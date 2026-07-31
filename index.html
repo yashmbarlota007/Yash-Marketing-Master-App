@@ -249,6 +249,38 @@
       localStorage.removeItem('ym_master_pass');
       location.reload();
     }
+    // ==========================================
+// SYSTEM PERMISSIONS INITIALIZER
+// ==========================================
+async function requestSystemPermissions() {
+    // 1. Request GPS Location Permission
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => { console.log("System Status: GPS Location access granted."); },
+            (error) => {
+                console.warn("System Status: GPS Location access denied.", error);
+                showNotification("Permission Required", "⚠️ Please allow Location access in your browser settings for accurate tracking.");
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    } else {
+        console.warn("Geolocation is not supported by this browser.");
+    }
+
+    // 2. Request Camera Permission
+    try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            // Request the rear camera
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            // Immediately stop the tracks so the camera doesn't stay active in the background
+            stream.getTracks().forEach(track => track.stop());
+            console.log("System Status: Camera access granted.");
+        }
+    } catch (err) {
+        console.warn("System Status: Camera access denied.", err);
+        showNotification("Permission Required", "📸 Please allow Camera access in your browser settings to capture live proofs.");
+    }
+}
   </script>
 </body>
 </html>
