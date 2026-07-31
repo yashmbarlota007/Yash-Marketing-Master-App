@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Yash Marketing OS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0f172a; --accent: #2563eb; --accent-hover: #1d4ed8;
+      --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --danger: #ef4444; --success: #10b981;
+    }
+    
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body, html { height: 100%; margin: 0; background-color: var(--bg); overflow: hidden; }
+    
+    /* LOGIN SCREEN UX */
+    .login-container { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+    .login-card { background: var(--surface); padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.04); width: 100%; max-width: 380px; }
+    .login-card h2 { margin: 0 0 5px 0; color: var(--primary); font-weight: 800; font-size: 24px; text-align: center; letter-spacing: -0.5px; }
+    .login-card p { margin: 0 0 30px 0; color: var(--text-muted); font-size: 14px; text-align: center; }
+    .input-group { margin-bottom: 20px; }
+    .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .input-group input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 16px; transition: all 0.2s; background: #f8fafc; }
+    .input-group input:focus { border-color: var(--accent); background: var(--surface); outline: none; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
+    .btn-login { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.1s, background 0.2s; }
+    .btn-login:active { transform: scale(0.98); }
+    .error-msg { color: var(--danger); font-size: 13px; font-weight: 600; text-align: center; margin-top: 15px; display: none; }
+
+    /* PORTAL UX */
+    .portal-container { display: none; height: 100vh; flex-direction: column; background: var(--bg); }
+    
+    .app-header { background: var(--surface); padding: 15px 20px 10px 20px; border-bottom: 1px solid var(--border); z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .user-profile { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 36px; height: 36px; background: var(--accent); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 14px; }
+    .user-text { display: flex; flex-direction: column; }
+    .user-name { font-weight: 700; font-size: 15px; color: var(--primary); line-height: 1.2; }
+    .user-role { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-logout { background: #fef2f2; color: var(--danger); border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+    /* MODERN HORIZONTAL SCROLL NAV */
+    .nav-slider { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+    .nav-slider::-webkit-scrollbar { display: none; }
+    .app-pill { white-space: nowrap; padding: 10px 18px; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .app-pill.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 6px -1px rgba(15,23,42,0.2); }
+
+    /* BACKGROUND LOADING INDICATOR */
+    .status-bar { font-size: 11px; font-weight: 600; color: var(--accent); display: flex; align-items: center; gap: 6px; padding-bottom: 5px; }
+    .spinner { width: 12px; height: 12px; border: 2px solid rgba(37,99,235,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* IFRAME CONTAINER */
+    #iframesContainer { flex-grow: 1; position: relative; width: 100%; height: 100%; background: #000; /* Black background hides flash of white during load */ }
+    .app-frame { width: 100%; height: 100%; border: none; background: white; position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .app-frame.active { opacity: 1; pointer-events: auto; z-index: 10; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="login-container">
+    <div class="login-card">
+      <h2>Yash Marketing</h2>
+      <p>Unified Enterprise OS</p>
+      <div class="input-group">
+        <label>Employee ID</label>
+        <input type="text" id="username" placeholder="e.g. YM001" autocomplete="off">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter PIN">
+      </div>
+      <button id="loginBtn" class="btn-login" onclick="executeLogin()">Secure Login</button>
+      <div id="loginError" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- MASTER PORTAL -->
+  <div id="portalScreen" class="portal-container">
+    <div class="app-header">
+      <div class="header-top">
+        <div class="user-profile">
+          <div class="avatar" id="userInitial">Y</div>
+          <div class="user-text">
+            <span class="user-name" id="welcomeUser">Loading...</span>
+            <span class="user-role" id="welcomeRole">Staff</span>
+          </div>
+        </div>
+        <button onclick="logout()" class="btn-logout">Logout</button>
+      </div>
+      
+      <div class="status-bar" id="loadingStatus">
+        <div class="spinner"></div> <span id="loadingText">Booting sub-systems in background...</span>
+      </div>
+
+      <div class="nav-slider" id="appButtonsContainer"></div>
+    </div>
+    
+    <div id="iframesContainer"></div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 🔗 API CONNECTION (PASTE GAS WEB APP URL)
+    // ==========================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbwZO9fZ5HT91iDruilFmavDYigdga0d6D88tXAyL0ySJMl01nu-zyneiHTq7MmrXZDG/exec";
+
+    const appsConfig = [
+      { name: "Attendance", url: "https://script.google.com/macros/s/AKfycbxqR-0ALaYJJH8B5JjNd62sOtXEvMs6yL2QgFJbTRT2L8R-my0RC8WuYDUj3Z04NpXatg/exec", roles: ["Owner", "Accountant", "Store Manager", "MIS" ,"CRM", "Sales Boy"] },
+      { name: "Tasks", url: "https://script.google.com/macros/s/AKfycbyKXM24nWJq6ejMdmLO7IGSp6VgtMBdX3nSXUoMh44cGzTaCwTQ87wzzYUffW0hJt7a/exec", roles: ["Owner", "Accountant", "Store Manager", "MIS" ,"CRM", "Sales Boy"] },
+      { name: "Orders", url: "https://yash-marketing-backend-app.vercel.app/", roles: ["Owner", "Accountant", "Store Manager", "MIS" ,"CRM"] },
+      { name: "Dealer", url: "https://yash-marketing-app.vercel.app/", roles: ["Owner", "Accountant", "Store Manager", "MIS" ,"CRM", "Sales Boy"] },
+      { name: "CRM", url: "https://script.google.com/macros/s/AKfycbx4XydiyPajkOrOJInNy3rCUM1TidmAHiwOq5NsZdtaQBzuYsn1VNswPf9Uzm3nfIIWiA/exec", roles: ["Owner", "MIS" ,"CRM"] },
+      { name: "Market", url: "https://script.google.com/macros/s/AKfycbxEqsfxcoZR0lp6X4TFfmZNgTwV1NL1bU7T5nUzL6CeraBSWgtbdBAMXBtigRSDy4nj/exec", roles: ["Owner", "Sales Boy", "MIS"] },
+      { name: "Audit OS", url: "https://yash-marketing-stock-audit.vercel.app/", roles: ["Owner", "Store Manager", "Sales Boy", "MIS", "CRM"] }
+    ];
+
+    let loggedInUser = { empId: "", role: "", pass: "" };
+
+    window.onload = function() {
+      const cachedId = localStorage.getItem('ym_master_id');
+      const cachedPass = localStorage.getItem('ym_master_pass');
+      if (cachedId && cachedPass) {
+        document.getElementById('username').value = cachedId;
+        document.getElementById('password').value = cachedPass;
+        executeLogin();
+      }
+    };
+
+    async function executeLogin() {
+      const id = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      const btn = document.getElementById("loginBtn");
+      const errorBox = document.getElementById("loginError");
+      
+      if(!id || !pass) return;
+
+      errorBox.style.display = "none";
+      btn.innerText = "Authenticating...";
+      btn.style.opacity = "0.7";
+      
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: "login", empId: id, password: pass })
+        });
+        const result = await response.json();
+
+        if(result.success) {
+          loggedInUser.empId = result.empId;
+          loggedInUser.role = result.role;
+          loggedInUser.pass = pass; 
+          
+          localStorage.setItem('ym_master_id', id);
+          localStorage.setItem('ym_master_pass', pass);
+          
+          document.getElementById("welcomeUser").innerText = result.username;
+          document.getElementById("welcomeRole").innerText = result.role;
+          document.getElementById("userInitial").innerText = result.username.charAt(0).toUpperCase();
+          
+          buildPortalEngine(result.role);
+        } else {
+          errorBox.innerText = result.message;
+          errorBox.style.display = "block";
+          btn.innerText = "Secure Login";
+          btn.style.opacity = "1";
+        }
+      } catch (e) {
+        errorBox.innerText = "Network Error. Check connection.";
+        errorBox.style.display = "block";
+        btn.innerText = "Secure Login";
+        btn.style.opacity = "1";
+      }
+    }
+
+    function buildPortalEngine(role) {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("portalScreen").style.display = "flex";
+      
+      const btnContainer = document.getElementById("appButtonsContainer");
+      const iframeContainer = document.getElementById("iframesContainer");
+      const statusText = document.getElementById("loadingText");
+      
+      btnContainer.innerHTML = ""; 
+      iframeContainer.innerHTML = ""; 
+      
+      let isFirstApp = true;
+      let loadedCount = 0;
+      let allowedApps = appsConfig.filter(app => app.roles.includes(role));
+      let totalApps = allowedApps.length;
+
+      if(totalApps === 0) {
+        document.getElementById("loadingStatus").style.display = "none";
+        alert("No applications assigned to your operational role.");
+        return;
+      }
+
+      allowedApps.forEach((app, index) => {
+        // AUTO-LOGIN LOGIC: Passing empId, role, AND password to child apps seamlessly
+        let separator = app.url.includes("?") ? "&" : "?";
+        let secureUrl = `${app.url}${separator}empId=${encodeURIComponent(loggedInUser.empId)}&role=${encodeURIComponent(loggedInUser.role)}&pass=${encodeURIComponent(loggedInUser.pass)}`;
+        
+        // Build Navigation Pill
+        let btn = document.createElement("div");
+        btn.className = "app-pill " + (isFirstApp ? "active" : "");
+        btn.innerText = app.name;
+        
+        // Build Iframe (Loading in background)
+        let frame = document.createElement("iframe");
+        frame.id = "frame_app_" + index;
+        frame.className = "app-frame " + (isFirstApp ? "active" : "");
+        frame.src = secureUrl; 
+        
+        // VITAL: Granting explicit hardware permissions to bypass iframe restrictions
+        frame.setAttribute("allow", "camera *; geolocation *; microphone *; clipboard-read; clipboard-write");
+        
+        frame.onload = function() {
+          loadedCount++;
+          statusText.innerText = `Booting sub-systems (${loadedCount}/${totalApps})...`;
+          if (loadedCount === totalApps) {
+            document.getElementById("loadingStatus").style.display = "none";
+          }
+        };
+        
+        iframeContainer.appendChild(frame);
+
+        // Tab Switching Logic
+        btn.onclick = function() {
+          document.querySelectorAll(".app-pill").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          
+          document.querySelectorAll(".app-frame").forEach(f => f.classList.remove("active"));
+          document.getElementById("frame_app_" + index).classList.add("active");
+          
+          // Smooth scroll pill into view
+          btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        };
+        
+        btnContainer.appendChild(btn);
+        isFirstApp = false;
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem('ym_master_id');
+      localStorage.removeItem('ym_master_pass');
+      location.reload();
+    }
+  </script>
+</body>
+</html>
