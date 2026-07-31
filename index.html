@@ -52,12 +52,22 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* IFRAME CONTAINER */
-    #iframesContainer { flex-grow: 1; position: relative; width: 100%; height: 100%; background: #000; /* Black background hides flash of white during load */ }
+    #iframesContainer { flex-grow: 1; position: relative; width: 100%; height: 100%; background: #000; }
     .app-frame { width: 100%; height: 100%; border: none; background: white; position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
     .app-frame.active { opacity: 1; pointer-events: auto; z-index: 10; }
+
+    /* TOAST NOTIFICATION SYSTEM */
+    #toastContainer { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
+    .toast { background: var(--primary); color: white; padding: 14px 20px; border-radius: 12px; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.2); display: flex; flex-direction: column; animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; pointer-events: auto; border: 1px solid rgba(255,255,255,0.1); }
+    .toast-title { font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .toast-msg { font-size: 13px; font-weight: 500; line-height: 1.4; }
+    @keyframes slideDown { from { transform: translateY(-150%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 <body>
+
+  <!-- TOAST NOTIFICATION AREA -->
+  <div id="toastContainer"></div>
 
   <!-- LOGIN SCREEN -->
   <div id="loginScreen" class="login-container">
@@ -129,6 +139,60 @@
       }
     };
 
+    // ==========================================
+    // CUSTOM NOTIFICATION SYSTEM
+    // ==========================================
+    function showNotification(title, message) {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.innerHTML = `
+            <span class="toast-title">${title}</span>
+            <span class="toast-msg">${message}</span>
+        `;
+        container.appendChild(toast);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+
+    // ==========================================
+    // SYSTEM PERMISSIONS INITIALIZER
+    // ==========================================
+    async function requestSystemPermissions() {
+        // 1. Request GPS Location Permission
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => { console.log("System Status: GPS Location access granted."); },
+                (error) => {
+                    console.warn("System Status: GPS Location access denied.", error);
+                    showNotification("Permission Required", "⚠️ Please allow Location access in your browser settings for accurate tracking.");
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            console.warn("Geolocation is not supported by this browser.");
+        }
+
+        // 2. Request Camera Permission
+        try {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Request the rear camera
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                // Immediately stop the tracks so the camera doesn't stay active in the background
+                stream.getTracks().forEach(track => track.stop());
+                console.log("System Status: Camera access granted.");
+            }
+        } catch (err) {
+            console.warn("System Status: Camera access denied.", err);
+            showNotification("Permission Required", "📸 Please allow Camera access in your browser settings to capture live proofs.");
+        }
+    }
+
     async function executeLogin() {
       const id = document.getElementById("username").value.trim();
       const pass = document.getElementById("password").value.trim();
@@ -179,6 +243,9 @@
     function buildPortalEngine(role) {
       document.getElementById("loginScreen").style.display = "none";
       document.getElementById("portalScreen").style.display = "flex";
+      
+      // --> TRIGGER NATIVE PERMISSION PROMPTS HERE RIGHT AFTER LOGIN <--
+      requestSystemPermissions();
       
       const btnContainer = document.getElementById("appButtonsContainer");
       const iframeContainer = document.getElementById("iframesContainer");
@@ -249,38 +316,6 @@
       localStorage.removeItem('ym_master_pass');
       location.reload();
     }
-    // ==========================================
-// SYSTEM PERMISSIONS INITIALIZER
-// ==========================================
-async function requestSystemPermissions() {
-    // 1. Request GPS Location Permission
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => { console.log("System Status: GPS Location access granted."); },
-            (error) => {
-                console.warn("System Status: GPS Location access denied.", error);
-                showNotification("Permission Required", "⚠️ Please allow Location access in your browser settings for accurate tracking.");
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-    } else {
-        console.warn("Geolocation is not supported by this browser.");
-    }
-
-    // 2. Request Camera Permission
-    try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            // Request the rear camera
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            // Immediately stop the tracks so the camera doesn't stay active in the background
-            stream.getTracks().forEach(track => track.stop());
-            console.log("System Status: Camera access granted.");
-        }
-    } catch (err) {
-        console.warn("System Status: Camera access denied.", err);
-        showNotification("Permission Required", "📸 Please allow Camera access in your browser settings to capture live proofs.");
-    }
-}
   </script>
 </body>
 </html>
