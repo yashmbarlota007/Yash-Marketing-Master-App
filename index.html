@@ -241,69 +241,71 @@
       }
     }
 
-    function buildPortalEngine(role) {
+   function buildPortalEngine(role) {
       document.getElementById("loginScreen").style.display = "none";
       document.getElementById("portalScreen").style.display = "flex";
       
-      // --> TRIGGER NATIVE PERMISSION PROMPTS HERE RIGHT AFTER LOGIN <--
       requestSystemPermissions();
       
       const btnContainer = document.getElementById("appButtonsContainer");
       const iframeContainer = document.getElementById("iframesContainer");
-      const statusText = document.getElementById("loadingText");
       
       btnContainer.innerHTML = ""; 
       iframeContainer.innerHTML = ""; 
       
       let isFirstApp = true;
-      let loadedCount = 0;
       let allowedApps = appsConfig.filter(app => app.roles.includes(role));
-      let totalApps = allowedApps.length;
 
-      if(totalApps === 0) {
+      if(allowedApps.length === 0) {
         document.getElementById("loadingStatus").style.display = "none";
         alert("No applications assigned to your operational role.");
         return;
       }
 
+      document.getElementById("loadingStatus").style.display = "none";
+
       allowedApps.forEach((app, index) => {
-        // AUTO-LOGIN LOGIC: Passing empId, role, AND password to child apps seamlessly
         let separator = app.url.includes("?") ? "&" : "?";
-        let secureUrl = `${app.url}${separator}empId=${encodeURIComponent(loggedInUser.empId)}&role=${encodeURIComponent(loggedInUser.role)}&pass=${encodeURIComponent(loggedInUser.pass)}`;
+        // ⚠️ SECURITY UPGRADE: Do not pass the password in the URL. It is highly insecure and can be logged. 
+        // Just pass empId and role. The Master App has already authenticated them.
+        let secureUrl = `${app.url}${separator}empId=${encodeURIComponent(loggedInUser.empId)}&role=${encodeURIComponent(loggedInUser.role)}`;
         
         // Build Navigation Pill
         let btn = document.createElement("div");
         btn.className = "app-pill " + (isFirstApp ? "active" : "");
         btn.innerText = app.name;
         
-        // Build Iframe (Loading in background)
+        // Build Iframe
         let frame = document.createElement("iframe");
         frame.id = "frame_app_" + index;
         frame.className = "app-frame " + (isFirstApp ? "active" : "");
-        frame.src = secureUrl; 
-        
-        // VITAL: Granting explicit hardware permissions to bypass iframe restrictions
         frame.setAttribute("allow", "camera *; geolocation *; microphone *; clipboard-read; clipboard-write");
         
-        frame.onload = function() {
-          loadedCount++;
-          statusText.innerText = `Booting sub-systems (${loadedCount}/${totalApps})...`;
-          if (loadedCount === totalApps) {
-            document.getElementById("loadingStatus").style.display = "none";
-          }
-        };
+        // LAZY LOADING LOGIC: Store the URL, but don't load it yet unless it's the first app
+        frame.dataset.src = secureUrl; 
+        
+        if (isFirstApp) {
+            frame.src = secureUrl; // Only boot the first app on login
+        }
         
         iframeContainer.appendChild(frame);
 
-        // Tab Switching Logic
+        // Tab Switching & Lazy Load Trigger
         btn.onclick = function() {
+          // Update active states
           document.querySelectorAll(".app-pill").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           
           document.querySelectorAll(".app-frame").forEach(f => f.classList.remove("active"));
-          document.getElementById("frame_app_" + index).classList.add("active");
+          let targetFrame = document.getElementById("frame_app_" + index);
+          targetFrame.classList.add("active");
           
-          // Smooth scroll pill into view
+          // If the app hasn't been loaded yet, load it now!
+          if (!targetFrame.src) {
+              targetFrame.src = targetFrame.dataset.src;
+              showNotification("Loading", "Starting " + app.name + "...");
+          }
+          
           btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         };
         
@@ -311,7 +313,6 @@
         isFirstApp = false;
       });
     }
-
     function logout() {
       localStorage.removeItem('ym_master_id');
       localStorage.removeItem('ym_master_pass');
