@@ -566,33 +566,44 @@
       }
 
       document.getElementById("loadingStatus").style.display = "none";
+// Retrieve the last opened app index, default to 0
+      let savedTabIndex = localStorage.getItem('ym_active_app') || 0;
+      
+      // Ensure the saved index doesn't exceed allowed apps
+      if (savedTabIndex >= allowedApps.length) savedTabIndex = 0;
 
       allowedApps.forEach((app, index) => {
         let separator = app.url.includes("?") ? "&" : "?";
         let secureUrl = `${app.url}${separator}empId=${encodeURIComponent(loggedInUser.empId)}&role=${encodeURIComponent(loggedInUser.role)}`;
         
+        // Determine if this specific app was the last one active
+        let isActiveApp = (index == savedTabIndex);
+
         // Build Navigation Pill
         let btn = document.createElement("div");
-        btn.className = "app-pill " + (isFirstApp ? "active" : "");
+        btn.className = "app-pill " + (isActiveApp ? "active" : "");
         btn.innerText = app.name;
         
         // Build Iframe
         let frame = document.createElement("iframe");
         frame.id = "frame_app_" + index;
-        frame.className = "app-frame " + (isFirstApp ? "active" : "");
+        frame.className = "app-frame " + (isActiveApp ? "active" : "");
         frame.setAttribute("allow", "camera *; geolocation *; microphone *; clipboard-read; clipboard-write");
         
         // LAZY LOADING LOGIC
         frame.dataset.src = secureUrl; 
         
-        if (isFirstApp) {
-            frame.src = secureUrl; // Only boot the first app immediately
+        if (isActiveApp) {
+            frame.src = secureUrl; // Boot the active app immediately
         }
         
         iframeContainer.appendChild(frame);
 
         // Tab Switching & Lazy Load Trigger
         btn.onclick = function() {
+          // SAVE STATE: Remember this tab for future refreshes
+          localStorage.setItem('ym_active_app', index);
+
           // Update active states
           document.querySelectorAll(".app-pill").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
@@ -601,7 +612,7 @@
           let targetFrame = document.getElementById("frame_app_" + index);
           targetFrame.classList.add("active");
           
-          // If the app hasn't been loaded yet (and ghost fetching didn't grab it), load it now
+          // If the app hasn't been loaded yet, load it now
           if (!targetFrame.src) {
               targetFrame.src = targetFrame.dataset.src;
               showNotification("Loading", "Starting " + app.name + "...");
@@ -611,7 +622,6 @@
         };
         
         btnContainer.appendChild(btn);
-        isFirstApp = false;
       });
 
       // ==========================================
