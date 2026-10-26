@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <base target=\"_top\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+  <title>Yash Marketing Enterprise Operations Portal</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    :root {
+      --primary: #0f172a; --accent: #2563eb; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+      --bg: #f1f5f9; --card-bg: #ffffff; --text: #1e293b; --text-light: #64748b; --border: #e2e8f0;
+      --purple: #8b5cf6;
+    }
+
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+    .container { width: 100%; max-width: 460px; background: var(--card-bg); padding: 25px 20px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.04); box-sizing: border-box; }
+    
+    h2, h3 { margin-top: 0; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
+    p { color: var(--text-light); font-size: 14px; margin: 5px 0; }
+    
+    input, select, textarea { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid var(--border); border-radius: 10px; box-sizing: border-box; font-family: 'Inter'; font-size: 15px; outline: none; transition: all 0.3s ease; background: #fafafa; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); background: #fff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+    
+    .btn { width: 100%; padding: 15px; font-size: 16px; font-weight: 600; color: white; background-color: var(--accent); border: none; border-radius: 10px; cursor: pointer; margin-top: 10px; box-sizing: border-box; transition: all 0.2s ease; position: relative; display: block; text-align: center; text-decoration: none; }
+    .btn:active { transform: scale(0.98); }
+    .btn-green { background-color: var(--success); }
+    .btn-orange { background-color: var(--warning); }
+    .btn-danger { background-color: var(--danger); }
+    .btn-outline { background-color: transparent; border: 2px solid var(--border); color: var(--text-light); margin-top: 15px; }
+    .btn-outline:hover { background: #f8fafc; color: var(--text); }
+    
+    .profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; position: relative; }
+    .profile-avatar-wrapper { position: relative; width: 105px; height: 105px; cursor: pointer; border-radius: 50%; padding: 3px; border: 3px solid var(--accent); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2); }
+    .profile-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #e2e8f0; display: block; }
+    .profile-name { font-size: 22px; font-weight: 700; margin: 12px 0 2px 0; }
+    .profile-role { font-size: 13px; color: var(--text-light); font-weight: 500; margin: 0; }
+
+    .live-clock-badge { background: #1e293b; color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-family: monospace; letter-spacing: 1px; position: absolute; top: -10px; right: 0px; font-weight: bold; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+    .stat-card { background: #f8fafc; padding: 15px; border-radius: 14px; border: 1px solid var(--border); text-align: left; box-sizing: border-box; }
+    .stat-card.full { grid-column: span 2; background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%); border-color: #bae6fd; }
+    .stat-lbl { font-size: 11px; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom:4px; }
+    .stat-val { font-size: 18px; font-weight: 700; color: var(--primary); }
+
+    .filter-card { background: #f8fafc; border: 1px dashed var(--accent); border-radius: 14px; padding: 12px; margin: 15px 0; text-align: left; }
+
+    .calendar-card { margin: 25px 0; border: 1px solid var(--border); border-radius: 14px; padding: 15px; background: #f8fafc; box-sizing: border-box; }
+    .calendar-ctrl { font-weight: 700; margin-bottom: 12px; color: var(--primary); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; font-size: 12px; }
+    .cal-header-day { font-weight: 600; color: var(--text-light); padding-bottom: 4px; text-align: center; }
+    .cal-cell { padding: 10px 0; border-radius: 8px; font-weight: 600; background: #fff; border: 1px solid var(--border); text-align: center; }
+    .cal-present { background-color: var(--success) !important; color: white !important; border-color: var(--success) !important; }
+    .cal-absent { background-color: var(--danger) !important; color: white !important; border-color: var(--danger) !important; }
+    .cal-half { background-color: var(--warning) !important; color: white !important; border-color: var(--warning) !important; }
+    .cal-sunday { background-color: var(--purple) !important; color: white !important; border-color: var(--purple) !important; }
+    
+    .doc-vault { text-align: left; background: #f8fafc; border: 1px solid var(--border); border-radius: 14px; padding: 15px; margin-top: 20px; box-sizing: border-box; }
+    .doc-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .doc-action-link { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 13px; }
+
+    .admin-box { background: #fff9f0; border: 2px dashed var(--warning); border-radius: 14px; padding: 15px; margin-bottom: 20px; text-align: left; box-sizing: border-box; }
+    .leave-card-row { background: white; border: 1px solid var(--border); padding: 14px; border-radius: 10px; margin-bottom: 11px; }
+    .leave-card-actions { display: flex; gap: 10px; margin-top: 10px; }
+    .leave-card-actions .btn { padding: 9px 12px; font-size: 13px; margin: 0; width: 50%; }
+
+    .notify-badge { position: absolute; top: -6px; right: -6px; background-color: var(--danger); color: white; border-radius: 50%; padding: 2px 8px; font-size: 11px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.15); display: none; z-index: 10; }
+
+    .table-responsive-wrapper { width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid var(--border); }
+    .payroll-table { width: 100%; border-collapse: collapse; text-align: left; background: white; font-size: 13px; }
+    .payroll-table th { background-color: #f8fafc; color: var(--text-light); font-weight: 600; padding: 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; white-space: nowrap;}
+    .payroll-table td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text); font-weight: 500; }
+
+    .warning-modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
+    .warning-modal-box { background:white; padding:30px 20px; border-radius:20px; max-width:85%; width:350px; text-align:center; border: 3px solid var(--danger); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+
+    #canvas { width: 100%; border-radius: 12px; display: none; margin-top: 15px; border: 2px solid var(--border); }
+    
+    #loginView { display: block; }
+    #dashboardView, #punchView, #docView, #holidayView, #adminControlView { display: none; }
+  </style>
+</head>
+<body>
+
+  
+  <div id=\"missedPunchWarningModal\" class=\"warning-modal-overlay\">
+    <div class=\"warning-modal-box\">
+      <div style=\"font-size: 40px; margin-bottom: 10px;\">⚠️</div>
+      <h3 style=\"color:var(--danger); margin-top:0; font-size:22px; letter-spacing:-0.5px;\">Punch Out Warning!</h3>
+      <p style=\"font-weight:600; color:var(--text); font-size:16px;\">Aapne is mahine <span id=\"missedCountDisplay\" style=\"color:var(--danger); font-size:20px; font-weight:800;\"></span> baar Punch Out miss kiya hai.</p>
+      <div style=\"background:#fff1f2; border:1px solid #fecdd3; padding:12px; border-radius:10px; margin: 15px 0;\">
+        <p style=\"font-size:13px; color:var(--danger); margin:0; font-weight:500; line-height:1.5;\">Penalty Engine is Active: Agar aap 3 baar punch out karna bhul jaate ho toh aapko 1 half day milega (Sunday is completely safe), isiliye roz punch out karo.</p>
+      </div>
+      <button class=\"btn btn-danger\" style=\"margin-top:20px;\" onclick=\"closeWarningModal()\">I Understand, I will Punch Out</button>
+    </div>
+  </div>
+
+  
+  <div id=\"dailyLedgerModal\" class=\"warning-modal-overlay\">
+    <div class=\"warning-modal-box\" style=\"max-width: 95%; width: 550px; max-height: 90vh; overflow-y: auto; text-align:left; border: 3px solid var(--accent);\">
+        <div style=\"display:flex; justify-content:space-between; align-items:center;\">
+            <h3 id=\"ledgerModalTitle\" style=\"margin:0; color: var(--primary);\">Attendance Ledger</h3>
+            <button onclick=\"closeLedgerModal()\" style=\"background:none; border:none; font-size:28px; font-weight:bold; cursor:pointer; color:var(--text-light);\">&times;</button>
+        </div>
+        <hr style=\"border:0; border-top:1px solid var(--border); margin:15px 0;\">
+        <div class=\"table-responsive-wrapper\">
+            <table class=\"payroll-table\">
+                <thead>
+                    <tr><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Hrs</th></tr>
+                </thead>
+                <tbody id=\"ledgerModalTbody\">
+                </tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+
+  
+  <div id=\"loginView\" class=\"container\">
+    <div style=\"margin-bottom: 25px; text-align: center;\">
+      <h2 style=\"font-size: 26px; margin-bottom: 6px;\">Yash Marketing</h2>
+      <p>Cloud Attendance & Payroll OS</p>
+    </div>
+    <input type=\"text\" id=\"loginId\" placeholder=\"Employee ID (e.g. YM001)\">
+    <input type=\"password\" id=\"loginPass\" placeholder=\"Password\">
+    <button class=\"btn\" onclick=\"executeAuthentication(false)\">Secure Login</button>
+    <p id=\"loginConsole\" style=\"color: var(--danger); font-weight: 600; margin-top: 15px; text-align: center;\"></p>
+  </div>
+
+  
+  <div id=\"dashboardView\" class=\"container\">
+    <div class=\"profile-header\">
+      <div id=\"liveClockTracker\" class=\"live-clock-badge\">00:00:00</div>
+      <div class=\"profile-avatar-wrapper\" onclick=\"document.getElementById('avatarFileInput').click();\">
+        <img id=\"userAvatar\" class=\"profile-img\" src=\"\" alt=\"Profile Avatar\">
+      </div>
+      <input type=\"file\" id=\"avatarFileInput\" accept=\"image/*\" style=\"display:none;\" onchange=\"uploadAvatarImage()\">
+      <h3 id=\"profileNameDisplay\" class=\"profile-name\">Employee Name</h3>
+      <p id=\"profileIdDisplay\" class=\"profile-role\">ID: --</p>
+    </div>
+    
+    <div id=\"ownerPrivilegeBox\" style=\"display:none; margin-bottom: 20px; position:relative;\">
+      <button class=\"btn btn-orange\" style=\"margin:0; box-shadow: 0 4px 12px rgba(245,158,11,0.2);\" onclick=\"showScreen('adminControlView')\">
+        🛠️ Open Admin Command Center
+        <span id=\"adminNotificationBadge\" class=\"notify-badge\">0</span>
+      </button>
+    </div>
+
+    <div class=\"filter-card\">
+      <label style=\"font-size:11px; font-weight:700; color:var(--accent); text-transform:uppercase; display:block; margin-bottom:4px;\">Select Month View Engine:</label>
+      <input type=\"month\" id=\"dashboardMonthFilterInput\" onchange=\"triggerMonthFilterRefresh()\" style=\"margin:0; padding:10px;\">
+    </div>
+
+    <div class=\"filter-card\" id=\"myLeaveStatusCard\" style=\"display:none; border-color:var(--warning);\">
+      <label style=\"font-size:11px; font-weight:700; color:var(--warning); text-transform:uppercase; display:block; margin-bottom:8px;\">My Recent Leave Status:</label>
+      <div id=\"leaveStatusList\" style=\"font-size:13px; line-height:1.6; color:var(--text);\"></div>
+    </div>
+
+    <div class=\"stats-grid\">
+      <div class=\"stat-card\"><div class=\"stat-lbl\">Paid Days / Hrs</div><div class=\"stat-val\" id=\"lblPresent\">0</div></div>
+      <div class=\"stat-card\"><div class=\"stat-lbl\">Normal Absent</div><div class=\"stat-val\" id=\"lblAbsent\" style=\"color: var(--danger);\">0</div></div>
+      <div class=\"stat-card\" style=\"background:#fff1f2; border-color:#fecdd3;\"><div class=\"stat-lbl\" style=\"color: var(--danger);\">Unapproved (2x Penalty)</div><div class=\"stat-val\" id=\"lblUnapproved\" style=\"color: var(--danger);\">0</div></div>
+      <div class=\"stat-card\"><div class=\"stat-lbl\">Base Salary</div><div class=\"stat-val\" id=\"lblBaseSalary\">\u20b90</div></div>
+      
+      <div class=\"stat-card full\" style=\"background: #fff1f2; border-color: #fecdd3;\">
+        <div class=\"stat-lbl\" style=\"color: var(--danger);\">Advance Deducted</div>
+        <div class=\"stat-val\" id=\"lblAdvanceDeducted\" style=\"color: var(--danger);\">\u20b90.00</div>
+      </div>
+
+      <div class=\"stat-card full\"><div class=\"stat-lbl\" style=\"color: var(--accent);\" id=\"lblNetPayTitle\">Net Payable Till Date</div><div class=\"stat-val\" id=\"lblCalculatedPay\" style=\"font-size: 26px; color: var(--primary);\">\u20b90.00</div></div>
+    </div>
+
+    <button class=\"btn btn-outline\" style=\"margin-top:0; margin-bottom: 25px; border-color:var(--accent); color:var(--accent); background: #eff6ff;\" onclick=\"openLedgerModal()\">📄 View Detailed Attendance Ledger</button>
+
+    <div class=\"calendar-card\">
+      <div class=\"calendar-ctrl\" id=\"calMonthYearTitle\">Month Track</div>
+      <div class=\"calendar-grid\" id=\"calDynamicGrid\"></div>
+    </div>
+
+    <button class=\"btn btn-green\" onclick=\"showScreen('punchView')\">Punch In / Out Log</button>
+    <button class=\"btn btn-orange\" onclick=\"showScreen('holidayView')\">Apply for Holiday</button>
+    <button class=\"btn\" style=\"background-color: var(--primary);\" onclick=\"showScreen('docView')\">Documents Vault</button>
+    <button class=\"btn btn-outline\" onclick=\"executeLogout()\">Secure Logout</button>
+  </div>
+
+  
+  <div id=\"punchView\" class=\"container\">
+    <h2>Attendance Action</h2>
+    <p style=\"margin-bottom: 20px;\">Identity verification snapshot mandatory.</p>
+    <select id=\"attendanceLogType\">
+      <option value=\"Punch In\">Punch In (Shift Start)</option>
+      <option value=\"Punch Out\">Punch Out (Shift End)</option>
+      <option value=\"Half Day\">Half Day Log</option>
+    </select>
+    
+    <button id=\"btnVerifyGPS\" class=\"btn\" onclick=\"initiateGeofenceVerification()\">1. Verify GPS Location</button>
+    
+    <label id=\"btnOpenCamera\" for=\"nativeCameraInput\" class=\"btn btn-orange\" style=\"display:none; margin-top: 10px; cursor:pointer; text-align:center; box-sizing:border-box;\">2. Open Camera to Snap</label>
+    
+    <input type=\"file\" id=\"nativeCameraInput\" accept=\"image/*\" capture=\"user\" style=\"display:none;\" onchange=\"processNativeCameraCapture(event)\">
+    <canvas id=\"canvas\"></canvas>
+    
+    <button id=\"submitPunchBtn\" class=\"btn btn-green\" style=\"display:none; margin-top: 15px;\" onclick=\"executeLogSubmit()\">2. Confirm Identity & Submit</button>
+    <p id=\"punchConsole\" style=\"font-weight:600; margin-top:15px; color: var(--accent);\"></p>
+    <button class=\"btn btn-outline\" onclick=\"cancelPunch()\">Back to Dashboard</button>
+  </div>
+
+  
+  <div id=\"holidayView\" class=\"container\">
+    <h2>Holiday Application</h2>
+    <select id=\"holidayTypeSelection\"><option value=\"Sick\">Sick Leave</option><option value=\"Casual\">Casual Leave</option></select>
+    <label style=\"display:block; text-align:left; font-size:12px; font-weight:600; margin-top:12px;\">START DATE</label>
+    <input type=\"date\" id=\"holidayStartDateInput\">
+    <label style=\"display:block; text-align:left; font-size:12px; font-weight:600; margin-top:12px;\">END DATE</label>
+    <input type=\"date\" id=\"holidayEndDateInput\">
+    <textarea id=\"holidayReasonInput\" placeholder=\"Specify clear justification...\" rows=\"3\"></textarea>
+    
+    <div style=\"background:#fff1f2; border:1px solid #fecdd3; padding:12px; border-radius:10px; margin: 15px 0;\">
+      <p style=\"font-size:13px; color:var(--danger); margin:0; font-weight:600; line-height:1.5;\">⚠️ STRICT POLICY: Applying for leave does NOT mean approval. Unapproved leave or leave without request will result in a DOUBLE (2x) salary deduction.</p>
+    </div>
+
+    <button class=\"btn btn-green\" onclick=\"executeHolidaySubmission()\">Submit Leave Request</button>
+    <p id=\"holidayConsole\" style=\"font-weight:600; margin-top:15px;\"></p>
+    <button class=\"btn btn-outline\" onclick=\"showScreen('dashboardView')\">Back to Dashboard</button>
+  </div>
+
+  
+  <div id=\"docView\" class=\"container\">
+    <h2>Documents Vault</h2>
+    <select id=\"vaultDocTypeSelection\"><option value=\"Aadhar Card\">Aadhar Card</option><option value=\"Pan Card\">Pan Card</option><option value=\"Bank Passbook\">Bank Passbook</option><option value=\"Offer Letter\">Offer Letter</option></select>
+    <input type=\"file\" id=\"vaultFileInput\" accept=\"image/*,application/pdf\" style=\"border:none; padding:10px 0;\">
+    <button class=\"btn btn-green\" onclick=\"executeVaultUpload()\">Upload Securely</button>
+    <p id=\"vaultConsole\" style=\"font-weight:600; margin-top:15px;\"></p>
+    <div class=\"doc-vault\">
+      <h4 style=\"margin: 0 0 12px 0; color: var(--primary); font-size:14px;\">Verified System Documents:</h4>
+      <div id=\"vaultUploadedDocsListContainer\">Checking cloud locker archive files...</div>
+    </div>
+    <button class=\"btn btn-outline\" onclick=\"showScreen('dashboardView')\">Back to Dashboard</button>
+  </div>
+
+  
+  <div id=\"adminControlView\" class=\"container\" style=\"max-width: 650px;\">
+    <h2>Management Command Center</h2>
+    <p>Real-time corporate oversight and operational approvals loop.</p>
+    
+    <div class=\"admin-box\">
+      <h4 style=\"margin:0 0 12px 0; color: var(--warning);\">Pending Leave Applications:</h4>
+      <div id=\"adminLeaveRequestsQueueContainer\">Loading active request rows...</div>
+    </div>
+    
+    <div class=\"admin-box\" style=\"background: #f0fdf4; border-color: var(--success);\">
+      <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;\">
+        <h4 style=\"margin:0; color: var(--success);\">Chronometric Payroll Ledger:</h4>
+        <span id=\"lblAdminSelectedMonthBadge\" style=\"font-size:11px; font-weight:700; background:var(--success); color:white; padding:2px 8px; border-radius:20px;\">Month</span>
+      </div>
+      <p style=\"font-size:12px; margin:0 0 12px 0; color:var(--text-light);\">Calculations based strictly on exact recorded shift hours and hourly rates.</p>
+      
+      <div class=\"table-responsive-wrapper\">
+        <table class=\"payroll-table\">
+          <thead>
+            <tr>
+              <th>Staff Profile</th>
+              <th>Paid Days / Hrs</th>
+              <th>Gross Pay</th>
+              <th style=\"color:var(--danger);\">Advance</th>
+              <th style=\"color:var(--success);\">Net Pay</th>
+            </tr>
+          </thead>
+          <tbody id=\"adminStaffPayrollGridContainer\">
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <button class=\"btn btn-outline\" style=\"width:100%;\" onclick=\"showScreen('dashboardView')\">Exit Admin Center</button>
+  </div>
+
+  <script>
+    const portalEmpId = \"\";
+    const portalRole = \"\";
+
+    const GEOFENCE_RADIUS_METERS = 50;
+    let currentEmpId = \"\"; let currentUserRole = \"\"; let finalBase64Image = \"\";
+    let currentGlobalPayrollData = []; 
+    window.currentUserDailyLogs = []; 
+    
+    setInterval(() => {
+        let cd = new Date();
+        document.getElementById('liveClockTracker').innerText = cd.toLocaleTimeString('en-US', { hour12: false });
+    }, 1000);
+
+    function initializeMonthFieldDefault() {
+      const d = new Date();
+      const currentMonthString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      document.getElementById('dashboardMonthFilterInput').value = currentMonthString;
+    }
+
+    window.onload = function() {
+      initializeMonthFieldDefault();
+      if (portalEmpId && portalEmpId.trim() !== \"\") {
+        document.getElementById('loginId').value = portalEmpId;
+        document.getElementById('loginPass').value = \"SSO_BYPASS\";
+        executeAuthentication(true);
+      } else {
+        const cachedId = localStorage.getItem('ym_cached_id'); const cachedPass = localStorage.getItem('ym_cached_pass');
+        if (cachedId && cachedPass) {
+          document.getElementById('loginId').value = cachedId; document.getElementById('loginPass').value = cachedPass;
+          executeAuthentication(true);
+        }
+      }
+    };
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.container, #adminControlView').forEach(el => el.style.display = 'none');
+      document.getElementById(screenId).style.display = 'block';
+    }
+
+    function closeWarningModal() { document.getElementById('missedPunchWarningModal').style.display = 'none'; }
+    function closeLedgerModal() { document.getElementById('dailyLedgerModal').style.display = 'none'; }
+
+    function openLedgerModal(staffId = null) {
+        let logs = [];
+        if (staffId) {
+            let staff = currentGlobalPayrollData.find(s => s.id === staffId);
+            if(staff) {
+                logs = staff.dailyLogs;
+                document.getElementById('ledgerModalTitle').innerText = `${staff.name} - Ledger`;
+            }
+        } else {
+            logs = window.currentUserDailyLogs;
+            document.getElementById('ledgerModalTitle').innerText = `My Attendance Ledger`;
+        }
+
+        const tbody = document.getElementById('ledgerModalTbody');
+        tbody.innerHTML = \"\";
+        logs.forEach(l => {
+            let trBg = \"\";
+            let statusColor = \"var(--text)\";
+            if (l.hrs < 0 || l.status.includes(\"Penalty\") || l.status.includes(\"Double Absent\") || l.status.includes(\"Missed\")) { 
+              trBg = \"background:#fef2f2;\"; statusColor = \"var(--danger)\"; 
+            } else if (l.status.includes(\"Sunday\") || l.status.includes(\"Approved\")) {
+              trBg = \"background:#f0fdf4;\"; statusColor = \"var(--success)\";
+            }
+
+            let row = `<tr style=\"${trBg}\">
+                <td style=\"font-size:11px;\">${l.date}</td>
+                <td style=\"font-size:11px; font-weight:600; color:${statusColor}\">${l.status}</td>
+                <td style=\"font-size:11px;\">${l.in}</td>
+                <td style=\"font-size:11px;\">${l.out}</td>
+                <td style=\"font-size:12px; font-weight:700;\">${l.hrs}</td>
+            </tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+        document.getElementById('dailyLedgerModal').style.display = 'flex';
+    }
+
+    function triggerMonthFilterRefresh() {
+      if(currentEmpId) { executeAuthentication(true); }
+    }
+
+    function cancelPunch() {
+      document.getElementById('canvas').style.display = 'none'; 
+      document.getElementById('submitPunchBtn').style.display = 'none';
+      document.getElementById('btnVerifyGPS').style.display = 'block'; 
+      document.getElementById('btnOpenCamera').style.display = 'none'; 
+      document.getElementById('punchConsole').innerText = \"\"; 
+      finalBase64Image = \"\"; 
+      showScreen('dashboardView');
+    }
+
+    function executeAuthentication(isAutoLogin) {
+      const id = document.getElementById('loginId').value.toUpperCase().trim();
+      const pass = document.getElementById('loginPass').value;
+      const selectedMonth = document.getElementById('dashboardMonthFilterInput').value; 
+      if(!id || !pass) return;
+      
+      document.getElementById('loginConsole').style.color = \"var(--accent)\";
+      document.getElementById('loginConsole').innerText = isAutoLogin ? \"Syncing time chronometrics...\" : \"Initiating dynamic verification link...\";
+      
+      google.script.run.withSuccessHandler(function(response) {
+        if(response.success) {
+          currentEmpId = id; currentUserRole = response.role; 
+          if(pass !== \"SSO_BYPASS\") {
+            localStorage.setItem('ym_cached_id', id); localStorage.setItem('ym_cached_pass', pass);
+          }
+          
+          document.getElementById('userAvatar').src = response.profilePic || \"https://i.ibb.co/TthbYc2/default-avatar.png\";
+          document.getElementById('profileNameDisplay').innerText = response.name;
+          document.getElementById('profileIdDisplay').innerText = \"Employee ID: \" + id + \" | \" + currentUserRole + \" (\" + response.gender + \")\";
+          
+          
+          document.getElementById('lblPresent').innerHTML = `${response.paidDays} d<br><span style=\"font-size:14px; color:var(--accent);\">${response.totalExactHours} Hrs</span>`;
+          document.getElementById('lblAbsent').innerText = response.absent;
+          document.getElementById('lblUnapproved').innerText = response.unapprovedAbsents;
+          document.getElementById('lblBaseSalary').innerText = \"\u20b9\" + response.salary;
+          
+          document.getElementById('lblAdvanceDeducted').innerText = \"- \u20b9\" + response.advanceDeducted;
+          document.getElementById('lblCalculatedPay').innerText = \"\u20b9\" + response.netSalary;
+          document.getElementById('lblNetPayTitle').innerText = `Net Earnings (${response.evaluatedMonthYearLabel})`;
+          
+          // SET LOGS GLOBALLY
+          window.currentUserDailyLogs = response.dailyDetailedLogs;
+          currentGlobalPayrollData = response.allStaffPayrollGrid || [];
+
+          compileVisualCalendar(response.attendanceMap); 
+          compileCloudDocumentsVaultList(response.uploadedDocs);
+
+          if (response.userLeaveHistoryData && response.userLeaveHistoryData.length > 0) {
+            document.getElementById('myLeaveStatusCard').style.display = 'block';
+            let leaveHTML = \"\";
+            response.userLeaveHistoryData.slice(0, 3).forEach(l => { 
+              let statusBadge = \"\";
+              if (l.status === \"Approved\") statusBadge = `<span style=\"background:var(--success); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;\">APPROVED</span>`;
+              else if (l.status === \"Rejected\") statusBadge = `<span style=\"background:var(--danger); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;\">REJECTED</span>`;
+              else statusBadge = `<span style=\"background:var(--warning); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;\">PENDING</span>`;
+              
+              leaveHTML += `<div style=\"border-bottom:1px solid var(--border); padding-bottom:6px; margin-bottom:6px;\">
+                              <strong>${l.type}</strong> (${l.start} to ${l.end}) <br> Status: ${statusBadge}
+                            </div>`;
+            });
+            document.getElementById('leaveStatusList').innerHTML = leaveHTML;
+          } else {
+            document.getElementById('myLeaveStatusCard').style.display = 'none';
+          }
+          
+          if (currentUserRole === \"Owner\") {
+            document.getElementById('ownerPrivilegeBox').style.display = 'block';
+            document.getElementById('lblAdminSelectedMonthBadge').innerText = response.evaluatedMonthYearLabel;
+            
+            let leaveQueueCount = response.adminPendingLeaves ? response.adminPendingLeaves.length : 0;
+            let badgeElement = document.getElementById('adminNotificationBadge');
+            
+            if (leaveQueueCount > 0) {
+              badgeElement.style.display = 'inline-block'; badgeElement.innerText = leaveQueueCount;
+            } else { badgeElement.style.display = 'none'; }
+            
+            compileAdminLeavePanelQueue(response.adminPendingLeaves);
+            compileAllStaffSalaryLedgerGrid(response.allStaffPayrollGrid); 
+          } else {
+            document.getElementById('ownerPrivilegeBox').style.display = 'none';
+          }
+
+          if (response.missedPunchOuts > 0 && response.isPenaltyActiveFlag) {
+            document.getElementById('missedCountDisplay').innerText = response.missedPunchOuts;
+            document.getElementById('missedPunchWarningModal').style.display = 'flex';
+          }
+
+          showScreen('dashboardView');
+        } else {
+          localStorage.removeItem('ym_cached_id'); localStorage.removeItem('ym_cached_pass');
+          document.getElementById('loginConsole').style.color = \"var(--danger)\";
+          document.getElementById('loginConsole').innerText = response.error || \"Handshake Rejection: Credentials mismatch.\";
+        }
+      }).authenticateUser(id, pass, selectedMonth); 
+    }
+
+    function executeLogout() {
+      localStorage.removeItem('ym_cached_id'); localStorage.removeItem('ym_cached_pass');
+      location.reload();
+    }
+
+    function compileVisualCalendar(attendanceMap) {
+      const grid = document.getElementById('calDynamicGrid'); const title = document.getElementById('calMonthYearTitle');
+      grid.innerHTML = \"\"; 
+      const filterVal = document.getElementById('dashboardMonthFilterInput').value.split(\"-\");
+      const timeObj = new Date(parseInt(filterVal[0]), parseInt(filterVal[1]) - 1, 1);
+      
+      title.innerText = timeObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+      ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => { const lbl = document.createElement('div'); lbl.className = 'cal-header-day'; lbl.innerText = day; grid.appendChild(lbl); });
+      
+      const padOffset = timeObj.getDay(); 
+      const totalDaysInMonth = new Date(timeObj.getFullYear(), timeObj.getMonth() + 1, 0).getDate();
+      
+      for(let i = 0; i < padOffset; i++) { grid.appendChild(document.createElement('div')); }
+      for(let dayIter = 1; dayIter <= totalDaysInMonth; dayIter++) {
+        const cell = document.createElement('div'); cell.className = 'cal-cell'; cell.innerText = dayIter;
+        let constructedKey = `${timeObj.getFullYear()}-${String(timeObj.getMonth() + 1).padStart(2, '0')}-${String(dayIter).padStart(2, '0')}`;
+        
+        let mapVal = attendanceMap[constructedKey] || \"\";
+        if(mapVal.includes(\"Present\")) { cell.classList.add('cal-present'); }
+        else if(mapVal.includes(\"Double Absent\") || mapVal.includes(\"Penalty\")) { cell.classList.add('cal-absent'); cell.style.border = \"3px solid #7f1d1d\"; }
+        else if(mapVal.includes(\"Absent\")) { cell.classList.add('cal-absent'); }
+        else if(mapVal.includes(\"Half Day\")) { cell.classList.add('cal-half'); }
+        else if(mapVal.includes(\"Sunday\")) { cell.classList.add('cal-sunday'); }
+        else if(mapVal.includes(\"Approved\")) { cell.style.backgroundColor = \"var(--success)\"; cell.style.color = \"white\"; cell.style.borderColor = \"var(--success)\"; }
+        
+        grid.appendChild(cell);
+      }
+    }
+
+    function compileCloudDocumentsVaultList(docsList) {
+      const box = document.getElementById('vaultUploadedDocsListContainer'); box.innerHTML = \"\";
+      if(!docsList || docsList.length === 0) { box.innerHTML = \"<p style='font-size:13px; color:var(--text-light); margin:0;'>No compliance archive files inside vault.</p>\"; return; }
+      docsList.forEach(item => {
+        const row = document.createElement('div'); row.className = 'doc-row';
+        row.innerHTML = `<span><strong>${item.type}</strong> <span style=\"font-size:11px; color:var(--text-light);\">(${item.date})</span></span>
+                         <a class=\"doc-action-link\" href=\"${item.url}\" target=\"_blank\">View File ↗</a>`;
+        box.appendChild(row);
+      });
+    }
+
+    function compileAdminLeavePanelQueue(pendingLeaves) {
+      const container = document.getElementById('adminLeaveRequestsQueueContainer'); container.innerHTML = \"\";
+      if (!pendingLeaves || pendingLeaves.length === 0) { container.innerHTML = \"<p style='font-size:13px; color:var(--text-light); margin:0;'>Queue matrix contains no entries.</p>\"; return; }
+      pendingLeaves.forEach(leave => {
+        const block = document.createElement('div'); block.className = 'leave-card-row';
+        block.innerHTML = `
+          <div style=\"font-size:14px; line-height: 1.4;\">
+            <strong>Staff Name:</strong> ${leave.empName} <span style=\"color:var(--text-light); font-size:12px;\">(${leave.empId})</span><br>
+            <strong>Type:</strong> ${leave.type}<br>
+            <strong>Timeline:</strong> ${leave.start} to ${leave.end}<br>
+            <strong>Reason Statement:</strong> <span style=\"color:var(--text-light); font-style:italic;\">${leave.reason}</span>
+          </div>
+          <div class=\"leave-card-actions\">
+            <button class=\"btn btn-green\" onclick=\"fireAdminDecisionCommand('${leave.uid}', 'Approved')\">Approve</button>
+            <button class=\"btn btn-danger\" onclick=\"fireAdminDecisionCommand('${leave.uid}', 'Rejected')\">Reject</button>
+          </div>`;
+        container.appendChild(block);
+      });
+    }
+
+    function compileAllStaffSalaryLedgerGrid(payrollArray) {
+      const tbodyContainer = document.getElementById('adminStaffPayrollGridContainer');
+      tbodyContainer.innerHTML = \"\";
+      if(!payrollArray || payrollArray.length === 0) {
+        tbodyContainer.innerHTML = `<tr><td colspan=\"5\" style=\"text-align:center; color:var(--text-light);\">No data matrix mapped.</td></tr>`; return;
+      }
+      payrollArray.forEach(staffRow => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${staffRow.name}</strong><br>
+          <span style=\"font-size:10px; color:var(--text-light);\">${staffRow.id}</span>
+         <br><a href=\"javascript:void(0)\" onclick=\"openLedgerModal('${staffRow.id}')\" style=\"font-size:11px; color:var(--accent); text-decoration:underline; font-weight:600; cursor:pointer;\">🔍 View Logs</a>
+          </td>
+          <td>
+            <span style=\"font-size:13px; font-weight:600; color:var(--text);\">${staffRow.paidDays} d</span><br>
+            <span style=\"font-size:11px; font-weight:600; color:var(--warning);\">${staffRow.totalHours} hrs</span>
+          </td>
+          <td style=\"font-weight:600; color:var(--text-light);\">\u20b9${staffRow.grossEarnings}</td>
+          <td style=\"font-weight:600; color:var(--danger);\">-\u20b9${staffRow.advanceDeducted}</td>
+          <td style=\"font-weight:700; color:var(--success); font-size:15px;\">\u20b9${staffRow.netPayable}</td>`;
+        tbodyContainer.appendChild(tr);
+      });
+    }
+
+    function fireAdminDecisionCommand(leaveId, decision) {
+      if(!confirm(`Commit execution code to mark Token ${leaveId} as ${decision}?`)) return;
+      document.getElementById('adminLeaveRequestsQueueContainer').innerHTML = `<p style=\"color:var(--accent); font-weight:600; font-size:13px;\">Syncing cellular status fields across spreadsheet array tables...</p>`;
+      google.script.run.withSuccessHandler(function(response) { alert(response); executeAuthentication(true); }).executeAdminActionOnLeave(leaveId, decision);
+    }
+
+    function uploadAvatarImage() {
+      const fileInput = document.getElementById('avatarFileInput'); if(fileInput.files.length === 0) return;
+      const file = fileInput.files[0]; const reader = new FileReader();
+      alert(\"Streaming secure avatar picture payload in background...\");
+      reader.onload = function(evt) {
+        google.script.run.withSuccessHandler(function() { executeAuthentication(false); }).saveDocument(currentEmpId, \"Profile Picture\", evt.target.result, file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function executeHolidaySubmission() {
+      const type = document.getElementById('holidayTypeSelection').value;
+      const start = document.getElementById('holidayStartDateInput').value; 
+      const end = document.getElementById('holidayEndDateInput').value;
+      const reason = document.getElementById('holidayReasonInput').value.trim(); 
+      const consoleMsg = document.getElementById('holidayConsole');
+      
+      if(!start || !end || !reason) { 
+        consoleMsg.style.color = \"var(--danger)\"; 
+        consoleMsg.innerText = \"Validation Exception: Fields incomplete!\"; 
+        return; 
+      }
+      
+      consoleMsg.style.color = \"var(--accent)\"; 
+      consoleMsg.innerText = \"Encrypting ledger record rows block...\";
+      
+      google.script.run.withSuccessHandler(function(response) {
+        consoleMsg.style.color = \"var(--success)\"; 
+        consoleMsg.innerText = response; 
+        alert(\"System Confirmation: \" + response + \"\
+\
+⚠️ REMEMBER: Wait for Admin approval. Taking this leave without approval will trigger an automatic DOUBLE (2x) salary deduction penalty.\");
+        document.getElementById('holidayStartDateInput').value = \"\"; 
+        document.getElementById('holidayEndDateInput').value = \"\"; 
+        document.getElementById('holidayReasonInput').value = \"\";
+        setTimeout(() => { showScreen('dashboardView'); consoleMsg.innerText = \"\"; }, 2000);
+      }).processLeaveRequest(currentEmpId, type, start, end, reason);
+    }
+
+    function executeVaultUpload() {
+      const fileInput = document.getElementById('vaultFileInput'); const docType = document.getElementById('vaultDocTypeSelection').value;
+      if(fileInput.files.length === 0) { alert('Attach record file chunk!'); return; }
+      const file = fileInput.files[0]; const reader = new FileReader();
+      document.getElementById('vaultConsole').style.color = \"var(--accent)\"; document.getElementById('vaultConsole').innerText = 'Streaming byte elements directly onto cloud drive directory...';
+      reader.onload = function(evt) {
+        google.script.run.withSuccessHandler(function(response) {
+          document.getElementById('vaultConsole').style.color = \"var(--success)\"; document.getElementById('vaultConsole').innerText = response; fileInput.value = \"\"; executeAuthentication(false);
+        }).saveDocument(currentEmpId, docType, evt.target.result, file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function initiateGeofenceVerification() {
+      const consoleMsg = document.getElementById('punchConsole'); 
+      consoleMsg.style.color = \"var(--accent)\"; 
+      consoleMsg.innerText = \"Locking triangulation satellites (Please wait up to 30 seconds)...\";
+      
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          capturedLatitude = position.coords.latitude; 
+          capturedLongitude = position.coords.longitude;
+          const EARTH_RADIUS = 6371e3;
+          
+          const OFFICE_LAT = 19.088889; 
+          const OFFICE_LON = 74.733667; 
+          
+          const dLat = (capturedLatitude - OFFICE_LAT) * Math.PI / 180; 
+          const dLon = (capturedLongitude - OFFICE_LON) * Math.PI / 180;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
+                    Math.cos(OFFICE_LAT * Math.PI / 180) * Math.cos(capturedLatitude * Math.PI / 180) * 
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const computedRadialDistanceMeters = EARTH_RADIUS * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+          
+          if (currentUserRole === \"Owner\" || currentUserRole === \"Sales Boy\") {
+            consoleMsg.style.color = \"var(--success)\"; 
+            consoleMsg.innerText = `Roaming Verification Active (${currentUserRole}). Tap below to open camera.`;
+            document.getElementById('btnVerifyGPS').style.display = 'none';
+            document.getElementById('btnOpenCamera').style.display = 'block';
+          } else if (computedRadialDistanceMeters <= GEOFENCE_RADIUS_METERS) {
+            consoleMsg.style.color = \"var(--success)\"; 
+            consoleMsg.innerText = `GPS Perimeter Match (${Math.round(computedRadialDistanceMeters)}m). Tap below to open camera.`;
+            document.getElementById('btnVerifyGPS').style.display = 'none';
+            document.getElementById('btnOpenCamera').style.display = 'block';
+          } else {
+            consoleMsg.style.color = \"var(--danger)\"; 
+            consoleMsg.innerText = `Access Denied: Geofence perimeter breach (${Math.round(computedRadialDistanceMeters)}m distance offset from warehouse).`;
+          }
+        },
+        function(err) { 
+          consoleMsg.style.color = \"var(--danger)\"; 
+          consoleMsg.innerText = \"GPS Handshake Failure: \" + err.message + \". (Make sure Location is ON)\"; 
+        },
+        { enableHighAccuracy: true, timeout: 30000, maximumAge: 15000 }
+      );
+    }
+
+    function processNativeCameraCapture(event) {
+      const file = event.target.files[0]; if(!file) return;
+      const consoleMsg = document.getElementById('punchConsole'); consoleMsg.style.color = \"var(--accent)\"; consoleMsg.innerText = \"Optimizing image matrix scales...\";
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.getElementById('canvas'); const ctx = canvas.getContext('2d');
+          const INTENDED_MAX_WIDTH = 400; const computingScaleFactor = INTENDED_MAX_WIDTH / img.width;
+          canvas.width = INTENDED_MAX_WIDTH; canvas.height = img.height * computingScaleFactor;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          finalBase64Image = canvas.toDataURL('image/jpeg', 0.5);
+          canvas.style.display = 'block'; document.getElementById('submitPunchBtn').style.display = 'block';
+          consoleMsg.style.color = \"var(--success)\"; consoleMsg.innerText = 'Snapshot bounded successfully. Transmit data.';
+        }
+        img.src = e.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function executeLogSubmit() {
+      const type = document.getElementById('attendanceLogType').value;
+      if(!finalBase64Image) { alert(\"Snapshot payload mapping missing.\"); return; }
+      document.getElementById('punchConsole').style.color = \"var(--accent)\"; document.getElementById('punchConsole').innerText = \"Pushing transaction record to master cell row blocks...\";
+      document.getElementById('submitPunchBtn').style.display = 'none';
+      google.script.run.withSuccessHandler(function(response) {
+        document.getElementById('punchConsole').style.color = \"var(--success)\"; document.getElementById('punchConsole').innerText = response;
+        setTimeout(() => { cancelPunch(); executeAuthentication(true); }, 2000);
+      }).processPunch(currentEmpId, type, `${capturedLatitude}, ${capturedLongitude}`, finalBase64Image);
+    }
+  </script>
+</body>
+</html>
