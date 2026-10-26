@@ -367,6 +367,9 @@
         <input type="password" id="password" placeholder="Enter PIN">
       </div>
       <button id="loginBtn" class="btn-login" onclick="executeLogin()">Secure Login</button>
+      <button type="button" onclick="loginAsTvMode()" style="margin-top: 12px; width: 100%; padding: 12px; background: rgba(79, 70, 229, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #a5b4fc; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px;">
+        📺 Office TV Display (No Permissions)
+      </button>
       <div id="loginError" class="error-msg"></div>
     </div>
   </div>
@@ -404,7 +407,7 @@
     const appsConfig = [
       { name: "Tasks", url: "https://script.google.com/macros/s/AKfycbxp8swIa2WzUe2FbRcskp80QCF6Y76pEIYAVqUDT8HQ8lZ-j668ogyKX74Y06QMJFnZ/exec", roles: ["Owner", "Owner 2", "Accountant", "Store Manager", "MIS" ,"CRM", "Sales Boy", "SMM"] },
       { name: "Attendance", url: "https://script.google.com/macros/s/AKfycbxqR-0ALaYJJH8B5JjNd62sOtXEvMs6yL2QgFJbTRT2L8R-my0RC8WuYDUj3Z04NpXatg/exec", roles: ["Owner", "Accountant", "Store Manager", "MIS" ,"CRM", "Sales Boy", "SMM", "Owner 2"] },
-      { name: "Orders", url: "https://yash-marketing-backend-app.vercel.app/", roles: ["Owner", "Accountant", "Store Manager", "MIS" ,"CRM", "SMM", "Owner 2"] },
+      { name: "Orders", url: "https://yash-marketing-backend-app.vercel.app/", roles: ["Owner", "Accountant", "Store Manager", "MIS" ,"CRM", "SMM", "Owner 2", "TV"] },
       { name: "Replacemnts", url: "https://script.google.com/macros/s/AKfycbzAOHk0S_fwB_bBW43qqyBxBcvgMDsdL3MARTAVMNuHJVrYF44gWz13wCc1dR1aIdrq_g/exec", roles: ["Owner", "Accountant", "Store Manager", "MIS" ,"CRM", "SMM", "Owner 2"] },
       { name: "Dealer", url: "https://yash-marketing-app.vercel.app/", roles: ["Owner", "Accountant", "Store Manager", "MIS" ,"CRM", "Sales Boy", "Owner 2"] },
       { name: "CRM", url: "https://script.google.com/macros/s/AKfycbx4XydiyPajkOrOJInNy3rCUM1TidmAHiwOq5NsZdtaQBzuYsn1VNswPf9Uzm3nfIIWiA/exec", roles: ["Owner", "MIS" ,"CRM"] },
@@ -421,7 +424,27 @@
     // ==========================================
     // OPTIMISTIC UI: INSTANT LOAD CACHED USER
     // ==========================================
+    function loginAsTvMode() {
+      loggedInUser.empId = "TV";
+      loggedInUser.role = "TV";
+      localStorage.setItem('ym_master_id', 'TV');
+      localStorage.setItem('ym_master_role', 'TV');
+      localStorage.setItem('ym_master_name', 'Office TV Display');
+      
+      document.getElementById("welcomeUser").innerText = "Office TV Display";
+      document.getElementById("welcomeRole").innerText = "TV Mode";
+      document.getElementById("userInitial").innerText = "📺";
+      buildPortalEngine("TV");
+    }
+
     window.onload = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isTvUrl = urlParams.get('tv') === '1' || urlParams.get('mode') === 'tv';
+      if (isTvUrl) {
+        loginAsTvMode();
+        return;
+      }
+
       const cachedId = localStorage.getItem('ym_master_id');
       const cachedRole = localStorage.getItem('ym_master_role');
       const cachedName = localStorage.getItem('ym_master_name');
@@ -464,6 +487,14 @@
     // SYSTEM PERMISSIONS INITIALIZER
     // ==========================================
     async function requestSystemPermissions() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isTv = (loggedInUser && (loggedInUser.role === 'TV' || loggedInUser.empId === 'TV')) ||
+                   urlParams.get('tv') === '1' || urlParams.get('mode') === 'tv';
+      if (isTv) {
+        console.log("TV user detected: Skipping all camera, location and notification permissions.");
+        return;
+      }
+
       // 1. Request GPS Location Permission
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -552,7 +583,17 @@
       document.getElementById("loginScreen").style.display = "none";
       document.getElementById("portalScreen").style.display = "flex";
       
-      requestSystemPermissions();
+      const urlParams = new URLSearchParams(window.location.search);
+      const isTvMode = (role && role.toUpperCase() === 'TV') || 
+                       (loggedInUser && loggedInUser.empId && loggedInUser.empId.toUpperCase() === 'TV') || 
+                       urlParams.get('tv') === '1' || 
+                       urlParams.get('mode') === 'tv';
+
+      if (!isTvMode) {
+        requestSystemPermissions();
+      } else {
+        console.log("TV Mode active: Skipping Camera, Location and Notification permissions entirely.");
+      }
       
       const btnContainer = document.getElementById("appButtonsContainer");
       const iframeContainer = document.getElementById("iframesContainer");
@@ -579,6 +620,9 @@
       allowedApps.forEach((app, index) => {
         let separator = app.url.includes("?") ? "&" : "?";
         let secureUrl = `${app.url}${separator}empId=${encodeURIComponent(loggedInUser.empId)}&role=${encodeURIComponent(loggedInUser.role)}`;
+        if (isTvMode) {
+          secureUrl += `&tv=1`;
+        }
         
         // Determine if this specific app was the last one active
         let isActiveApp = (index == savedTabIndex);
@@ -592,7 +636,7 @@
         let frame = document.createElement("iframe");
         frame.id = "frame_app_" + index;
         frame.className = "app-frame " + (isActiveApp ? "active" : "");
-        frame.setAttribute("allow", "camera *; geolocation *; microphone *; clipboard-read; clipboard-write");
+        frame.setAttribute("allow", "camera *; geolocation *; microphone *; clipboard-read; clipboard-write; autoplay *");
         
         // LAZY LOADING LOGIC
         frame.dataset.src = secureUrl; 
