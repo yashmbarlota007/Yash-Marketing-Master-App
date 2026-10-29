@@ -1,4 +1,4 @@
-// =====================================================================
+﻿// =====================================================================
 // YASH MARKETING - ENTERPRISE ATTENDANCE & PAYROLL ENGINE (Code.gs)
 // Includes Short Break Deductions, 50m Geofencing & Real-Time Chronometrics
 // =====================================================================
@@ -9,8 +9,15 @@ var OFFICE_LON = 74.733667;
 var GEOFENCE_RADIUS_METERS = 50;
 
 function doGet(e) {
-  return HtmlService.createTemplateFromFile('Index')
-    .evaluate()
+  var template = HtmlService.createTemplateFromFile('Index');
+  if (e && e.parameter && e.parameter.empId) {
+    template.empId = e.parameter.empId;
+    template.role = e.parameter.role || '';
+  } else {
+    template.empId = '';
+    template.role = '';
+  }
+  return template.evaluate()
     .setTitle('Yash Marketing - Attendance OS')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
