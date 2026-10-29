@@ -1,0 +1,787 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    html, body { -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; background-color: #f0f2f5; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+    
+     
+    #loginScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #3f51b5; padding: 20px;}
+    .login-box { background: white; padding: 30px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 350px; text-align: center; }
+    .login-box h1 { color: #1a237e; font-size: 24px; margin: 0 0 5px 0; }
+    .login-box h3 { color: #ff9800; font-size: 14px; margin: 0 0 25px 0; font-weight: normal; }
+    .login-input-group { text-align: left; margin-bottom: 15px; }
+    .login-input-group label { font-size: 13px; color: #424242; font-weight: bold; display: block; margin-bottom: 5px;}
+    .login-input-group input { width: 100%; padding: 14px; border: 1px solid #cfd8dc; border-radius: 6px; box-sizing: border-box; background-color: #fafafa; font-size: 15px; font-weight: bold;}
+    .login-input-group input:focus { border-color: #3f51b5; outline: none; background-color: #fff; }
+    .login-btn { width: 100%; background: #ff9800; color: white; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s;}
+    .login-btn:active { background: #e68a00; transform: scale(0.98); }
+    #loginError { color: red; font-size: 13px; font-weight: bold; margin-top: 10px; display: none; }
+    .loader-text { color: #3f51b5; font-weight: bold; font-size: 14px; margin-top: 15px; display: none; }
+
+     
+    #mainApp { display: none; padding: 15px; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3f51b5; padding-bottom: 10px; margin-bottom: 15px; }
+    .header-bar h2 { color: #1a237e; font-size: 20px; margin: 0; }
+    .logout-btn { background: #ffebee; color: #d32f2f; border: 1px solid #ffcdd2; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; }
+
+    .tabs { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid #3f51b5; }
+    .tab-btn { flex: 1; padding: 12px; background: white; color: #3f51b5; font-weight: bold; border: none; cursor: pointer; text-align: center; font-size: 15px; }
+    .tab-btn.active { background: #3f51b5; color: white; }
+    
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    .section-title { grid-column: 1 / -1; background: #e8eaf6; color: #1a237e; padding: 10px; border-radius: 6px; font-weight: bold; margin-top: 10px; border-left: 4px solid #3f51b5; font-size: 15px; }
+    label { font-weight: 600; font-size: 13px; color: #424242; margin-top: 5px; display: block; }
+    input { width: 100%; padding: 12px; margin-top: 4px; border: 1px solid #cfd8dc; border-radius: 6px; box-sizing: border-box; background-color: #fafafa; font-size: 14px; }
+    input[type="file"] { padding: 8px; font-size: 13px; }
+    input:focus { border-color: #3f51b5; outline: none; background-color: #fff; box-shadow: 0 0 0 2px rgba(63,81,181,0.2); }
+    
+    input[readonly] { font-weight: bold; cursor: not-allowed; transition: 0.3s;}
+    .qty-short { background-color: #ffebee !important; color: #d32f2f !important; border-color: #d32f2f !important; }
+    .qty-extra { background-color: #e8f5e9 !important; color: #2e7d32 !important; border-color: #2e7d32 !important; }
+    .qty-ok { background-color: #fafafa !important; color: #424242 !important; }
+    .locked-field { background-color: #e8eaf6 !important; color: #1a237e !important; border-color: #c5cae9 !important; }
+
+    .custom-dropdown { position: relative; }
+    .custom-dropdown::after { content: "â–¼"; position: absolute; right: 15px; top: 19px; font-size: 12px; color: #78909c; pointer-events: none; }
+    .custom-input { padding-right: 30px !important; cursor: text; }
+    .dropdown-list { display: none; position: absolute; z-index: 9999; width: 100%; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #3f51b5; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 2px; padding: 0; list-style: none; -webkit-overflow-scrolling: touch;}
+    .dropdown-list li { padding: 12px 15px; cursor: pointer; color: #424242; font-size: 14px; border-bottom: 1px solid #f0f2f5; }
+    .dropdown-list li:active { background-color: #e8eaf6; color: #1a237e; font-weight: bold; }
+    .dropdown-list li.no-result { color: #e91e63; font-style: italic; cursor: default; }
+
+    .product-box { border: 1px solid #3f51b5; padding: 15px; border-radius: 8px; margin-bottom: 15px; background: #fafcff; }
+    .missing-box { border: 1px dashed #e91e63; padding: 15px; border-radius: 8px; margin-bottom: 15px; background: #fff0f2; }
+    .product-header { font-weight: bold; color: #fff; background: #3f51b5; margin: -15px -15px 15px -15px; padding: 10px 15px; border-radius: 7px 7px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    .remove-btn { color: #fff; cursor: pointer; font-size: 12px; background: #e53935; padding: 4px 10px; border-radius: 4px; font-weight: bold;}
+    
+    .add-more-btn { display:block; background-color: #ff9800; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; margin-bottom: 20px;}
+    .add-more-btn:active { background-color: #e68a00; transform: scale(0.98); }
+    
+    .submit-btn { width: 100%; background-color: #3f51b5; color: white; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top:10px; transition: 0.3s;}
+    .submit-btn:disabled { background-color: #b0bec5; cursor: not-allowed; color: #eceff1; border: 2px dashed #90a4ae; }
+    
+    #message { text-align: center; margin-top: 15px; font-weight: bold; font-size: 15px; }
+    .hint { font-size: 11px; color: #e91e63; margin-top: 2px; }
+    .req { color: red; font-weight: bold; font-size: 14px; margin-left: 3px; }
+    #photoWarning { color: #d32f2f; background: #ffebee; font-weight: bold; text-align: center; padding: 12px; border-radius: 6px; border: 1px dashed #d32f2f; margin-top: 15px; }
+
+     
+    #historySearchBox { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #3f51b5; border-radius: 8px; font-size: 16px; font-weight:bold; }
+    .invoice-card { background: white; border-left: 5px solid #ff9800; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 12px; cursor: pointer; transition: 0.2s;}
+    .invoice-card:active { background-color: #f5f5f5; }
+    .invoice-card .hc-title { font-weight: bold; color: #1a237e; font-size: 16px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px; }
+    .invoice-card p { margin: 4px 0; font-size: 13.5px; color: #424242; }
+    .invoice-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 2px dashed #cfd8dc; }
+    .item-row { padding: 10px 0; border-bottom: 1px solid #f0f2f5; font-size: 13px; display: block;}
+    .item-header-row { display: flex; justify-content: space-between; align-items: center; }
+    .item-brand { font-weight: bold; color: #3f51b5; }
+    .item-qty { font-weight: bold; color: #4caf50; background: #e8f5e9; padding: 2px 6px; border-radius: 4px; }
+    .click-hint { text-align: center; color: #ff9800; font-size: 12px; font-weight: bold; margin-top: 10px; }
+    .photo-btn { display: inline-block; margin: 6px 6px 0 0; padding: 6px 12px; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold; border: 1px solid #ccc; transition: 0.2s;}
+    .photo-btn-inv { background: #e3f2fd; color: #1976d2; border-color: #bbdefb; }
+    .photo-btn-box { background: #fff3e0; color: #e65100; border-color: #ffe0b2; }
+    .photo-btn-pavti { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+  </style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>Yash Marketing</h1>
+    <h3>Stock Inward System</h3>
+    <div id="loginLoader" class="loader-text" style="display:block;">Fetching Staff List... â³</div>
+    <div id="loginFormArea" style="display:none;">
+      <div class="login-input-group">
+        <label>Employee ID</label>
+        <input type="text" id="loginEmpId" placeholder="Enter ID (e.g. YM01)" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="login-input-group">
+        <label>Password</label>
+        <input type="password" id="loginPin" placeholder="Enter Password">
+      </div>
+      <button class="login-btn" onclick="verifyLogin()">SECURE LOGIN</button>
+      <div id="loginError">Incorrect ID or Password!</div>
+    </div>
+  </div>
+</div>
+
+<div id="mainApp">
+  <div class="container">
+    <div class="header-bar">
+      <h2>Stock Inward</h2>
+      <button class="logout-btn" onclick="logout()">ðŸšª Logout</button>
+    </div>
+    
+    <div class="tabs">
+      <button class="tab-btn active" id="tabEntry" onclick="switchTab('entry')">âž• New Entry</button>
+      <button class="tab-btn" id="tabHistory" onclick="switchTab('history')">ðŸ§¾ View Invoice</button>
+    </div>
+
+    <div id="entrySection">
+      <form id="stockForm">
+        <div class="section-title">1. Common / Invoice Details</div>
+        <div class="grid">
+          <div><label>Inward Date <span class="req">*</span></label><input type="date" name="inwardDate" required></div>
+          <div><label>Inward Time <span class="req">*</span></label><input type="time" name="inwardTime" required></div>
+          <div>
+            <label>Staff / Checker Name ðŸ”’</label>
+            <input type="text" name="staffName" id="mainStaffName" class="locked-field" readonly title="Logged in Staff">
+          </div>
+          <div>
+            <label>Transporter Name <span class="req">*</span></label>
+            <div class="custom-dropdown">
+              <input type="text" name="transporter" class="custom-input dynamic-transporter" required placeholder="Select Transporter..." autocomplete="off" autocorrect="off" spellcheck="false">
+              <ul class="dropdown-list"></ul>
+            </div>
+          </div>
+          <div><label>LR Number</label><input type="text" name="lrNumber" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+          <div><label>Total Master Cartons</label><input type="number" name="masterCartons"></div>
+          <div><label>Invoice Number <span class="req">*</span></label><input type="text" name="invoiceNo" required autocomplete="off" autocorrect="off" spellcheck="false"></div>
+          <div><label>Invoice Date <span class="req">*</span></label><input type="date" name="invoiceDate" required></div>
+          
+          <div>
+            <label>Brand Name <span class="req">*</span></label>
+            <div class="custom-dropdown">
+              <input type="text" id="commonBrand" name="commonBrand" class="custom-input dynamic-brand" required placeholder="Select Brand..." autocomplete="off" autocorrect="off" spellcheck="false">
+              <ul class="dropdown-list"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">2. Product Models</div>
+        <div id="productContainer">
+          <div class="product-box">
+            <div class="product-header">ðŸ“¦ Item 1</div>
+            <div class="grid">
+              <div><label>Category <span class="req">*</span></label><div class="custom-dropdown"><input type="text" name="category" class="custom-input dynamic-cat" required placeholder="Select Category..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
+              <div><label>Product / Model Name <span class="req">*</span></label><div class="custom-dropdown"><input type="text" name="modelName" class="custom-input dynamic-model" required placeholder="Select Model..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
+              
+              <div><label>Pieces per Carton (Invoice Qty) <span class="req">*</span></label><input type="number" name="piecesPerCarton" required oninput="calculateDifference(this)"></div>
+              <div><label>Actual Found Qty <span class="req">*</span></label><input type="number" name="actualQty" required oninput="calculateDifference(this)"></div>
+              
+              <div><label>Shortage Qty</label><input type="text" name="shortageQty" value="0" readonly title="Auto Calculated" class="qty-ok"></div>
+              <div><label>DOA / Damaged Qty</label><input type="number" name="doaQty" value="0"></div>
+              
+              
+              <div style="grid-column: 1 / -1; background:#e3f2fd; padding:10px; border-radius:6px; border:1px dashed #90caf9;">
+                <label style="color:#1565c0;">ðŸ“¸ Product Photo <span class="req">*</span></label>
+                <input type="file" name="productPhoto" accept="image/*" onchange="checkPhotosRequired()" required>
+                <div class="hint" style="color:#1565c0;">Click to take Live Photo or select from Gallery</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="add-more-btn" onclick="addProduct()">+ Add Another Model</button>
+
+        <div class="section-title">3. Missing Product Details (If any)</div>
+        <div class="missing-box">
+          <div class="grid">
+            <div><label style="color:#d32f2f;">Missing Category</label><div class="custom-dropdown"><input type="text" name="missingCat" class="custom-input dynamic-cat" placeholder="Select Category..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
+            <div><label style="color:#d32f2f;">Missing Model Name</label><div class="custom-dropdown"><input type="text" name="missingProduct" class="custom-input dynamic-missing" placeholder="Search Missing Model..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
+            <div><label style="color:#d32f2f;">Missing Qty</label><input type="number" name="missingQty" value="0"></div>
+          </div>
+        </div>
+
+        <div class="section-title">4. Upload Photos (Compulsory)</div>
+        <div class="grid" style="background:#fff3e0; padding:15px; border-radius:8px; border:1px dashed #ff9800;">
+          <div>
+            <label>Invoice Photo <span class="req">*</span></label>
+            <input type="file" id="invoicePhotos" multiple accept="image/*" onchange="checkPhotosRequired()" required>
+          </div>
+          <div>
+            <label>Box Photo <span class="req">*</span></label>
+            <input type="file" id="boxPhotos" multiple accept="image/*" onchange="checkPhotosRequired()" required>
+          </div>
+          <div>
+            <label>Pavti Photo(s) <span class="req">*</span></label>
+            <input type="file" id="pavtiPhotos" multiple accept="image/*" onchange="checkPhotosRequired()" required>
+          </div>
+        </div>
+
+        <div id="photoWarning">âš ï¸ Please upload Invoice, Box, Pavti, AND ALL Product Photos to Unlock Submit Button!</div>
+
+        <button type="button" id="submitBtn" class="submit-btn" disabled onclick="submitData()">Submit All Data</button>
+        <div id="message"></div>
+      </form>
+    </div>
+
+    <div id="historySection" style="display: none;">
+      <input type="text" id="historySearchBox" placeholder="ðŸ” Search Invoice, Transporter, or Model..." onkeyup="filterHistory()">
+      <div id="historyLoading" style="text-align:center; font-weight:bold; color:#3f51b5; padding: 20px;">
+        Fetching Invoices... â³
+      </div>
+      <div id="historyContainer"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  <? var ssoEmpId = typeof empId !== 'undefined' ? empId : ''; ?>
+  <? var ssoRole = typeof role !== 'undefined' ? role : ''; ?>
+  const portalEmpId = "<?= ssoEmpId ?>";
+  const portalRole = "<?= ssoRole ?>";
+
+  let allProductsData = [];
+  let staffListObj = []; 
+  let transporterList = []; 
+  let productCount = 1;
+  let cachedBrands = [];
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      return false;
+    }
+  });
+
+  function verifyLogin() {
+    let idInput = document.getElementById("loginEmpId").value.trim().toLowerCase();
+    let pinInput = document.getElementById("loginPin").value.trim();
+    let errorBox = document.getElementById("loginError");
+    
+    if(!idInput || !pinInput) {
+       errorBox.innerText = "Please enter Employee ID and Password!";
+       errorBox.style.display = "block";
+       return;
+    }
+
+    let user = staffListObj.find(s => s.id === idInput);
+    if(user && user.p === pinInput) {
+       document.getElementById("loginScreen").style.display = "none";
+       document.getElementById("mainApp").style.display = "block";
+       document.getElementById("mainStaffName").value = user.n; 
+       errorBox.style.display = "none";
+    } else {
+       errorBox.innerText = "Incorrect Employee ID or Password!";
+       errorBox.style.display = "block";
+    }
+  }
+
+  function logout() {
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("mainApp").style.display = "none";
+    document.getElementById("loginEmpId").value = "";
+    document.getElementById("loginPin").value = "";
+    document.getElementById("mainStaffName").value = "";
+  }
+
+  function checkPhotosRequired() {
+    let invLen = document.getElementById("invoicePhotos").files.length;
+    let boxLen = document.getElementById("boxPhotos").files.length;
+    let pavtiLen = document.getElementById("pavtiPhotos").files.length;
+    
+    let allProductPhotosOk = true;
+    document.querySelectorAll('[name="productPhoto"]').forEach(input => {
+      if(input.files.length === 0) {
+        allProductPhotosOk = false;
+      }
+    });
+
+    let btn = document.getElementById("submitBtn");
+    let warning = document.getElementById("photoWarning");
+
+    if(invLen > 0 && boxLen > 0 && pavtiLen > 0 && allProductPhotosOk) {
+      btn.disabled = false; 
+      warning.style.display = "none"; 
+    } else {
+      btn.disabled = true; 
+      warning.style.display = "block"; 
+    }
+  }
+
+  function switchTab(tabName) {
+    if (tabName === 'entry') {
+      document.getElementById('entrySection').style.display = 'block';
+      document.getElementById('historySection').style.display = 'none';
+      document.getElementById('tabEntry').classList.add('active');
+      document.getElementById('tabHistory').classList.remove('active');
+    } else {
+      document.getElementById('entrySection').style.display = 'none';
+      document.getElementById('historySection').style.display = 'block';
+      document.getElementById('tabHistory').classList.add('active');
+      document.getElementById('tabEntry').classList.remove('active');
+      loadHistory(); 
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    google.script.run
+      .withSuccessHandler(function(data) {
+        allProductsData = data.products || [];
+        staffListObj = data.staffs || []; 
+        transporterList = data.transporters || []; 
+        
+        cachedBrands = [...new Set(allProductsData.map(i => i.b))].filter(Boolean);
+        
+        // --- SSO AUTO-LOGIN CHECK (Master App Single Sign-On) ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeEmpId = (typeof portalEmpId !== 'undefined' && portalEmpId) ? portalEmpId : urlParams.get('empId');
+        const activeRole = (typeof portalRole !== 'undefined' && portalRole) ? portalRole : urlParams.get('role');
+
+        if (activeEmpId) {
+          const matchedUser = staffListObj.find(s => s.id && s.id.toLowerCase() === activeEmpId.toLowerCase().trim());
+          if (matchedUser) {
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("mainApp").style.display = "block";
+            document.getElementById("mainStaffName").value = matchedUser.n;
+            return;
+          } else if (activeRole && (activeRole.toLowerCase().includes("owner") || activeRole.toLowerCase().includes("admin") || activeRole.toLowerCase().includes("manager"))) {
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("mainApp").style.display = "block";
+            document.getElementById("mainStaffName").value = activeRole + " (" + activeEmpId + ")";
+            return;
+          }
+        }
+
+        document.getElementById("loginLoader").style.display = "none";
+        document.getElementById("loginFormArea").style.display = "block";
+      })
+      .getDropdownData();
+      
+      checkPhotosRequired();
+  });
+
+  function calculateDifference(el) {
+    let box = el.closest('.grid');
+    let invoiceQty = parseFloat(box.querySelector('[name="piecesPerCarton"]').value) || 0;
+    let actualQty = parseFloat(box.querySelector('[name="actualQty"]').value) || 0;
+    
+    let diffBox = box.querySelector('[name="shortageQty"]');
+    
+    if (actualQty < invoiceQty) {
+      let short = invoiceQty - actualQty;
+      diffBox.value = short + " Short";
+      diffBox.className = "qty-short"; 
+    } else if (actualQty > invoiceQty) {
+      let extra = actualQty - invoiceQty;
+      diffBox.value = extra + " Extra";
+      diffBox.className = "qty-extra"; 
+    } else {
+      diffBox.value = "0";
+      diffBox.className = "qty-ok"; 
+    }
+  }
+
+  function getItemsForInput(input) {
+    if (input.classList.contains("dynamic-transporter")) return transporterList;
+    if (input.classList.contains("dynamic-brand")) return cachedBrands;
+    
+    let brandInput = document.getElementById("commonBrand");
+    let selectedBrand = brandInput ? brandInput.value.toLowerCase().trim() : "";
+    
+    let filtered = allProductsData;
+    if (selectedBrand) filtered = filtered.filter(i => i.b.toLowerCase() === selectedBrand);
+
+    let box = input.closest('.product-box') || input.closest('.missing-box');
+    let catInput = box ? box.querySelector('.dynamic-cat') : null;
+    let selectedCat = catInput ? catInput.value.toLowerCase().trim() : "";
+    
+    if (input.classList.contains("dynamic-cat")) {
+      return [...new Set(filtered.map(i => i.c))].filter(Boolean);
+    }
+    if (input.classList.contains("dynamic-model") || input.classList.contains("dynamic-missing")) {
+      if (selectedCat) filtered = filtered.filter(i => i.c.toLowerCase() === selectedCat);
+      return [...new Set(filtered.map(i => i.m))].filter(Boolean);
+    }
+    return [];
+  }
+
+  function renderList(ul, items, inputElement) {
+    requestAnimationFrame(() => {
+      if(items.length === 0) {
+        ul.innerHTML = "<li class='no-result'>Type to add custom name...</li>";
+        return;
+      }
+      let limitedItems = items.slice(0, 40); 
+      ul.innerHTML = limitedItems.map(item => `<li>${item}</li>`).join('');
+      ul.onmousedown = function(e) {
+        if(e.target.tagName === 'LI' && !e.target.classList.contains('no-result')) {
+          e.preventDefault(); 
+          inputElement.value = e.target.textContent;
+          ul.style.display = "none";
+          inputElement.dispatchEvent(new Event('change', {bubbles: true}));
+        }
+      };
+    });
+  }
+
+  document.addEventListener("focus", function(e) {
+    if(e.target.classList.contains("custom-input")) {
+      let ul = e.target.nextElementSibling;
+      let items = getItemsForInput(e.target);
+      renderList(ul, items, e.target);
+      ul.style.display = "block";
+    }
+  }, true);
+
+  let searchTimeout;
+  document.addEventListener("input", function(e) {
+    if(e.target.classList.contains("custom-input")) {
+      clearTimeout(searchTimeout);
+      let ul = e.target.nextElementSibling;
+      let val = e.target.value.toLowerCase();
+      searchTimeout = setTimeout(() => {
+        let items = getItemsForInput(e.target);
+        let filtered = items.filter(i => i.toLowerCase().includes(val));
+        renderList(ul, filtered, e.target);
+        ul.style.display = "block";
+      }, 150); 
+    }
+  });
+
+  document.addEventListener("blur", function(e) {
+    if(e.target.classList.contains("custom-input")) {
+      setTimeout(() => { e.target.nextElementSibling.style.display = "none"; }, 150);
+    }
+  }, true);
+
+  document.addEventListener("change", function(e) {
+    if(e.target.classList.contains("dynamic-brand")) {
+      document.querySelectorAll('.dynamic-cat').forEach(el => el.value = "");
+      document.querySelectorAll('.dynamic-model').forEach(el => el.value = "");
+      document.querySelectorAll('.dynamic-missing').forEach(el => el.value = "");
+    }
+    
+    let box = e.target.closest('.product-box') || e.target.closest('.missing-box');
+    if(!box) return;
+    
+    if(e.target.classList.contains("dynamic-cat")) {
+      let mod = box.querySelector('.dynamic-model') || box.querySelector('.dynamic-missing');
+      if(mod) { mod.value = ""; }
+    }
+  });
+
+  function addProduct() {
+    productCount++;
+    const container = document.getElementById('productContainer');
+    const newBox = document.createElement('div');
+    newBox.className = 'product-box';
+    newBox.innerHTML = `
+      <div class="product-header">ðŸ“¦ Item ${productCount} <span class="remove-btn" onclick="this.closest('.product-box').remove(); checkPhotosRequired();">âŒ Remove Item</span></div>
+      <div class="grid">
+        <div><label>Category <span class="req">*</span></label><div class="custom-dropdown"><input type="text" name="category" class="custom-input dynamic-cat" required placeholder="Select Category..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
+        <div><label>Product / Model Name <span class="req">*</span></label><div class="custom-dropdown"><input type="text" name="modelName" class="custom-input dynamic-model" required placeholder="Select Model..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
+        <div><label>Pieces per Carton (Invoice Qty) <span class="req">*</span></label><input type="number" name="piecesPerCarton" required oninput="calculateDifference(this)"></div>
+        <div><label>Actual Found Qty <span class="req">*</span></label><input type="number" name="actualQty" required oninput="calculateDifference(this)"></div>
+        <div><label>Shortage Qty</label><input type="text" name="shortageQty" value="0" readonly title="Auto Calculated" class="qty-ok"></div>
+        <div><label>DOA / Damaged Qty</label><input type="number" name="doaQty" value="0"></div>
+        
+        <!-- ðŸ”¥ Yahan se bhi capture="environment" hata diya hai ðŸ”¥ -->
+        <div style="grid-column: 1 / -1; background:#e3f2fd; padding:10px; border-radius:6px; border:1px dashed #90caf9;">
+          <label style="color:#1565c0;">ðŸ“¸ Product Photo <span class="req">*</span></label>
+          <input type="file" name="productPhoto" accept="image/*" onchange="checkPhotosRequired()" required>
+          <div class="hint" style="color:#1565c0;">Click to take Live Photo or select from Gallery</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(newBox);
+    checkPhotosRequired(); 
+  }
+
+  function compressImage(file) {
+    return new Promise((resolve) => {
+      let reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        let img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          let canvas = document.createElement('canvas');
+          let ctx = canvas.getContext('2d');
+          let maxWidth = 700; 
+          let scale = maxWidth / img.width;
+          let newWidth = img.width > maxWidth ? maxWidth : img.width;
+          let newHeight = img.width > maxWidth ? img.height * scale : img.height;
+          canvas.width = newWidth;
+          canvas.height = newHeight;
+          ctx.drawImage(img, 0, 0, newWidth, newHeight);
+          let base64 = canvas.toDataURL('image/jpeg', 0.5); 
+          resolve({ name: file.name, mimeType: 'image/jpeg', data: base64.split(',')[1] });
+        };
+      };
+    });
+  }
+
+  const delay = ms => new Promise(res => setTimeout(res, ms));
+
+  async function submitData() {
+    const form = document.getElementById("stockForm"); 
+    
+    if (!form.checkValidity()) {
+      form.reportValidity(); 
+      return; 
+    }
+
+    const btn = document.getElementById("submitBtn");
+    const msg = document.getElementById("message");
+
+    btn.disabled = true;
+    btn.innerText = "Compressing Photos... Please wait â³";
+    msg.style.color = "blue";
+    msg.innerText = "";
+
+    try {
+      const getB64Array = async (inputId) => {
+        let arr = [];
+        let files = document.getElementById(inputId).files;
+        for (let i = 0; i < files.length; i++) {
+           arr.push(await compressImage(files[i]));
+           await delay(10);
+        }
+        return arr;
+      };
+
+      let invoicePhotosB64 = await getB64Array('invoicePhotos');
+      let boxPhotosB64 = await getB64Array('boxPhotos');
+      let pavtiPhotosB64 = await getB64Array('pavtiPhotos');
+
+      let items = [];
+      let productBoxes = document.querySelectorAll('.product-box');
+      
+      for (let i = 0; i < productBoxes.length; i++) {
+         let box = productBoxes[i];
+         let pPhotoFile = box.querySelector('[name="productPhoto"]').files[0];
+         let pPhotoB64 = null;
+         if (pPhotoFile) {
+            pPhotoB64 = await compressImage(pPhotoFile);
+         }
+
+         items.push({
+            category: box.querySelector('[name="category"]').value,
+            modelName: box.querySelector('[name="modelName"]').value,
+            piecesPerCarton: box.querySelector('[name="piecesPerCarton"]').value,
+            actualQty: box.querySelector('[name="actualQty"]').value,
+            shortageQty: box.querySelector('[name="shortageQty"]').value,
+            doaQty: box.querySelector('[name="doaQty"]').value,
+            productPhotoB64: pPhotoB64 
+         });
+      }
+
+      let payload = {
+         inwardDate: document.querySelector('[name="inwardDate"]').value,
+         inwardTime: document.querySelector('[name="inwardTime"]').value,
+         staffName: document.querySelector('[name="staffName"]').value,
+         commonBrand: document.querySelector('#commonBrand').value, 
+         transporter: document.querySelector('[name="transporter"]').value, 
+         lrNumber: document.querySelector('[name="lrNumber"]').value,
+         masterCartons: document.querySelector('[name="masterCartons"]').value,
+         invoiceNo: document.querySelector('[name="invoiceNo"]').value,
+         invoiceDate: document.querySelector('[name="invoiceDate"]').value,
+         missingModel: document.querySelector('[name="missingProduct"]') ? document.querySelector('[name="missingProduct"]').value : "-",
+         missingQty: document.querySelector('[name="missingQty"]') ? document.querySelector('[name="missingQty"]').value : "0",
+         invoicePhotosB64: invoicePhotosB64,
+         boxPhotosB64: boxPhotosB64,
+         pavtiPhotosB64: pavtiPhotosB64,
+         items: items
+      };
+
+      btn.innerText = "Saving to Google Server (Super Fast) ðŸš€...";
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          msg.innerText = response;
+          if (response.includes("âœ…")) {
+            msg.style.color = "green";
+            form.reset(); 
+            document.querySelectorAll('.product-box:not(:first-child)').forEach(el => el.remove());
+            document.querySelectorAll('.qty-short, .qty-extra').forEach(el => {
+                el.className = 'qty-ok';
+                el.value = '0';
+            });
+            productCount = 1;
+            checkPhotosRequired(); 
+          } else {
+            msg.style.color = "red";
+            checkPhotosRequired();
+          }
+        })
+        .withFailureHandler(function(error) {
+          msg.style.color = "red";
+          msg.innerText = "Error: " + error.message;
+          checkPhotosRequired();
+        })
+        .processFormFast(JSON.stringify(payload)); 
+
+    } catch (e) {
+      msg.style.color = "red";
+      msg.innerText = "Error processing data!";
+      checkPhotosRequired();
+    }
+  }
+
+  function loadHistory() {
+    document.getElementById('historyLoading').style.display = 'block';
+    document.getElementById('historyContainer').innerHTML = '';
+    
+    google.script.run
+      .withSuccessHandler(function(historyData) {
+        document.getElementById('historyLoading').style.display = 'none';
+        
+        if(historyData.length === 0) {
+          document.getElementById('historyContainer').innerHTML = '<p style="text-align:center;">No Invoices Found.</p>';
+          return;
+        }
+
+        let html = '';
+        historyData.forEach((inv, index) => {
+          let itemsHtml = '';
+          
+          inv.items.forEach(item => {
+            let prodPicLink = (item.prodPhoto && item.prodPhoto !== '-') 
+              ? `<a href="${item.prodPhoto}" target="_blank" style="text-decoration:none; background:#e3f2fd; color:#1565c0; padding:3px 6px; border-radius:4px; font-size:11px; border:1px solid #90caf9; margin-left: 8px; font-weight:bold; display:inline-block; vertical-align:middle;">ðŸ“¸ Photo</a>` 
+              : '';
+
+            itemsHtml += `
+              <div class="item-row">
+                <div class="item-header-row">
+                  <div style="flex:1;">
+                    <span class="item-brand">${inv.commonBrand}</span> - ${item.model} ${prodPicLink}
+                  </div>
+                  <div class="item-qty">${item.qty} Pcs</div>
+                </div>
+              </div>
+            `;
+          });
+
+          let missingAlertHtml = '';
+          if (inv.missingProd && inv.missingProd !== '-') {
+            missingAlertHtml = `<div style="background:#ffebee; color:#d32f2f; padding:8px; border-radius:6px; margin-top:10px; font-weight:bold; font-size:13px; border:1px dashed #d32f2f;">
+              âš ï¸ Missing: ${inv.missingProd} (${inv.missingQty || 0} Pcs)
+            </div>`;
+          }
+
+          let photoHtml = '<div style="margin-top:12px; border-top:1px dashed #cfd8dc; padding-top:10px;">';
+          let hasPhotos = false;
+
+          if (inv.invoicePhotos && inv.invoicePhotos !== "No Photo" && inv.invoicePhotos !== "-") {
+            let urls = inv.invoicePhotos.split(" \
+ "); 
+            photoHtml += '<b>ðŸ“¸ Invoice Photo:</b><br>';
+            urls.forEach((url, i) => {
+               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-inv">ðŸ–¼ï¸ Inv Photo ${i+1}</a>`;
+            });
+            photoHtml += '<br><br>';
+            hasPhotos = true;
+          }
+
+          if (inv.boxPhotos && inv.boxPhotos !== "No Photo" && inv.boxPhotos !== "-") {
+            let urls = inv.boxPhotos.split(" \
+ "); 
+            photoHtml += '<b>ðŸ“¦ Box Photo:</b><br>';
+            urls.forEach((url, i) => {
+               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-box">ðŸ–¼ï¸ Box Photo ${i+1}</a>`;
+            });
+            photoHtml += '<br><br>';
+            hasPhotos = true;
+          }
+
+          if (inv.pavtiPhotos && inv.pavtiPhotos !== "No Photo" && inv.pavtiPhotos !== "-") {
+            let urls = inv.pavtiPhotos.split(" \
+ "); 
+            photoHtml += '<b>ðŸ§¾ Pavti Photo:</b><br>';
+            urls.forEach((url, i) => {
+               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-pavti">ðŸ–¼ï¸ Pavti Photo ${i+1}</a>`;
+            });
+            photoHtml += '<br>';
+            hasPhotos = true;
+          }
+
+          photoHtml += '</div>';
+          if(!hasPhotos) photoHtml = '';
+
+          html += `
+            <div class="invoice-card" onclick="toggleDetails(event, 'inv_${index}')">
+              <div class="hc-title">
+                <div>ðŸ§¾ Inv: ${inv.invoice}</div>
+                <div style="font-size:12px; font-weight:normal; color:#555;">${inv.inwardDate}</div>
+              </div>
+              <p>ðŸ·ï¸ <b>Brand Name:</b> ${inv.commonBrand}</p>
+              <p>ðŸš— <b>Transporter:</b> ${inv.transporter}</p>
+              <p>ðŸ“¦ <b>Total Items Logged:</b> ${inv.items.length}</p>
+              <p>ðŸ‘¤ <b>Checker:</b> ${inv.staff}</p>
+              <div class="click-hint">â–¼ Click to View Inside Items â–¼</div>
+
+              <div id="inv_${index}" class="invoice-details">
+                ${itemsHtml}
+                ${missingAlertHtml}
+                ${photoHtml}
+              </div>
+            </div>
+          `;
+        });
+        document.getElementById('historyContainer').innerHTML = html;
+      })
+      .getInwardHistory();
+  }
+
+  function toggleDetails(event, id) {
+    if(event.target.tagName === 'A') return; 
+    let el = document.getElementById(id);
+    if(el.style.display === 'block') {
+      el.style.display = 'none';
+    } else {
+      el.style.display = 'block';
+    }
+  }
+
+  function filterHistory() {
+    let query = document.getElementById('historySearchBox').value.toLowerCase();
+    let cards = document.querySelectorAll('.invoice-card');
+    
+    cards.forEach(card => {
+      let text = card.innerText.toLowerCase();
+      if(text.includes(query)) {
+        card.style.display = "block";
+      } else {
+        card.style.display = "none";
+      }
+    });
+  }
+  // 1. DATA AUTO-SAVE KARNE KA FUNCTION
+function saveFormData() {
+  const formData = {
+    inwardDate: document.querySelector('[name="inwardDate"]').value,
+    inwardTime: document.querySelector('[name="inwardTime"]').value,
+    lrNumber: document.querySelector('[name="lrNumber"]').value,
+    masterCartons: document.querySelector('[name="masterCartons"]').value,
+    invoiceNo: document.querySelector('[name="invoiceNo"]').value,
+    invoiceDate: document.querySelector('[name="invoiceDate"]').value,
+  };
+  localStorage.setItem('yashStockDraft', JSON.stringify(formData));
+}
+
+// 2. FORM MEIN KUCH BHI TYPE KARNE PAR SAVE KAREGA
+document.getElementById('stockForm').addEventListener('input', saveFormData);
+
+// 3. REFRESH HONE PAR DATA WAPAS LAANE KA FUNCTION
+function loadFormData() {
+  const savedData = localStorage.getItem('yashStockDraft');
+  if (savedData) {
+    const formData = JSON.parse(savedData);
+    document.querySelector('[name="inwardDate"]').value = formData.inwardDate || '';
+    document.querySelector('[name="inwardTime"]').value = formData.inwardTime || '';
+    document.querySelector('[name="lrNumber"]').value = formData.lrNumber || '';
+    document.querySelector('[name="masterCartons"]').value = formData.masterCartons || '';
+    document.querySelector('[name="invoiceNo"]').value = formData.invoiceNo || '';
+    document.querySelector('[name="invoiceDate"]').value = formData.invoiceDate || '';
+  }
+}
+
+// 4. PAGE LOAD HOTE HI DATA BHAR DEGA
+window.addEventListener('load', loadFormData);
+
+// 5. PAGE GALTI SE REFRESH HONE PAR WARNING DEGA
+window.addEventListener('beforeunload', function (e) {
+  e.preventDefault();
+  e.returnValue = '';
+});
+</script>
+</body>
+</html>
+
