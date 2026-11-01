@@ -490,7 +490,8 @@
       }
 
       const cachedId = localStorage.getItem('ym_master_id');
-      const cachedRole = localStorage.getItem('ym_master_role');
+      let cachedRole = localStorage.getItem('ym_master_role');
+      if (cachedRole && cachedRole.toUpperCase() === 'OWNER') { cachedRole = 'CEO'; localStorage.setItem('ym_master_role', 'CEO'); }
       const cachedName = localStorage.getItem('ym_master_name');
 
       if (cachedId && cachedRole && cachedName) {
@@ -593,19 +594,20 @@
 
         if(result.success) {
           loggedInUser.empId = result.empId;
-          loggedInUser.role = result.role;
+          const displayRole = (result.role && result.role.toUpperCase() === 'OWNER') ? 'CEO' : result.role;
+          loggedInUser.role = displayRole;
           loggedInUser.pass = pass; 
           
           // CACHE EVERYTHING FOR INSTANT NEXT LOAD
           localStorage.setItem('ym_master_id', id);
-          localStorage.setItem('ym_master_role', result.role);
+          localStorage.setItem('ym_master_role', displayRole);
           localStorage.setItem('ym_master_name', result.username);
           
           document.getElementById("welcomeUser").innerText = result.username;
-          document.getElementById("welcomeRole").innerText = result.role;
+          document.getElementById("welcomeRole").innerText = displayRole;
           document.getElementById("userInitial").innerText = result.username.charAt(0).toUpperCase();
           
-          buildPortalEngine(result.role);
+          buildPortalEngine(displayRole);
         } else {
           errorBox.innerText = result.message;
           errorBox.style.display = "block";
@@ -652,14 +654,15 @@
       }
 
       // MANAGEMENT SALES TRACKER BUTTON (OWNER / MIS)
-      const isManagement = role && (role === "Owner" || role === "Owner 2" || role === "MIS");
+      const isManagement = role && (role.toUpperCase() === "CEO" || role.toUpperCase() === "OWNER" || role === "Owner 2" || role === "MIS");
       const btnTrack = document.getElementById("btnOpenSalesTracker");
       if (btnTrack) {
         btnTrack.style.display = isManagement ? "inline-flex" : "none";
       }
 
       let isFirstApp = true;
-      let allowedApps = appsConfig.filter(app => app.roles.includes(role));
+      let effectiveRole = (role && role.toUpperCase() === "OWNER") ? "CEO" : role;
+      let allowedApps = appsConfig.filter(app => app.roles.includes(effectiveRole) || (effectiveRole === "CEO" && app.roles.includes("CEO")));
 
       if(allowedApps.length === 0) {
         document.getElementById("loadingStatus").style.display = "none";
@@ -676,7 +679,8 @@
 
       allowedApps.forEach((app, index) => {
         let separator = app.url.includes("?") ? "&" : "?";
-        let secureUrl = `${app.url}${separator}empId=${encodeURIComponent(loggedInUser.empId)}&role=${encodeURIComponent(loggedInUser.role)}`;
+        let targetRole = (loggedInUser.role && loggedInUser.role.toUpperCase() === "OWNER") ? "CEO" : loggedInUser.role;
+        let secureUrl = `${app.url}${separator}empId=${encodeURIComponent(loggedInUser.empId)}&role=${encodeURIComponent(targetRole)}`;
         if (isTvMode) {
           secureUrl += `&tv=1`;
         }
