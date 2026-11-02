@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <base target="_top">
@@ -6,7 +6,7 @@
   <style>
     html, body { -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; background-color: #f0f2f5; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
     
-     
+    /* LOGIN SCREEN CSS */
     #loginScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: #3f51b5; padding: 20px;}
     .login-box { background: white; padding: 30px 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 350px; text-align: center; }
     .login-box h1 { color: #1a237e; font-size: 24px; margin: 0 0 5px 0; }
@@ -20,7 +20,7 @@
     #loginError { color: red; font-size: 13px; font-weight: bold; margin-top: 10px; display: none; }
     .loader-text { color: #3f51b5; font-weight: bold; font-size: 14px; margin-top: 15px; display: none; }
 
-     
+    /* MAIN APP CSS */
     #mainApp { display: none; padding: 15px; }
     .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3f51b5; padding-bottom: 10px; margin-bottom: 15px; }
@@ -46,7 +46,7 @@
     .locked-field { background-color: #e8eaf6 !important; color: #1a237e !important; border-color: #c5cae9 !important; }
 
     .custom-dropdown { position: relative; }
-    .custom-dropdown::after { content: "â–¼"; position: absolute; right: 15px; top: 19px; font-size: 12px; color: #78909c; pointer-events: none; }
+    .custom-dropdown::after { content: "▼"; position: absolute; right: 15px; top: 19px; font-size: 12px; color: #78909c; pointer-events: none; }
     .custom-input { padding-right: 30px !important; cursor: text; }
     .dropdown-list { display: none; position: absolute; z-index: 9999; width: 100%; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #3f51b5; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 2px; padding: 0; list-style: none; -webkit-overflow-scrolling: touch;}
     .dropdown-list li { padding: 12px 15px; cursor: pointer; color: #424242; font-size: 14px; border-bottom: 1px solid #f0f2f5; }
@@ -69,7 +69,7 @@
     .req { color: red; font-weight: bold; font-size: 14px; margin-left: 3px; }
     #photoWarning { color: #d32f2f; background: #ffebee; font-weight: bold; text-align: center; padding: 12px; border-radius: 6px; border: 1px dashed #d32f2f; margin-top: 15px; }
 
-     
+    /* INVOICE VIEW CSS */
     #historySearchBox { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #3f51b5; border-radius: 8px; font-size: 16px; font-weight:bold; }
     .invoice-card { background: white; border-left: 5px solid #ff9800; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 12px; cursor: pointer; transition: 0.2s;}
     .invoice-card:active { background-color: #f5f5f5; }
@@ -93,7 +93,7 @@
   <div class="login-box">
     <h1>Yash Marketing</h1>
     <h3>Stock Inward System</h3>
-    <div id="loginLoader" class="loader-text" style="display:block;">Fetching Staff List... â³</div>
+    <div id="loginLoader" class="loader-text" style="display:block;">Fetching Staff List... ⏳</div>
     <div id="loginFormArea" style="display:none;">
       <div class="login-input-group">
         <label>Employee ID</label>
@@ -113,12 +113,12 @@
   <div class="container">
     <div class="header-bar">
       <h2>Stock Inward</h2>
-      <button class="logout-btn" onclick="logout()">ðŸšª Logout</button>
+      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
     </div>
     
     <div class="tabs">
-      <button class="tab-btn active" id="tabEntry" onclick="switchTab('entry')">âž• New Entry</button>
-      <button class="tab-btn" id="tabHistory" onclick="switchTab('history')">ðŸ§¾ View Invoice</button>
+      <button class="tab-btn active" id="tabEntry" onclick="switchTab('entry')">➕ New Entry</button>
+      <button class="tab-btn" id="tabHistory" onclick="switchTab('history')">🧾 View Invoice</button>
     </div>
 
     <div id="entrySection">
@@ -128,7 +128,7 @@
           <div><label>Inward Date <span class="req">*</span></label><input type="date" name="inwardDate" required></div>
           <div><label>Inward Time <span class="req">*</span></label><input type="time" name="inwardTime" required></div>
           <div>
-            <label>Staff / Checker Name ðŸ”’</label>
+            <label>Staff / Checker Name 🔒</label>
             <input type="text" name="staffName" id="mainStaffName" class="locked-field" readonly title="Logged in Staff">
           </div>
           <div>
@@ -155,7 +155,7 @@
         <div class="section-title">2. Product Models</div>
         <div id="productContainer">
           <div class="product-box">
-            <div class="product-header">ðŸ“¦ Item 1</div>
+            <div class="product-header">📦 Item 1</div>
             <div class="grid">
               <div><label>Category <span class="req">*</span></label><div class="custom-dropdown"><input type="text" name="category" class="custom-input dynamic-cat" required placeholder="Select Category..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
               <div><label>Product / Model Name <span class="req">*</span></label><div class="custom-dropdown"><input type="text" name="modelName" class="custom-input dynamic-model" required placeholder="Select Model..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
@@ -166,9 +166,9 @@
               <div><label>Shortage Qty</label><input type="text" name="shortageQty" value="0" readonly title="Auto Calculated" class="qty-ok"></div>
               <div><label>DOA / Damaged Qty</label><input type="number" name="doaQty" value="0"></div>
               
-              
+              <!-- 🔥 capture="environment" HATA DIYA HAI TAKI CAMERA AUR GALLERY DONO AAYE 🔥 -->
               <div style="grid-column: 1 / -1; background:#e3f2fd; padding:10px; border-radius:6px; border:1px dashed #90caf9;">
-                <label style="color:#1565c0;">ðŸ“¸ Product Photo <span class="req">*</span></label>
+                <label style="color:#1565c0;">📸 Product Photo <span class="req">*</span></label>
                 <input type="file" name="productPhoto" accept="image/*" onchange="checkPhotosRequired()" required>
                 <div class="hint" style="color:#1565c0;">Click to take Live Photo or select from Gallery</div>
               </div>
@@ -203,7 +203,7 @@
           </div>
         </div>
 
-        <div id="photoWarning">âš ï¸ Please upload Invoice, Box, Pavti, AND ALL Product Photos to Unlock Submit Button!</div>
+        <div id="photoWarning">⚠️ Please upload Invoice, Box, Pavti, AND ALL Product Photos to Unlock Submit Button!</div>
 
         <button type="button" id="submitBtn" class="submit-btn" disabled onclick="submitData()">Submit All Data</button>
         <div id="message"></div>
@@ -211,9 +211,9 @@
     </div>
 
     <div id="historySection" style="display: none;">
-      <input type="text" id="historySearchBox" placeholder="ðŸ” Search Invoice, Transporter, or Model..." onkeyup="filterHistory()">
+      <input type="text" id="historySearchBox" placeholder="🔍 Search Invoice, Transporter, or Model..." onkeyup="filterHistory()">
       <div id="historyLoading" style="text-align:center; font-weight:bold; color:#3f51b5; padding: 20px;">
-        Fetching Invoices... â³
+        Fetching Invoices... ⏳
       </div>
       <div id="historyContainer"></div>
     </div>
@@ -222,11 +222,6 @@
 </div>
 
 <script>
-  <? var ssoEmpId = typeof empId !== 'undefined' ? empId : ''; ?>
-  <? var ssoRole = typeof role !== 'undefined' ? role : ''; ?>
-  const portalEmpId = "<?= ssoEmpId ?>";
-  const portalRole = "<?= ssoRole ?>";
-
   let allProductsData = [];
   let staffListObj = []; 
   let transporterList = []; 
@@ -313,32 +308,12 @@
   document.addEventListener("DOMContentLoaded", function() {
     google.script.run
       .withSuccessHandler(function(data) {
-        allProductsData = data.products || [];
-        staffListObj = data.staffs || []; 
+        allProductsData = data.products;
+        staffListObj = data.staffs; 
         transporterList = data.transporters || []; 
         
         cachedBrands = [...new Set(allProductsData.map(i => i.b))].filter(Boolean);
         
-        // --- SSO AUTO-LOGIN CHECK (Master App Single Sign-On) ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const activeEmpId = (typeof portalEmpId !== 'undefined' && portalEmpId) ? portalEmpId : urlParams.get('empId');
-        const activeRole = (typeof portalRole !== 'undefined' && portalRole) ? portalRole : urlParams.get('role');
-
-        if (activeEmpId) {
-          const matchedUser = staffListObj.find(s => s.id && s.id.toLowerCase() === activeEmpId.toLowerCase().trim());
-          if (matchedUser) {
-            document.getElementById("loginScreen").style.display = "none";
-            document.getElementById("mainApp").style.display = "block";
-            document.getElementById("mainStaffName").value = matchedUser.n;
-            return;
-          } else if (activeRole && (activeRole.toLowerCase().includes("owner") || activeRole.toLowerCase().includes("ceo") || activeRole.toLowerCase().includes("admin") || activeRole.toLowerCase().includes("manager"))) {
-            document.getElementById("loginScreen").style.display = "none";
-            document.getElementById("mainApp").style.display = "block";
-            document.getElementById("mainStaffName").value = activeRole + " (" + activeEmpId + ")";
-            return;
-          }
-        }
-
         document.getElementById("loginLoader").style.display = "none";
         document.getElementById("loginFormArea").style.display = "block";
       })
@@ -463,7 +438,7 @@
     const newBox = document.createElement('div');
     newBox.className = 'product-box';
     newBox.innerHTML = `
-      <div class="product-header">ðŸ“¦ Item ${productCount} <span class="remove-btn" onclick="this.closest('.product-box').remove(); checkPhotosRequired();">âŒ Remove Item</span></div>
+      <div class="product-header">📦 Item ${productCount} <span class="remove-btn" onclick="this.closest('.product-box').remove(); checkPhotosRequired();">❌ Remove Item</span></div>
       <div class="grid">
         <div><label>Category <span class="req">*</span></label><div class="custom-dropdown"><input type="text" name="category" class="custom-input dynamic-cat" required placeholder="Select Category..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
         <div><label>Product / Model Name <span class="req">*</span></label><div class="custom-dropdown"><input type="text" name="modelName" class="custom-input dynamic-model" required placeholder="Select Model..." autocomplete="off" autocorrect="off" spellcheck="false"><ul class="dropdown-list"></ul></div></div>
@@ -472,9 +447,9 @@
         <div><label>Shortage Qty</label><input type="text" name="shortageQty" value="0" readonly title="Auto Calculated" class="qty-ok"></div>
         <div><label>DOA / Damaged Qty</label><input type="number" name="doaQty" value="0"></div>
         
-        <!-- ðŸ”¥ Yahan se bhi capture="environment" hata diya hai ðŸ”¥ -->
+        <!-- 🔥 Yahan se bhi capture="environment" hata diya hai 🔥 -->
         <div style="grid-column: 1 / -1; background:#e3f2fd; padding:10px; border-radius:6px; border:1px dashed #90caf9;">
-          <label style="color:#1565c0;">ðŸ“¸ Product Photo <span class="req">*</span></label>
+          <label style="color:#1565c0;">📸 Product Photo <span class="req">*</span></label>
           <input type="file" name="productPhoto" accept="image/*" onchange="checkPhotosRequired()" required>
           <div class="hint" style="color:#1565c0;">Click to take Live Photo or select from Gallery</div>
         </div>
@@ -484,27 +459,136 @@
     checkPhotosRequired(); 
   }
 
-  function compressImage(file) {
+  // --- BULLETPROOF ULTRA-FAST COMPRESSION WITH FAILSAFE TIMEOUT & FALLBACK ---
+  function compressImage(file, label) {
+    label = label || "Photo";
     return new Promise((resolve) => {
-      let reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        let img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          let canvas = document.createElement('canvas');
-          let ctx = canvas.getContext('2d');
-          let maxWidth = 700; 
-          let scale = maxWidth / img.width;
-          let newWidth = img.width > maxWidth ? maxWidth : img.width;
-          let newHeight = img.width > maxWidth ? img.height * scale : img.height;
-          canvas.width = newWidth;
-          canvas.height = newHeight;
-          ctx.drawImage(img, 0, 0, newWidth, newHeight);
-          let base64 = canvas.toDataURL('image/jpeg', 0.5); 
-          resolve({ name: file.name, mimeType: 'image/jpeg', data: base64.split(',')[1] });
-        };
+      // 6-second safety timeout: If compression hangs on any photo, fallback to direct base64 immediately!
+      const timer = setTimeout(() => {
+        console.warn(`[Timeout] ${label} compression timed out. Falling back to direct read.`);
+        directReadBase64(file).then(resolve);
+      }, 6000);
+
+      const finish = (result) => {
+        clearTimeout(timer);
+        resolve(result);
       };
+
+      // 1. Try modern createImageBitmap (fastest, hardware-accelerated, lowest memory on Android)
+      if (typeof window.createImageBitmap === 'function') {
+        createImageBitmap(file)
+          .then((bitmap) => {
+            try {
+              const maxDim = 800;
+              let w = bitmap.width;
+              let h = bitmap.height;
+              if (w > maxDim || h > maxDim) {
+                if (w > h) {
+                  h = Math.round((h * maxDim) / w);
+                  w = maxDim;
+                } else {
+                  w = Math.round((w * maxDim) / h);
+                  h = maxDim;
+                }
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(bitmap, 0, 0, w, h);
+              if (typeof bitmap.close === 'function') bitmap.close();
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+              const b64 = dataUrl.split(',')[1];
+              if (b64 && b64.length > 50) {
+                return finish({ name: file.name, mimeType: 'image/jpeg', data: b64 });
+              }
+              throw new Error("Empty canvas result");
+            } catch (canvasErr) {
+              fallbackViaImage(file).then(finish);
+            }
+          })
+          .catch(() => {
+            fallbackViaImage(file).then(finish);
+          });
+        return;
+      }
+
+      // 2. Fallback via Image object
+      fallbackViaImage(file).then(finish);
+    });
+  }
+
+  function fallbackViaImage(file) {
+    return new Promise((resolve) => {
+      try {
+        const reader = new FileReader();
+        reader.onerror = () => directReadBase64(file).then(resolve);
+        reader.onload = (e) => {
+          try {
+            const img = new Image();
+            img.onerror = () => directReadBase64(file).then(resolve);
+            img.onload = () => {
+              try {
+                const maxDim = 800;
+                let w = img.width || 800;
+                let h = img.height || 600;
+                if (w > maxDim || h > maxDim) {
+                  if (w > h) {
+                    h = Math.round((h * maxDim) / w);
+                    w = maxDim;
+                  } else {
+                    w = Math.round((w * maxDim) / h);
+                    h = maxDim;
+                  }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                const b64 = dataUrl.split(',')[1];
+                if (b64 && b64.length > 50) {
+                  resolve({ name: file.name, mimeType: 'image/jpeg', data: b64 });
+                } else {
+                  directReadBase64(file).then(resolve);
+                }
+              } catch (ex) {
+                directReadBase64(file).then(resolve);
+              }
+            };
+            img.src = e.target.result;
+          } catch (ex) {
+            directReadBase64(file).then(resolve);
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (ex) {
+        directReadBase64(file).then(resolve);
+      }
+    });
+  }
+
+  function directReadBase64(file) {
+    return new Promise((resolve) => {
+      try {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const res = e.target.result || "";
+          const parts = res.split(',');
+          resolve({
+            name: file.name,
+            mimeType: file.type || 'image/jpeg',
+            data: parts.length > 1 ? parts[1] : parts[0]
+          });
+        };
+        reader.onerror = () => {
+          resolve({ name: file.name, mimeType: file.type || 'image/jpeg', data: "" });
+        };
+        reader.readAsDataURL(file);
+      } catch (e) {
+        resolve({ name: file.name, mimeType: file.type || 'image/jpeg', data: "" });
+      }
     });
   }
 
@@ -522,57 +606,64 @@
     const msg = document.getElementById("message");
 
     btn.disabled = true;
-    btn.innerText = "Compressing Photos... Please wait â³";
-    msg.style.color = "blue";
-    msg.innerText = "";
+    btn.classList.remove("btn-ready");
+    btn.innerText = "Processing Photos... ⏳";
+    msg.style.color = "#1565c0";
+    msg.innerText = "Optimizing photos for super-fast upload...";
 
     try {
-      const getB64Array = async (inputId) => {
+      const getB64Array = async (inputId, label) => {
         let arr = [];
-        let files = document.getElementById(inputId).files;
+        let inputElem = document.getElementById(inputId);
+        let files = inputElem && inputElem.files ? inputElem.files : [];
         for (let i = 0; i < files.length; i++) {
-           arr.push(await compressImage(files[i]));
+           btn.innerText = `Compressing ${label} (${i + 1}/${files.length}) ⏳`;
+           msg.innerText = `Processing ${label} Photo ${i + 1} of ${files.length}...`;
+           arr.push(await compressImage(files[i], `${label} ${i + 1}`));
            await delay(10);
         }
         return arr;
       };
 
-      let invoicePhotosB64 = await getB64Array('invoicePhotos');
-      let boxPhotosB64 = await getB64Array('boxPhotos');
-      let pavtiPhotosB64 = await getB64Array('pavtiPhotos');
+      let invoicePhotosB64 = await getB64Array('invoicePhotos', 'Invoice');
+      let boxPhotosB64 = await getB64Array('boxPhotos', 'Box');
+      let pavtiPhotosB64 = await getB64Array('pavtiPhotos', 'Pavti');
 
       let items = [];
       let productBoxes = document.querySelectorAll('.product-box');
       
       for (let i = 0; i < productBoxes.length; i++) {
          let box = productBoxes[i];
-         let pPhotoFile = box.querySelector('[name="productPhoto"]').files[0];
+         let pPhotoInput = box.querySelector('[name="productPhoto"]');
+         let pPhotoFile = pPhotoInput && pPhotoInput.files ? pPhotoInput.files[0] : null;
          let pPhotoB64 = null;
          if (pPhotoFile) {
-            pPhotoB64 = await compressImage(pPhotoFile);
+            btn.innerText = `Compressing Item ${i + 1} Photo ⏳`;
+            msg.innerText = `Processing Product Photo for Item ${i + 1}...`;
+            pPhotoB64 = await compressImage(pPhotoFile, `Item ${i + 1} Photo`);
          }
 
          items.push({
-            category: box.querySelector('[name="category"]').value,
-            modelName: box.querySelector('[name="modelName"]').value,
-            piecesPerCarton: box.querySelector('[name="piecesPerCarton"]').value,
-            actualQty: box.querySelector('[name="actualQty"]').value,
-            shortageQty: box.querySelector('[name="shortageQty"]').value,
-            doaQty: box.querySelector('[name="doaQty"]').value,
+            category: box.querySelector('[name="category"]') ? box.querySelector('[name="category"]').value : "",
+            modelName: box.querySelector('[name="modelName"]') ? box.querySelector('[name="modelName"]').value : "",
+            piecesPerCarton: box.querySelector('[name="piecesPerCarton"]') ? box.querySelector('[name="piecesPerCarton"]').value : "0",
+            actualQty: box.querySelector('[name="actualQty"]') ? box.querySelector('[name="actualQty"]').value : "0",
+            shortageQty: box.querySelector('[name="shortageQty"]') ? box.querySelector('[name="shortageQty"]').value : "0",
+            doaQty: box.querySelector('[name="doaQty"]') ? box.querySelector('[name="doaQty"]').value : "0",
             productPhotoB64: pPhotoB64 
          });
       }
 
       let payload = {
-         inwardDate: document.querySelector('[name="inwardDate"]').value,
-         inwardTime: document.querySelector('[name="inwardTime"]').value,
-         staffName: document.querySelector('[name="staffName"]').value,
-         commonBrand: document.querySelector('#commonBrand').value, 
-         transporter: document.querySelector('[name="transporter"]').value, 
-         lrNumber: document.querySelector('[name="lrNumber"]').value,
-         masterCartons: document.querySelector('[name="masterCartons"]').value,
-         invoiceNo: document.querySelector('[name="invoiceNo"]').value,
-         invoiceDate: document.querySelector('[name="invoiceDate"]').value,
+         inwardDate: document.querySelector('[name="inwardDate"]') ? document.querySelector('[name="inwardDate"]').value : "",
+         inwardTime: document.querySelector('[name="inwardTime"]') ? document.querySelector('[name="inwardTime"]').value : "",
+         staffName: document.querySelector('[name="staffName"]') ? document.querySelector('[name="staffName"]').value : "",
+         commonBrand: document.querySelector('#commonBrand') ? document.querySelector('#commonBrand').value : "", 
+         transporter: document.querySelector('[name="transporter"]') ? document.querySelector('[name="transporter"]').value : "", 
+         lrNumber: document.querySelector('[name="lrNumber"]') ? document.querySelector('[name="lrNumber"]').value : "",
+         masterCartons: document.querySelector('[name="masterCartons"]') ? document.querySelector('[name="masterCartons"]').value : "0",
+         invoiceNo: document.querySelector('[name="invoiceNo"]') ? document.querySelector('[name="invoiceNo"]').value : "",
+         invoiceDate: document.querySelector('[name="invoiceDate"]') ? document.querySelector('[name="invoiceDate"]').value : "",
          missingModel: document.querySelector('[name="missingProduct"]') ? document.querySelector('[name="missingProduct"]').value : "-",
          missingQty: document.querySelector('[name="missingQty"]') ? document.querySelector('[name="missingQty"]').value : "0",
          invoicePhotosB64: invoicePhotosB64,
@@ -581,12 +672,13 @@
          items: items
       };
 
-      btn.innerText = "Saving to Google Server (Super Fast) ðŸš€...";
+      btn.innerText = "Saving to Google Server (Super Fast) 🚀...";
+      msg.innerText = "Saving data and uploading to Google Cloud...";
 
       google.script.run
         .withSuccessHandler(function(response) {
           msg.innerText = response;
-          if (response.includes("âœ…")) {
+          if (response && response.includes("✅")) {
             msg.style.color = "green";
             form.reset(); 
             document.querySelectorAll('.product-box:not(:first-child)').forEach(el => el.remove());
@@ -603,14 +695,15 @@
         })
         .withFailureHandler(function(error) {
           msg.style.color = "red";
-          msg.innerText = "Error: " + error.message;
+          msg.innerText = "Error: " + (error ? (error.message || error) : "Submission failed");
           checkPhotosRequired();
         })
         .processFormFast(JSON.stringify(payload)); 
 
     } catch (e) {
+      console.error("Submission error:", e);
       msg.style.color = "red";
-      msg.innerText = "Error processing data!";
+      msg.innerText = "Error processing photos: " + (e ? e.message : "Unknown error");
       checkPhotosRequired();
     }
   }
@@ -634,7 +727,7 @@
           
           inv.items.forEach(item => {
             let prodPicLink = (item.prodPhoto && item.prodPhoto !== '-') 
-              ? `<a href="${item.prodPhoto}" target="_blank" style="text-decoration:none; background:#e3f2fd; color:#1565c0; padding:3px 6px; border-radius:4px; font-size:11px; border:1px solid #90caf9; margin-left: 8px; font-weight:bold; display:inline-block; vertical-align:middle;">ðŸ“¸ Photo</a>` 
+              ? `<a href="${item.prodPhoto}" target="_blank" style="text-decoration:none; background:#e3f2fd; color:#1565c0; padding:3px 6px; border-radius:4px; font-size:11px; border:1px solid #90caf9; margin-left: 8px; font-weight:bold; display:inline-block; vertical-align:middle;">📸 Photo</a>` 
               : '';
 
             itemsHtml += `
@@ -652,7 +745,7 @@
           let missingAlertHtml = '';
           if (inv.missingProd && inv.missingProd !== '-') {
             missingAlertHtml = `<div style="background:#ffebee; color:#d32f2f; padding:8px; border-radius:6px; margin-top:10px; font-weight:bold; font-size:13px; border:1px dashed #d32f2f;">
-              âš ï¸ Missing: ${inv.missingProd} (${inv.missingQty || 0} Pcs)
+              ⚠️ Missing: ${inv.missingProd} (${inv.missingQty || 0} Pcs)
             </div>`;
           }
 
@@ -660,33 +753,30 @@
           let hasPhotos = false;
 
           if (inv.invoicePhotos && inv.invoicePhotos !== "No Photo" && inv.invoicePhotos !== "-") {
-            let urls = inv.invoicePhotos.split(" \
- "); 
-            photoHtml += '<b>ðŸ“¸ Invoice Photo:</b><br>';
+            let urls = inv.invoicePhotos.split(" \n "); 
+            photoHtml += '<b>📸 Invoice Photo:</b><br>';
             urls.forEach((url, i) => {
-               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-inv">ðŸ–¼ï¸ Inv Photo ${i+1}</a>`;
+               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-inv">🖼️ Inv Photo ${i+1}</a>`;
             });
             photoHtml += '<br><br>';
             hasPhotos = true;
           }
 
           if (inv.boxPhotos && inv.boxPhotos !== "No Photo" && inv.boxPhotos !== "-") {
-            let urls = inv.boxPhotos.split(" \
- "); 
-            photoHtml += '<b>ðŸ“¦ Box Photo:</b><br>';
+            let urls = inv.boxPhotos.split(" \n "); 
+            photoHtml += '<b>📦 Box Photo:</b><br>';
             urls.forEach((url, i) => {
-               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-box">ðŸ–¼ï¸ Box Photo ${i+1}</a>`;
+               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-box">🖼️ Box Photo ${i+1}</a>`;
             });
             photoHtml += '<br><br>';
             hasPhotos = true;
           }
 
           if (inv.pavtiPhotos && inv.pavtiPhotos !== "No Photo" && inv.pavtiPhotos !== "-") {
-            let urls = inv.pavtiPhotos.split(" \
- "); 
-            photoHtml += '<b>ðŸ§¾ Pavti Photo:</b><br>';
+            let urls = inv.pavtiPhotos.split(" \n "); 
+            photoHtml += '<b>🧾 Pavti Photo:</b><br>';
             urls.forEach((url, i) => {
-               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-pavti">ðŸ–¼ï¸ Pavti Photo ${i+1}</a>`;
+               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-pavti">🖼️ Pavti Photo ${i+1}</a>`;
             });
             photoHtml += '<br>';
             hasPhotos = true;
@@ -698,14 +788,14 @@
           html += `
             <div class="invoice-card" onclick="toggleDetails(event, 'inv_${index}')">
               <div class="hc-title">
-                <div>ðŸ§¾ Inv: ${inv.invoice}</div>
+                <div>🧾 Inv: ${inv.invoice}</div>
                 <div style="font-size:12px; font-weight:normal; color:#555;">${inv.inwardDate}</div>
               </div>
-              <p>ðŸ·ï¸ <b>Brand Name:</b> ${inv.commonBrand}</p>
-              <p>ðŸš— <b>Transporter:</b> ${inv.transporter}</p>
-              <p>ðŸ“¦ <b>Total Items Logged:</b> ${inv.items.length}</p>
-              <p>ðŸ‘¤ <b>Checker:</b> ${inv.staff}</p>
-              <div class="click-hint">â–¼ Click to View Inside Items â–¼</div>
+              <p>🏷️ <b>Brand Name:</b> ${inv.commonBrand}</p>
+              <p>🚗 <b>Transporter:</b> ${inv.transporter}</p>
+              <p>📦 <b>Total Items Logged:</b> ${inv.items.length}</p>
+              <p>👤 <b>Checker:</b> ${inv.staff}</p>
+              <div class="click-hint">▼ Click to View Inside Items ▼</div>
 
               <div id="inv_${index}" class="invoice-details">
                 ${itemsHtml}
