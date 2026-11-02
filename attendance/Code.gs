@@ -184,7 +184,9 @@ function authenticateUser(empId, password, selectedMonth) {
       });
     }
 
-    var paidDays = presentDays + (halfDays * 0.5) + (user.role === "Owner" ? 0 : Math.floor(daysInMonth / 7));
+    var roleUpper = (user.role || "").toUpperCase().trim();
+    var isManagement = (roleUpper === "OWNER" || roleUpper === "CEO");
+    var paidDays = presentDays + (halfDays * 0.5) + (isManagement ? 0 : Math.floor(daysInMonth / 7));
     var perDaySalary = user.salary > 0 ? (user.salary / daysInMonth) : 0;
     var grossSalary = Math.round(paidDays * perDaySalary);
     var netSalary = Math.max(0, grossSalary);
