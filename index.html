@@ -782,8 +782,15 @@
         return;
       }
 
+      const currentRole = (loggedInUser && loggedInUser.role ? loggedInUser.role : (localStorage.getItem('ym_master_role') || '')).toUpperCase();
+      const isCeoExclusive = (currentRole === 'CEO' || currentRole === 'OWNER' || currentRole === 'OWNER 2');
       const badge = document.getElementById("salesGpsBadge");
-      if (badge) badge.style.display = "inline-flex";
+      
+      // Strict CEO-only: Staff must never see GPS tracking indicators
+      if (badge) {
+        badge.style.display = isCeoExclusive ? "inline-flex" : "none";
+        if (!isCeoExclusive) badge.innerHTML = "";
+      }
 
       function onPositionSuccess(position) {
         const lat = position.coords.latitude;
@@ -833,14 +840,26 @@
         } catch(e) {}
 
         if (badge) {
-          badge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#10b981; border-radius:50%; box-shadow:0 0 8px #10b981;"></span> 📍 Live Field GPS: ${distKm}km (${speed} km/h)`;
+          if (isCeoExclusive) {
+            badge.style.display = "inline-flex";
+            badge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#10b981; border-radius:50%; box-shadow:0 0 8px #10b981;"></span> 📍 Live Field GPS: ${distKm}km (${speed} km/h)`;
+          } else {
+            badge.style.display = "none";
+            badge.innerHTML = "";
+          }
         }
       }
 
       function onPositionError(err) {
         console.warn("Sales GPS tracking warning:", err.message);
         if (badge) {
-          badge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#f59e0b; border-radius:50%;"></span> 📍 Field GPS: Retrying satellite lock...`;
+          if (isCeoExclusive) {
+            badge.style.display = "inline-flex";
+            badge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#f59e0b; border-radius:50%;"></span> 📍 Field GPS: Retrying satellite lock...`;
+          } else {
+            badge.style.display = "none";
+            badge.innerHTML = "";
+          }
         }
       }
 
