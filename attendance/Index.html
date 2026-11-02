@@ -437,7 +437,9 @@
             document.getElementById('myLeaveStatusCard').style.display = 'none';
           }
           
-          if (currentUserRole === "Owner") {
+          const roleUpper = (currentUserRole || "").toUpperCase().trim();
+          const isManager = (roleUpper === "OWNER" || roleUpper === "CEO");
+          if (isManager) {
             document.getElementById('ownerPrivilegeBox').style.display = 'block';
             document.getElementById('lblAdminSelectedMonthBadge').innerText = response.evaluatedMonthYearLabel;
             
@@ -634,7 +636,9 @@
                     Math.sin(dLon/2) * Math.sin(dLon/2);
           const computedRadialDistanceMeters = EARTH_RADIUS * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
           
-          if (currentUserRole === "Owner" || currentUserRole === "Sales Boy") {
+          const activeRoleUpper = (currentUserRole || "").toUpperCase().trim();
+          const isRoamingRole = (activeRoleUpper === "OWNER" || activeRoleUpper === "CEO" || activeRoleUpper === "SALES BOY");
+          if (isRoamingRole) {
             consoleMsg.style.color = "var(--success)"; 
             consoleMsg.innerText = `Roaming Verification Active (${currentUserRole}). Tap below to open camera.`;
             document.getElementById('btnVerifyGPS').style.display = 'none';
