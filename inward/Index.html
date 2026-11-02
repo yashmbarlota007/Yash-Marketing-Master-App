@@ -331,7 +331,7 @@
             document.getElementById("mainApp").style.display = "block";
             document.getElementById("mainStaffName").value = matchedUser.n;
             return;
-          } else if (activeRole && (activeRole.toLowerCase().includes("owner") || activeRole.toLowerCase().includes("admin") || activeRole.toLowerCase().includes("manager"))) {
+          } else if (activeRole && (activeRole.toLowerCase().includes("owner") || activeRole.toLowerCase().includes("ceo") || activeRole.toLowerCase().includes("admin") || activeRole.toLowerCase().includes("manager"))) {
             document.getElementById("loginScreen").style.display = "none";
             document.getElementById("mainApp").style.display = "block";
             document.getElementById("mainStaffName").value = activeRole + " (" + activeEmpId + ")";
