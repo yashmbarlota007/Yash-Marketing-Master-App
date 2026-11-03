@@ -1,3 +1,11 @@
+// ONE-CLICK AUTHORIZATION FUNCTION FOR GOOGLE DRIVE PERMISSIONS
+function authorizeDrivePermissions() {
+  let folders = DriveApp.getFoldersByName("Attendance Photos");
+  let targetFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder("Attendance Photos");
+  Logger.log("? Google Drive Permissions successfully authorized! Folder: " + targetFolder.getName());
+  return "? Drive Permissions Active for " + targetFolder.getName();
+}
+
 
 // Helper Engine: Process Daily Punch Logs with Chronological Short Break Deductions
 function processDailyPunchLogs(punchesMap) {
@@ -474,33 +482,35 @@ function processPunch(empId, type, location, imgBase64) {
     const sheet = ss.getSheetByName("Attendance_Logs") || ss.getSheetByName("Attendance Logs");
     if (!sheet) return "Database Error: Logs transaction sheet tab is missing.";
     
-    // --- NEW CODE: BASE64 TO GOOGLE DRIVE IMAGE LINK ---
+    // --- ROBUST SELFIE UPLOAD TO GOOGLE DRIVE ---
     let imageUrl = "";
-    if (imgBase64 && imgBase64.includes("base64,")) {
+    if (imgBase64 && imgBase64.indexOf("base64,") > -1) {
       try {
-        // "Attendance Selfies" नाम का फोल्डर ढूंढेगा या नया बनाएगा
-        let folderLookups = DriveApp.getFoldersByName("Attendance Selfies");
-        let targetFolder = folderLookups.hasNext() ? folderLookups.next() : DriveApp.createFolder("Attendance Selfies");
+        // "Attendance Photos" ya "Attendance Selfies" folder use karein
+        let folderLookups = DriveApp.getFoldersByName("Attendance Photos");
+        if (!folderLookups.hasNext()) folderLookups = DriveApp.getFoldersByName("Attendance Selfies");
+        let targetFolder = folderLookups.hasNext() ? folderLookups.next() : DriveApp.createFolder("Attendance Photos");
 
-        // Base64 टेक्स्ट को इमेज फ़ाइल में कन्वर्ट करेगा
-        let splitData = imgBase64.split(',');
-        let mimeType = splitData[0].split(';')[0].replace('data:', '');
-        let decodedData = Utilities.base64Decode(splitData[1]);
+        let parts = imgBase64.split("base64,");
+        let mimeType = parts[0].replace("data:", "").replace(";", "").trim() || "image/jpeg";
+        let decodedData = Utilities.base64Decode(parts[1]);
 
-        // फ़ाइल का नाम सेट करेगा (उदा: YM001_Punch In_28-09-2026_103000.jpg)
         let timeStamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "dd-MM-yyyy_HHmmss");
-        let fileName = empId + "_" + type + "_" + timeStamp + ".jpg";
+        let cleanType = type.toString().replace(/[^a-zA-Z0-9]/g, "_");
+        let fileName = empId + "_" + cleanType + "_" + timeStamp + ".jpg";
 
-        // फ़ाइल को Drive में सेव करके उसका लिंक निकालेगा
         let blob = Utilities.newBlob(decodedData, mimeType, fileName);
         let driveFile = targetFolder.createFile(blob);
-        imageUrl = driveFile.getUrl(); 
-        
+        try {
+          driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        } catch(shErr) {}
+        imageUrl = driveFile.getUrl();
       } catch(err) {
-        imageUrl = "Image Upload Failed";
+        imageUrl = "Image Upload Failed (" + err.message + ")";
+        console.error("Selfie upload failed: " + err.toString());
       }
     } else {
-      imageUrl = imgBase64; // अगर फोटो नहीं है तो जैसा है वैसा ही रखेगा
+      imageUrl = imgBase64 || "No Photo Attached";
     }
     // ----------------------------------------------------
 
