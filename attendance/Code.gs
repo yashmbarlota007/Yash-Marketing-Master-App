@@ -1,8 +1,19 @@
+var ATTENDANCE_DRIVE_FOLDER_ID = "1gd7gOsZeSfK4wNpq9NY723NXDEVvp-Rs";
+
+function getAttendancePhotoFolder() {
+  try {
+    return DriveApp.getFolderById(ATTENDANCE_DRIVE_FOLDER_ID);
+  } catch(e) {
+    let folders = DriveApp.getFoldersByName("Attendance Photos");
+    if (folders.hasNext()) return folders.next();
+    return DriveApp.createFolder("Attendance Photos");
+  }
+}
+
 // ONE-CLICK AUTHORIZATION FUNCTION FOR GOOGLE DRIVE PERMISSIONS
 function authorizeDrivePermissions() {
-  let folders = DriveApp.getFoldersByName("Attendance Photos");
-  let targetFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder("Attendance Photos");
-  Logger.log("? Google Drive Permissions successfully authorized! Folder: " + targetFolder.getName());
+  let targetFolder = getAttendancePhotoFolder();
+  Logger.log("? Google Drive Permissions successfully authorized! Folder: " + targetFolder.getName() + " (ID: " + targetFolder.getId() + ")");
   return "? Drive Permissions Active for " + targetFolder.getName();
 }
 
@@ -486,10 +497,7 @@ function processPunch(empId, type, location, imgBase64) {
     let imageUrl = "";
     if (imgBase64 && imgBase64.indexOf("base64,") > -1) {
       try {
-        // "Attendance Photos" ya "Attendance Selfies" folder use karein
-        let folderLookups = DriveApp.getFoldersByName("Attendance Photos");
-        if (!folderLookups.hasNext()) folderLookups = DriveApp.getFoldersByName("Attendance Selfies");
-        let targetFolder = folderLookups.hasNext() ? folderLookups.next() : DriveApp.createFolder("Attendance Photos");
+        let targetFolder = getAttendancePhotoFolder();
 
         let parts = imgBase64.split("base64,");
         let mimeType = parts[0].replace("data:", "").replace(";", "").trim() || "image/jpeg";
