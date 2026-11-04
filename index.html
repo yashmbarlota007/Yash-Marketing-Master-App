@@ -768,7 +768,7 @@
       // ==========================================
     // SALES STAFF LIVE GPS TRACKING & MONITORING
     // ==========================================
-    const DEALER_LOG_API = "https://script.google.com/macros/s/AKfycbw_HtJl9dqW4J4OnjMZkDTM98nKmuvcwfnh7vnoBKWJGdlB2afWqKRi2nn19AgVkm1t8A/exec";
+    const MARKET_VISIT_TRACKING_API = "https://script.google.com/macros/s/AKfycbxEqsfxcoZR0lp6X4TFfmZNgTwV1NL1bU7T5nUzL6CeraBSWgtbdBAMXBtigRSDy4nj/exec";
     const WAREHOUSE_LAT = 19.088889;
     const WAREHOUSE_LON = 74.733667;
     let salesWatchId = null;
@@ -827,21 +827,19 @@
         } catch(e) {}
 
         try {
-          fetch(DEALER_LOG_API, {
+          fetch(MARKET_VISIT_TRACKING_API, {
             method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              action: "logEvent",
-              phone: loggedInUser.empId,
-              shopName: data.name,
-              event: "SALES_LIVE_GPS",
-              details: JSON.stringify({
-                lat: lat,
-                lng: lng,
-                acc: acc,
-                speed: speed,
-                distFromOfficeKm: distKm,
-                maps: data.mapsUrl
-              })
+              action: "updateStaffLocation",
+              staffName: data.name,
+              empId: data.empId,
+              role: data.role,
+              lat: lat,
+              lng: lng,
+              accuracy: acc,
+              speed: speed
             })
           }).catch(() => {});
         } catch(e) {}
