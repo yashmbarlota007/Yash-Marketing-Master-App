@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>Yash Marketing | India&#39;s First Tech-Driven B2B Distributor</title>
+  
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; padding-top: 70px; overflow-x: hidden; }
+    
+     
+    .navbar { box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: #001f4d !important; }
+    .navbar-brand { font-weight: 800; letter-spacing: 1px; cursor: pointer; }
+    .nav-link { cursor: pointer; font-weight: 500; margin: 0 4px; }
+    .nav-link:hover { color: #ffc107 !important; }
+    
+     
+    .hero-section { background: linear-gradient(135deg, #0d6efd, #001536); color: white; padding: 70px 20px 90px; text-align: center; }
+    
+     
+    .counter-box { background: white; padding: 25px 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); height: 100%; transition: transform 0.3s; }
+    .counter-box:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .counter-number { font-size: 2.2rem; font-weight: 800; color: #002255; }
+    
+     
+    .scroll-fade { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+    .scroll-fade.visible { opacity: 1; transform: translateY(0); }
+
+     
+    .card-custom { background: white; border-radius: 14px; padding: 40px; margin-bottom: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    
+     
+    .pillar-card { background: #f8f9fa; border-top: 5px solid #0d6efd; border-radius: 12px; padding: 25px; height: 100%; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .pillar-card:hover { transform: translateY(-8px); background: white; box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+    
+     
+    .brand-badge { background-color: #f8f9fa; color: #002255; padding: 12px 25px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; display: inline-block; margin: 8px; border: 1px solid #dee2e6; transition: all 0.3s ease; }
+    .brand-badge:hover { background-color: #0d6efd; color: white; transform: scale(1.1); box-shadow: 0 5px 15px rgba(13,110,253,0.3); }
+
+     
+    .step-box { background-color: #fff; border-left: 5px solid #0d6efd; padding: 25px; height: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: all 0.3s; }
+    .step-box:hover { border-left-width: 10px; background-color: #f8f9fa; }
+    .step-icon { font-size: 2.2rem; margin-bottom: 15px; }
+
+     
+    .media-box { background: #111; color: white; border-radius: 12px; overflow: hidden; position: relative; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .media-box i { font-size: 3rem; color: #ffc107; margin-bottom: 10px; transition: transform 0.3s; }
+    .media-box:hover i { transform: scale(1.2); }
+
+     
+    .software-section { background: linear-gradient(135deg, #111827, #1f2937); color: white; border-radius: 16px; padding: 50px 40px; margin-bottom: 40px; border: 2px solid #374151; }
+    
+     
+    .float-btn { position: fixed; right: 25px; color: white; border-radius: 50%; width: 58px; height: 58px; text-align: center; font-size: 26px; line-height: 58px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; transition: transform 0.3s; }
+    .float-btn:hover { transform: scale(1.12); color: white; }
+    .whatsapp-float { bottom: 25px; background-color: #25d366; }
+    .call-float { bottom: 95px; background-color: #0d6efd; font-size: 22px; }
+    .map-float { bottom: 165px; background-color: #dc3545; font-size: 24px; }
+
+     
+    .footer { background: #111; color: #ddd; padding: 60px 20px 20px; }
+    .footer h5 { color: white; font-weight: bold; margin-bottom: 20px; }
+    .footer a { color: #aaa; text-decoration: none; cursor: pointer; }
+    .footer a:hover { color: #ffc107; }
+    .footer-bottom { border-top: 1px solid #333; margin-top: 40px; padding-top: 20px; text-align: center; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  
+  <nav class="navbar navbar-expand-xl navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">
+        <i class="fas fa-bolt text-warning"></i> YASH MARKETING
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" onclick="scrollToSection('vision')">Founder's Vision</a></li>
+          <li class="nav-item"><a class="nav-link" onclick="scrollToSection('pillars')">4 Pillars</a></li>
+          <li class="nav-item"><a class="nav-link" onclick="scrollToSection('usp')">Why Choose Us</a></li>
+          <li class="nav-item"><a class="nav-link" onclick="scrollToSection('gallery')">Videos & Office</a></li>
+          <li class="nav-item"><a class="nav-link" onclick="scrollToSection('franchise')">Franchise</a></li>
+          <li class="nav-item"><a class="nav-link text-warning fw-bold" onclick="scrollToSection('software')">Buy B2B Software</a></li>
+          <li class="nav-item"><a class="nav-link btn btn-primary text-white px-3 ms-2 rounded-pill" onclick="scrollToSection('contact')">Order / Partner</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  
+  <section class="hero-section scroll-fade">
+    <div class="container">
+      <span class="bg-warning text-dark px-3 py-1 rounded-pill fw-bold"><i class="fa-solid fa-star"></i> Established in 2003</span>
+      
+      
+      <div class="mb-4 mt-3 d-flex justify-content-center">
+        <div style="background-color: white; padding: 25px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); display: inline-block; max-width: 100%;">
+          <div style="display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="font-family: 'Times New Roman', serif; font-size: 4rem; font-weight: bold; line-height: 0.8; margin-right: 20px;">
+              <span style="color: #e60000;">Y</span><span style="color: #222;">M</span>
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: center; border-left: 2px solid #333; padding-left: 20px; text-align: left;">
+              <div style="color: #e60000; font-size: 1.2rem; letter-spacing: 8px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 5px;">Y A S H</div>
+              <div style="color: #222; font-size: 1.1rem; letter-spacing: 5px; font-weight: bold;">MARKETING</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; font-weight: bold; color: #333; text-transform: uppercase;">
+            <span>boAt</span> <span style="color: #ccc;">|</span> 
+            <span style="color: #e60000;">Portronics</span> <span style="color: #ccc;">|</span> 
+            <span style="color: #e60000;">JBL</span> <span style="color: #ccc;">|</span> 
+            <span>Knockout</span> <span style="color: #ccc;">|</span> 
+            <span style="color: #e60000; font-style: italic;">Hikvision</span> <span style="color: #ccc;">|</span> 
+            <span>Velocity</span> <span style="color: #ccc;">|</span>
+            <span style="color: #0d6efd;">GoBoult</span>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="fw-bold mt-3 text-warning">Trust & Goodwill of 23+ Years</h2>
+      <p class="lead mt-2 mb-4">India's First Technology-Driven Mobile Accessories Distributor.</p>
+
+      <div class="container mb-4" style="max-width: 750px;"></div>
+      
+      <button type="button" onclick="scrollToSection('contact')" class="btn btn-light btn-lg fw-bold rounded-pill px-4 shadow text-primary me-2 mb-2"><i class="fas fa-handshake me-1"></i> Become a Dealer</button>
+      <button type="button" onclick="scrollToSection('franchise')" class="btn btn-warning btn-lg fw-bold rounded-pill px-4 shadow text-dark me-2 mb-2"><i class="fas fa-store me-1"></i> Get Franchise</button>
+      <button type="button" onclick="scrollToSection('software')" class="btn btn-outline-light btn-lg fw-bold rounded-pill px-4 mb-2"><i class="fas fa-laptop-code me-1"></i> Automate Your Business</button>
+    </div>
+  </section>
+
+  
+  <section class="container mt-n4 position-relative" style="top: -45px;">
+    <div class="row g-4 scroll-fade">
+      <div class="col-md-3 col-6">
+        <div class="counter-box border-bottom border-primary border-4">
+          <i class="fas fa-users text-primary fa-2x mb-2"></i>
+          <div class="counter-number">1000+</div>
+          <div class="text-muted fw-bold small">Trusted Dealers</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="counter-box border-bottom border-success border-4">
+          <i class="fas fa-award text-success fa-2x mb-2"></i>
+          <div class="counter-number">23+ Yrs</div>
+          <div class="text-muted fw-bold small">Legacy Since 2003</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="counter-box border-bottom border-warning border-4">
+          <i class="fas fa-percent text-warning fa-2x mb-2"></i>
+          <div class="counter-number">7+</div>
+          <div class="text-muted fw-bold small">Industry Leading Brands One Roof</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="counter-box border-bottom border-info border-4">
+          <i class="fas fa-shipping-fast text-info fa-2x mb-2"></i>
+          <div class="counter-number">95%</div>
+          <div class="text-muted fw-bold small">Same Day Dispatch</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+
+    
+    <div id="vision" class="card-custom scroll-fade" style="border-left: 6px solid #001f4d;">
+      <div class="row align-items-center">
+        <div class="col-lg-7">
+          <span class="badge text-uppercase mb-2 text-primary">About Us & Founder's Vision</span>
+          <h2 class="fw-bold text-dark mb-3">From Humble Beginnings in 2003 to India's one of the first Distributor</h2>
+          <p class="text-muted">Hamari parent company ki shuruat <strong>2003</strong> me ek simple soch ke sath hui thi: "B2B business sirf mal bechna nahi, balki dealers ke sath bharose aur tarakki ka rishta banana hai." Pichle 23+ saalon me market badla, brands badhe, lekin hamara bharosa aur goodwill hamesha mazboot raha.</p>
+          <p class="text-muted">Aaj <strong>Yash Barlota</strong> ke vision ke tehat, Yash Marketing ne 23 saalon ke traditional anubhav ko modern automation aur technology se jod diya hai. Hum samajhte hain ki ek retailer din-raat kitni mehnat karta hai\\u2014isiliye humne Industry-First Dealer Ordering App, Transparent Pricing, Daily Collection System aur har order par upto 5% discount jaisi suvidhayein shuru ki hain taaki hamare har dealer ka munafa badhe aur unka waqt bache.</p>
+        </div>
+        <div class="col-lg-5 mt-4 mt-lg-0">
+          <div class="p-4 rounded text-white" style="background: linear-gradient(135deg, #002255, #0d6efd);">
+            <h4 class="fw-bold text-warning mb-3"><i class="fas fa-history me-2"></i>Our Evolution Journey</h4>
+            <ul class="list-unstyled mb-0">
+              <li class="mb-3">
+                <span class="badge bg-warning text-dark mb-1">2003 - The Foundation</span>
+                <p class="small mb-0">Parent company established with a focus on ethical trading and deep market relationships.</p>
+              </li>
+              <li class="mb-3">
+                <span class="badge bg-info text-dark mb-1">2021 - Expansion Phase</span>
+                <p class="small mb-0">Partnered with top global & Indian brands (boAt, JBL, Portronics, Hikvision, GoBoult, Velocity, Knockout).</p>
+              </li>
+              <li class="mb-0">
+                <span class="badge bg-success text-dark mb-1">Present - Tech Revolution 2026</span>
+                <p class="small mb-0">100% System-driven operations: Live Ordering App, Replacement Backend, Automated FMS & 95% Same-Day Dispatch.</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div id="pillars" class="card-custom scroll-fade">
+      <div class="text-center mb-5">
+        <span class="badge bg-warning text-dark mb-2 px-3 py-1 fw-bold fs-6">OUR FOUNDATION</span>
+        <h2 class="fw-bold text-primary display-6 mt-2">The 4 Core Pillars of Our Business</h2>
+        <p class="text-muted fs-5">Hamara poora vyapar in 4 mazboot stambhon (pillars) par tiki hai jo hume sabse alag banate hain</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="pillar-card">
+            <i class="fas fa-award fa-3x text-primary mb-3"></i>
+            <h5 class="fw-bold fs-4"><span class="text-danger fw-extrabold" style="font-size: 1.4rem;">B</span>rands</h5>
+            <p class="small text-muted mb-0">Hum sirf 100% original aur market-leading brands (<strong>boAt, JBL, Portronics, Hikvision, GoBoult, Velocity, Knockout</strong>) me deal karte hain. \\u20b950 se \\u20b91,50,000 tak ki har high-demand accessory ek hi chhat ke niche milti hai.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="pillar-card" style="border-top-color: #198754;">
+            <i class="fas fa-users-cog fa-3x text-success mb-3"></i>
+            <h5 class="fw-bold fs-4"><span class="text-primary fw-extrabold" style="font-size: 1.4rem;">E</span>mployees</h5>
+            <p class="small text-muted mb-0">Hamari trained aur dedicated manpower hamari asli taqat hai. Sales, Accounts, Billing, Packing aur Dedicated Replacement Desk ke liye alag-alag experts hain jo har dealer ko VIP support dete hain.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="pillar-card" style="border-top-color: #ffc107;">
+            <i class="fas fa-cogs fa-3x text-warning mb-3"></i>
+            <h5 class="fw-bold fs-4"><span class="text-success fw-extrabold" style="font-size: 1.4rem;">S</span>ystem</h5>
+            <p class="small text-muted mb-0">Insano ki bhool-chuk hota hai par system nahi! Stock inward se lekar QC photo verification, automated billing, aur dispatch tracking tak\\u2014hamara har step software aur SOPs se chalta hai, jisse zero error hota hai.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="pillar-card" style="border-top-color: #dc3545;">
+            <i class="fas fa-store-alt fa-3x text-danger mb-3"></i>
+            <h5 class="fw-bold fs-4"><span class="text-warning fw-extrabold" style="font-size: 1.4rem;">T</span>raders (Dealers)</h5>
+            <p class="small text-muted mb-0">Dealers sirf 1000+ customers nahi, balki business partners hain. Unki profitability badhane ke liye hum Upto 5% Per Order Discount, Daily Collection aur fast replacement dete hain.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div id="usp" class="card-custom scroll-fade" style="background: linear-gradient(to right, #f8f9fa, #ffffff);">
+      <h2 class="mb-2 text-center text-primary fw-bold">Industry-First Tech & Financial Support</h2>
+      <p class="text-center text-muted mb-5">Jo suvidhayein aapko kisi traditional distributor ke paas nahi milengi</p>
+      
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="step-box border-primary">
+            <i class="fas fa-mobile-screen-button step-icon text-primary"></i>
+            <h5 class="fw-bold text-dark">Industry-First Dealer Ordering App</h5>
+            <p class="text-muted small mb-0">Ab salesman ka intezaar karne ya phone par lamba order likhwane ki zaroorat nahi! Hamare Ordering App par 24x7 live stock dekhein, 100% transparent rates check karein, **upto 5% discount** paayein aur 1 click me order lagayein.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="step-box border-success" style="border-left-color: #198754;">
+            <i class="fas fa-hand-holding-dollar step-icon text-success"></i>
+            <h5 class="fw-bold text-dark">Daily Collection System (Asaan Payment)</h5>
+            <p class="text-muted small mb-0"><strong>Iske Fayde:</strong> Ek sath bada cheque ya bulk payment dene ka pressure khatam! Rozana thoda-thoda payment dekar apna ledger clear rakhein, apna credit limit badhayein aur bina kisi tension ke dukan me hamesha naya stock bharein.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="step-box border-danger" style="border-left-color: #dc3545;">
+            <i class="fas fa-sync-alt step-icon text-danger"></i>
+            <h5 class="fw-bold text-dark">Dedicated Replacement Backend System</h5>
+            <p class="text-muted small mb-0">Defective maal ya warranty claims ke liye alag counter aur software tracking. Dealers ka paisa aur waqt kabhi nahi rukta, replacement process bilkul fast aur transparent tarike se pura hota hai.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="step-box border-warning" style="border-left-color: #ffc107;">
+            <i class="fas fa-boxes-packing step-icon text-warning"></i>
+            <h5 class="fw-bold text-dark">6-Step System Master Workflow</h5>
+            <p class="text-muted small mb-0">1. App Order Reception &rarr; 2. Instant Ledger Verification &rarr; 3. Automated Fast Billing &rarr; 4. QC Verified Secure Packing &rarr; 5. 95% Same-Day Dispatch &rarr; 6. Dealer Feedback.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div id="gallery" class="card-custom scroll-fade">
+      <div class="text-center mb-5">
+        <span class="badge bg-danger mb-2"><i class="fas fa-play-circle me-1"></i> LIVE PROOF & GALLERY</span>
+        <h2 class="fw-bold text-primary">Dekhiye Humare Office Me Kaam Kaise Hota Hai</h2>
+        <p class="text-muted">Backend processing, replacement system, office environment aur humare khush dealers ke videos</p>
+      </div>
+
+      
+      <h5 class="fw-bold mb-3"><i class="fas fa-video text-primary me-2"></i>1. Backend Order & Replacement Processing Videos</h5>
+      <div class="row g-4 mb-5">
+        <div class="col-md-4">
+          <div class="media-box">
+            <i class="fas fa-box-open"></i>
+            <h6 class="fw-bold">Live Order Packing & QC Process</h6>
+            <p class="small text-white-50 mb-2">Dekhiye kaise har item scan aur check hokar pack hota hai.</p>
+            <span class="badge bg-warning text-dark">Backend Video 1</span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="media-box">
+            <i class="fas fa-rotate"></i>
+            <h6 class="fw-bold">Dedicated Replacement Processing</h6>
+            <p class="small text-white-50 mb-2">Replacement claims ko fast verify aur dispatch karne ka live system.</p>
+            <span class="badge bg-warning text-dark">Replacement Video 2</span>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="media-box">
+            <i class="fas fa-building"></i>
+            <h6 class="fw-bold">Wadiya Park Head Office & Warehouse</h6>
+            <p class="small text-white-50 mb-2">Humare office, stock inward aur dispatch team ka live tour.</p>
+            <span class="badge bg-warning text-dark">Office Tour Video 3</span>
+          </div>
+        </div>
+      </div>
+
+      
+      <h5 class="fw-bold mb-3"><i class="fas fa-comments text-success me-2"></i>2. Dealer Testimonial Videos (Humare Partners Ki Zubani)</h5>
+      <div class="row g-3 mb-5">
+        <div class="col-md-4 col-lg-20">
+          <div class="media-box" style="min-height: 180px; background: #1e293b;">
+            <i class="fas fa-play-circle text-info"></i>
+            <h6 class="fw-bold small mb-1">Dealer Review #1</h6>
+            <p class="small text-white-50 mb-0">"Ordering App & 5% discount se profit badha!"</p>
+          </div>
+        </div>
+        <div class="col-md-4 col-lg-20">
+          <div class="media-box" style="min-height: 180px; background: #1e293b;">
+            <i class="fas fa-play-circle text-info"></i>
+            <h6 class="fw-bold small mb-1">Dealer Review #2</h6>
+            <p class="small text-white-50 mb-0">"95% Same day dispatch aur best packaging."</p>
+          </div>
+        </div>
+        <div class="col-md-4 col-lg-20">
+          <div class="media-box" style="min-height: 180px; background: #1e293b;">
+            <i class="fas fa-play-circle text-info"></i>
+            <h6 class="fw-bold small mb-1">Dealer Review #3</h6>
+            <p class="small text-white-50 mb-0">"Replacement system sabse fast hai."</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="media-box" style="min-height: 180px; background: #1e293b;">
+            <i class="fas fa-play-circle text-info"></i>
+            <h6 class="fw-bold small mb-1">Dealer Review #4</h6>
+            <p class="small text-white-50 mb-0">"Daily collection se business asaan ho gaya."</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="media-box" style="min-height: 180px; background: #1e293b;">
+            <i class="fas fa-play-circle text-info"></i>
+            <h6 class="fw-bold small mb-1">Dealer Review #5</h6>
+            <p class="small text-white-50 mb-0">"Pichle 10 saal se 100% original brands mil rahe hain."</p>
+          </div>
+        </div>
+      </div>
+
+      
+      <h5 class="fw-bold mb-3"><i class="fas fa-images text-warning me-2"></i>3. Office & Warehouse Photo Gallery</h5>
+      <div class="row g-3 text-center">
+        <div class="col-md-3 col-6">
+          <div class="p-4 bg-light border rounded shadow-sm">
+            <i class="fas fa-warehouse fa-2x text-secondary mb-2"></i>
+            <div class="fw-bold small">Master Stock Warehouse</div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="p-2 bg-light border rounded shadow-sm h-100 d-flex flex-column align-items-center justify-content-between" onclick="openPhotoModal('./assets/billing_and_fms_desk.jpg', 'Billing & FMS Desk')" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+            <div style="width: 100%; height: 110px; overflow: hidden; border-radius: 6px; margin-bottom: 8px; position: relative; background: #e2e8f0;">
+              <img src="./assets/billing_and_fms_desk.jpg" alt="Billing & FMS Desk" style="width: 100%; height: 100%; object-fit: cover;" />
+              <span class="badge bg-dark bg-opacity-75 position-absolute bottom-0 end-0 m-1" style="font-size: 10px;"><i class="fas fa-search-plus"></i> View</span>
+            </div>
+            <div class="fw-bold small text-dark">Billing & FMS Desk</div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="p-4 bg-light border rounded shadow-sm">
+            <i class="fas fa-people-carry-box fa-2x text-success mb-2"></i>
+            <div class="fw-bold small">Packing & Dispatch Hub</div>
+          </div>
+        </div>
+        <div class="col-md-3 col-6">
+          <div class="p-4 bg-light border rounded shadow-sm">
+            <i class="fas fa-gifts fa-2x text-danger mb-2"></i>
+            <div class="fw-bold small">Dealer Gift Kits Display</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div id="franchise" class="card-custom scroll-fade" style="border-top: 6px solid #ffc107;">
+      <div class="text-center mb-5">
+        <span class="badge bg-warning text-dark mb-2">FRANCHISE OPPORTUNITY</span>
+        <h2 class="fw-bold text-primary">Franchise With Us: Apne Shehar Me Yash Marketing Banayein</h2>
+        <p class="text-muted">Traditional distribution chhodiye, humare tech-driven model ke sath apna distribution business 10x grow karein</p>
+      </div>
+
+      
+      <div class="table-responsive mb-4">
+        <table class="table table-bordered align-middle text-center shadow-sm">
+          <thead class="table-dark">
+            <tr>
+              <th class="py-3">Particulars / Features</th>
+              <th class="py-3 bg-secondary">Traditional Distributor</th>
+              <th class="py-3 bg-primary text-warning"><i class="fas fa-bolt me-1"></i> Yash Marketing Franchise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="fw-bold text-start">Order लेने ka Tarika</td>
+              <td class="text-muted">Manual calls, WhatsApp par galtiyan, salesman dependency</td>
+              <td class="fw-bold text-success">24x7 Automated Dealer Ordering App with Live Stock</td>
+            </tr>
+            <tr>
+              <td class="fw-bold text-start">Brand Portfolio</td>
+              <td class="text-muted">Limited 1-2 brands, dead stock ka khatra</td>
+              <td class="fw-bold text-success">7+ Top Moving Brands (boAt, JBL, Portronics, Hikvision, etc.)</td>
+            </tr>
+            <tr>
+              <td class="fw-bold text-start">Payment Recovery</td>
+              <td class="text-muted">Mahino tak paisa phasa rehta hai (High Bad-Debt)</td>
+              <td class="fw-bold text-success">Proven Daily Collection System & Automated Ledger</td>
+            </tr>
+            <tr>
+              <td class="fw-bold text-start">Warranty & Replacement</td>
+              <td class="text-muted">Slow process, dealers hamesha naraz rehte hain</td>
+              <td class="fw-bold text-success">Dedicated Replacement Backend Software & Support</td>
+            </tr>
+            <tr>
+              <td class="fw-bold text-start">Operations & Tracking</td>
+              <td class="text-muted">Chori, stock shortage aur dispatch delays</td>
+              <td class="fw-bold text-success">100% Software Tracked (Inward, QC, Packing, Delivery)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row g-4 align-items-center bg-light p-4 rounded">
+        <div class="col-md-8">
+          <h5 class="fw-bold text-dark">Humari Franchise Lene Se Aapka Kya Fayda Hoga?</h5>
+          <ul class="small text-muted mb-0">
+            <li class="mb-1"><strong>Ready-Made Brand Goodwill:</strong> 23+ saalon ka trust aur top brands ki direct supply.</li>
+            <li class="mb-1"><strong>Complete Tech Setup:</strong> Ordering App, FMS Billing, aur Stock Tracking hum aapko set karke denge.</li>
+            <li class="mb-1"><strong>Staff Training & SOPs:</strong> Aapki team ko humare System Master workflow ki poori training milegi.</li>
+            <li><strong>High ROI & Fast Scaling:</strong> Kam kharche aur zero leakage ke sath pehle din se profitable system.</li>
+          </ul>
+        </div>
+        <div class="col-md-4 text-center">
+          <button onclick="selectInquiry('Franchise Opportunity')" class="btn btn-warning btn-lg fw-bold rounded-pill px-4 shadow w-100">Apply for Franchise <i class="fas fa-arrow-right ms-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    
+    <div id="software" class="software-section scroll-fade shadow-lg">
+      <div class="row align-items-center">
+        <div class="col-lg-7">
+          <span class="badge bg-info text-dark fw-bold mb-3 px-3 py-2">RUN YOUR BUSINESS LIKE A PRO 🚀</span>
+          <h2 class="fw-bold text-white mb-3">Automate Your Distribution Business With Our Systems & Softwares!</h2>
+          <p class="text-light opacity-75 mb-4">Kya aap ek distributor ya wholesaler hain aur rozana stock mismatch,遅i dispatch, staff task tracking aur payment recovery se pareshan hain? Humara in-house **B2B Distribution Automation Suite** kharidein aur apne business ko next level par scale karein!</p>
+          
+          <div class="row g-3 mb-4">
+            <div class="col-sm-6">
+              <div class="p-3 rounded" style="background: rgba(255,255,255,0.08);">
+                <i class="fas fa-truck-ramp-box text-warning me-2"></i> <strong>Order-to-Delivery FMS:</strong> Track billing, packing & every single dispatch live.
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="p-3 rounded" style="background: rgba(255,255,255,0.08);">
+                <i class="fas fa-camera-retro text-info me-2"></i> <strong>QC & Photo Verification:</strong> Mandatory photo proof for packing, stock inward & tasks.
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="p-3 rounded" style="background: rgba(255,255,255,0.08);">
+                <i class="fas fa-boxes-stacked text-success me-2"></i> <strong>Stock Inward & Shortage Tracker:</strong> Master carton aur invoice tracking.
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="p-3 rounded" style="background: rgba(255,255,255,0.08);">
+                <i class="fas fa-list-check text-danger me-2"></i> <strong>Staff Task & Branch Monitor:</strong> Daily/Weekly staff tasks & live location lock logs.
+              </div>
+            </div>
+          </div>
+
+          <button onclick="selectInquiry('Buy B2B Automation Software')" class="btn btn-info btn-lg fw-bold rounded-pill px-5 shadow text-dark">Book a Free Software Demo <i class="fas fa-laptop-code ms-2"></i></button>
+        </div>
+        <div class="col-lg-5 mt-4 mt-lg-0 text-center">
+          <div class="p-4 rounded-4 bg-dark border border-secondary">
+            <i class="fas fa-server fa-4x text-warning mb-3"></i>
+            <h4 class="fw-bold">Complete B2B ERP & App Suite</h4>
+            <p class="small text-white-50">Tested on 1000+ dealers & thousands of daily dispatches at Yash Marketing.</p>
+            <hr class="border-secondary">
+            <div class="text-start small">
+              <p class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Custom Dealer Ordering App</p>
+              <p class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Dispatch & Delivery Tracking</p>
+              <p class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Replacement Backend System</p>
+              <p class="mb-0"><i class="fas fa-check-circle text-success me-2"></i> 100% Cloud Based & Mobile Friendly</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div id="contact" class="card-custom scroll-fade" style="border-top: 6px solid #001f4d;">
+      
+      
+      <div class="p-4 mb-5 rounded-3 text-white text-center shadow" style="background: linear-gradient(90deg, #002255, #0d6efd);">
+        <h3 class="fw-bold mb-2"><i class="fas fa-mobile-alt text-warning me-2"></i>Existing Dealer Hain? Seedha App Se Order Place Karein!</h3>
+        <p class="mb-3">Live stock dekhein, transparent rates paayein aur har order par <strong>Upto 5% Discount</strong> claim karein.</p>
+        <a href="https://wa.me/918378811922?text=Hello%20Yash%20Marketing,%20Please%20share%20the%20Direct%20Dealer%20Ordering%20App%20link." target="_blank" class="btn btn-warning btn-lg fw-bold rounded-pill px-5 shadow text-dark">
+          <i class="fas fa-cart-shopping me-2"></i> Open Dealer Ordering App (Place Order)
+        </a>
+      </div>
+
+      <div class="row align-items-center">
+        <div class="col-md-5 mb-4 mb-md-0">
+          <h3 class="fw-bold text-primary">Partner With Us / Send Inquiry</h3>
+          <p class="text-muted small">Naye Dealer banne, Franchise lene, ya humara B2B Software kharidne ke liye yeh form bharein. Humari team turant aapse sampark karegi.</p>
+          <div class="mt-4 p-3 bg-light rounded border">
+            <p class="mb-2"><i class="fas fa-user-tie text-primary me-2"></i> <strong>Proprietor:</strong> Yash Barlota</p>
+            <p class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i> <strong>Location:</strong> Wadiya Park, Ahmednagar, Maharashtra</p>
+            <p class="mb-2"><i class="fas fa-phone-alt text-success me-2"></i> <strong>Office No:</strong> +91 83788 11922</p>
+            <a href="https://www.google.com/maps/search/?api=1&amp;query=Wadiya&#43;Park&#43;Ahmednagar&#43;Maharashtra" target="_blank" class="btn btn-outline-danger btn-sm w-100 mt-2 fw-bold">
+              <i class="fas fa-location-arrow me-1"></i> Open Location in Google Maps
+            </a>
+          </div>
+        </div>
+        <div class="col-md-7">
+          <form id="dealerForm" onsubmit="submitForm(event)">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <input type="text" class="form-control bg-light" id="name" placeholder="Your Full Name" required>
+              </div>
+              <div class="col-md-6">
+                <input type="text" class="form-control bg-light" id="shop" placeholder="Shop / Business Name" required>
+              </div>
+              <div class="col-md-6">
+                <input type="tel" class="form-control bg-light" id="phone" placeholder="WhatsApp / Mobile Number" required>
+              </div>
+              <div class="col-md-6">
+                <select class="form-select bg-light" id="type" required>
+                  <option value="New Dealer Registration &amp; App Access">New Dealer & Ordering App Access</option>
+                  <option value="Franchise Opportunity">Franchise Opportunity Inquiry</option>
+                  <option value="Buy B2B Automation Software">Buy B2B Automation Software</option>
+                  <option value="Bulk Order Inquiry">Bulk Order Inquiry</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <textarea class="form-control bg-light" id="message" rows="3" placeholder="Apna shehar aur requirement likhein..."></textarea>
+              </div>
+              <div class="col-12">
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg fw-bold rounded-pill w-100">Submit Request <i class="fas fa-paper-plane ms-2"></i></button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div> 
+
+  
+  <footer class="footer mt-5">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <h5><i class="fas fa-bolt text-warning"></i> Yash Marketing</h5>
+          <p class="text-muted small">Parent company established in 2003. India's first technology-driven B2B distributor serving 1000+ dealers with Upto 5% per-order discount, Daily Collection System, and 95% same-day dispatch.</p>
+        </div>
+        <div class="col-md-4">
+          <h5>Quick Navigation</h5>
+          <ul class="list-unstyled small">
+            <li class="mb-1"><a onclick="scrollToSection('vision')"><i class="fas fa-angle-right me-2"></i> Founder's Vision (Since 2003)</a></li>
+            <li class="mb-1"><a onclick="scrollToSection('pillars')"><i class="fas fa-angle-right me-2"></i> Our 4 Core Pillars</a></li>
+            <li class="mb-1"><a onclick="scrollToSection('franchise')"><i class="fas fa-angle-right me-2"></i> Get a Franchise</a></li>
+            <li class="mb-1"><a onclick="scrollToSection('software')"><i class="fas fa-angle-right me-2"></i> Buy B2B Automation Software</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>Head Office Contact</h5>
+          <p class="small mb-1"><i class="fas fa-user-tie me-2 text-primary"></i> <strong>Proprietor:</strong> Yash Barlota</p>
+          <p class="small mb-1"><i class="fas fa-map-pin me-2 text-danger"></i> Wadiya Park, Ahmednagar, Maharashtra</p>
+          <p class="small mb-1"><i class="fas fa-phone me-2 text-success"></i> +91 83788 11922</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; 2026 Yash Marketing. All Rights Reserved.
+      </div>
+    </div>
+  </footer>
+
+  
+  <a href="https://www.google.com/maps/search/?api=1&amp;query=Wadiya&#43;Park&#43;Ahmednagar&#43;Maharashtra" target="_blank" class="float-btn map-float" title="Open Office Location on Google Maps">
+    <i class="fas fa-map-marker-alt"></i>
+  </a>
+
+  <a href="tel:&#43;918378811922" class="float-btn call-float" title="Call Office">
+    <i class="fas fa-phone-alt"></i>
+  </a>
+
+  <a href="https://wa.me/918378811922?text=Hello%20Yash%20Marketing,%20I%20want%20to%20connect%20regarding%20Dealership%20/%20Ordering%20App." target="_blank" class="float-btn whatsapp-float" title="Chat on WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </a>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function scrollToSection(id) {
+      document.getElementById(id).scrollIntoView({behavior: 'smooth'});
+    }
+
+    function selectInquiry(optionValue) {
+      document.getElementById('type').value = optionValue;
+      scrollToSection('contact');
+    }
+
+    
+    document.addEventListener("DOMContentLoaded", function() {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1 });
+      
+      document.querySelectorAll('.scroll-fade').forEach(el => observer.observe(el));
+    });
+
+    
+    function submitForm(event) {
+      event.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Details...';
+      btn.disabled = true;
+
+      const formData = {
+        name: document.getElementById('name').value,
+        shop: document.getElementById('shop').value,
+        phone: document.getElementById('phone').value,
+        type: document.getElementById('type').value,
+        message: document.getElementById('message').value
+      };
+
+      google.script.run.withSuccessHandler(function(response) {
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Request Saved Successfully!';
+        btn.classList.replace('btn-primary', 'btn-success');
+        document.getElementById('dealerForm').reset();
+        
+        setTimeout(() => {
+          btn.innerHTML = 'Submit Request <i class="fas fa-paper-plane ms-2"></i>';
+          btn.classList.replace('btn-success', 'btn-primary');
+          btn.disabled = false;
+        }, 3000);
+      }).saveDealerInfo(formData);
+    }
+  </script>
+
+  <!-- PHOTO ZOOM MODAL -->
+  <div class="modal fade" id="galleryPhotoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary py-2">
+          <h5 class="modal-title fs-6" id="galleryPhotoModalLabel"><i class="fas fa-desktop text-primary me-2"></i>Billing & FMS Desk</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-2">
+          <img id="galleryModalImg" src="" alt="Photo" class="img-fluid rounded" style="max-height: 80vh; object-fit: contain; width: 100%;" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openPhotoModal(imgSrc, title) {
+      document.getElementById('galleryModalImg').src = imgSrc;
+      document.getElementById('galleryPhotoModalLabel').innerHTML = '<i class="fas fa-desktop text-primary me-2"></i>' + title;
+      var modalEl = document.getElementById('galleryPhotoModal');
+      var myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      myModal.show();
+    }
+  </script>
+</body>
+</html>
