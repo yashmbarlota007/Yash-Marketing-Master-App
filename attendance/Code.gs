@@ -28,6 +28,8 @@ function processDailyPunchLogs(punchesMap) {
     
     let punchIn = null;
     let punchOut = null;
+    let inSelfie = "";
+    let outSelfie = "";
     let isHalfDay = false;
     let totalBreakMs = 0;
     let breakStart = null;
@@ -36,13 +38,18 @@ function processDailyPunchLogs(punchesMap) {
       let item = dayData.rawLogs[k];
       let t = item.type ? item.type.toString().trim() : "";
       let tUpper = t.toUpperCase();
+      let s = item.selfie ? item.selfie.toString().trim() : "";
       
       if (tUpper === "HALF DAY") {
         isHalfDay = true;
       } else if (tUpper === "PUNCH IN") {
-        if (!punchIn) punchIn = item.time;
+        if (!punchIn) {
+          punchIn = item.time;
+          if (s) inSelfie = s;
+        }
       } else if (tUpper === "PUNCH OUT") {
         punchOut = item.time;
+        if (s) outSelfie = s;
         if (breakStart) {
           totalBreakMs += Math.max(0, item.time.getTime() - breakStart.getTime());
           breakStart = null;
@@ -59,6 +66,8 @@ function processDailyPunchLogs(punchesMap) {
     
     dayData.in = punchIn;
     dayData.out = punchOut;
+    dayData.inSelfie = inSelfie;
+    dayData.outSelfie = outSelfie;
     dayData.type = isHalfDay ? "Half Day" : null;
     dayData.totalBreakHours = totalBreakMs / 3600000;
     dayData.totalBreakMinutes = Math.round(totalBreakMs / 60000);
@@ -70,6 +79,38 @@ function processDailyPunchLogs(punchesMap) {
 // ====================================================================================
 
 function doGet(e) {
+  if (e && e.parameter && e.parameter.diag === "status") {
+    var result = { drive: null, logs: [] };
+    try {
+      var f = DriveApp.getFolderById(ATTENDANCE_DRIVE_FOLDER_ID);
+      result.drive = { authorized: true, folder: f.getName(), id: f.getId() };
+    } catch(err) {
+      result.drive = { authorized: false, error: err.toString() };
+    }
+    try {
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var sheet = ss.getSheetByName("Attendance_Logs") || ss.getSheetByName("Attendance Logs");
+      if (sheet) {
+        var lastRow = sheet.getLastRow();
+        var startRow = Math.max(2, lastRow - 9);
+        var rows = sheet.getRange(startRow, 1, lastRow - startRow + 1, sheet.getLastColumn()).getValues();
+        result.logs = rows.map(function(r) {
+          return {
+            timestamp: r[0],
+            name: r[1],
+            id: r[2],
+            type: r[3],
+            location: r[4],
+            selfie: r[5] ? r[5].toString().substring(0, 150) : ""
+          };
+        });
+      }
+    } catch(err) {
+      result.sheetError = err.toString();
+    }
+    return ContentService.createTextOutput(JSON.stringify(result, null, 2)).setMimeType(ContentService.MimeType.JSON);
+  }
+
   var template = HtmlService.createTemplateFromFile('Index');
   if (e && e.parameter && e.parameter.empId) {
     template.empId = e.parameter.empId;
@@ -209,7 +250,16 @@ function evaluateEmployeeMonth(empObj, empPunchesMap, daysInMonth, evalBoundary,
         
         metrics.attendanceMap[dKey] = dayStatus;
         if (d <= evalBoundary) {
-            metrics.dailyLogs.push({ date: dKey, status: dayStatus, in: dayIn, out: dayOut, breakMins: pData ? (pData.totalBreakMinutes || 0) : 0, hrs: typeof dayHrs === 'number' ? dayHrs.toFixed(2) : dayHrs });
+            metrics.dailyLogs.push({ 
+                date: dKey, 
+                status: dayStatus, 
+                in: dayIn, 
+                out: dayOut, 
+                inSelfie: pData ? (pData.inSelfie || "") : "",
+                outSelfie: pData ? (pData.outSelfie || "") : "",
+                breakMins: pData ? (pData.totalBreakMinutes || 0) : 0, 
+                hrs: typeof dayHrs === 'number' ? dayHrs.toFixed(2) : dayHrs 
+            });
         }
     }
     return metrics;
@@ -317,7 +367,7 @@ function authenticateUser(empId, pass, targetMonthStr) {
     // Attendance Punch Retrieval
     const logSheet = ss.getSheetByName("Attendance_Logs") || ss.getSheetByName("Attendance Logs");
     let allLogs = [];
-    let logIdCol = 1; let logTypeCol = 2; 
+    let logIdCol = 1; let logTypeCol = 2; let logSelfieCol = 5;
 
     if (logSheet && logSheet.getLastRow() > 0) {
       allLogs = logSheet.getDataRange().getValues();
@@ -328,6 +378,12 @@ function authenticateUser(empId, pass, targetMonthStr) {
         
         let foundType = logHeaders.findIndex(h => h.toString().replace(/_/g, " ").trim().toUpperCase() === "PUNCH TYPE" || h.toString().replace(/_/g, " ").trim().toUpperCase() === "ATTENDANCE TYPE");
         if (foundType !== -1) logTypeCol = foundType;
+
+        let foundSelfie = logHeaders.findIndex(h => {
+          let s = h.toString().replace(/_/g, " ").trim().toUpperCase();
+          return s.includes("SELFIE") || s.includes("PHOTO");
+        });
+        if (foundSelfie !== -1) logSelfieCol = foundSelfie;
       }
     }
 
@@ -339,8 +395,9 @@ function authenticateUser(empId, pass, targetMonthStr) {
           let dateStr = `${logDateObj.getFullYear()}-${String(logDateObj.getMonth() + 1).padStart(2, '0')}-${String(logDateObj.getDate()).padStart(2, '0')}`;
           let logType = allLogs[i][logTypeCol] ? allLogs[i][logTypeCol].toString().trim() : "Punch In";
           
+          let userSelfieVal = (logSelfieCol < allLogs[i].length && allLogs[i][logSelfieCol]) ? allLogs[i][logSelfieCol].toString().trim() : "";
           if(!userPunchesMap[dateStr]) userPunchesMap[dateStr] = { in: null, out: null, type: null, rawLogs: [] };
-          userPunchesMap[dateStr].rawLogs.push({ time: logDateObj, type: logType });
+          userPunchesMap[dateStr].rawLogs.push({ time: logDateObj, type: logType, selfie: userSelfieVal });
         }
       }
     }
@@ -396,8 +453,9 @@ function authenticateUser(empId, pass, targetMonthStr) {
               let dKey = `${lDateObj.getFullYear()}-${String(lDateObj.getMonth() + 1).padStart(2, '0')}-${String(lDateObj.getDate()).padStart(2, '0')}`;
               let lType = allLogs[j][logTypeCol] ? allLogs[j][logTypeCol].toString().trim() : "Punch In";
               
+              let staffSelfieVal = (logSelfieCol < allLogs[j].length && allLogs[j][logSelfieCol]) ? allLogs[j][logSelfieCol].toString().trim() : "";
               if(!staffPunches[dKey]) staffPunches[dKey] = { in: null, out: null, type: null, rawLogs: [] };
-              staffPunches[dKey].rawLogs.push({ time: lDateObj, type: lType });
+              staffPunches[dKey].rawLogs.push({ time: lDateObj, type: lType, selfie: staffSelfieVal });
             }
           }
         }
