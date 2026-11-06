@@ -79,6 +79,20 @@
     
     #loginView { display: block; }
     #dashboardView, #punchView, #docView, #holidayView, #adminControlView { display: none; }
+    .btn-selfie-tag {
+      border: none;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-block;
+      margin: 1px;
+      transition: all 0.2s;
+    }
+    .btn-selfie-tag.in { background: #dcfce7; color: #15803d; }
+    .btn-selfie-tag.out { background: #e0f2fe; color: #0369a1; }
+    .btn-selfie-tag:hover { filter: brightness(0.92); transform: scale(1.05); }
   </style>
 </head>
 <body>
@@ -107,12 +121,29 @@
         <div class="table-responsive-wrapper">
             <table class="payroll-table">
                 <thead>
-                    <tr><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Break</th><th>Net Hrs</th></tr>
+                    <tr><th>Date</th><th>Status</th><th>In</th><th>Out</th><th>Break</th><th>Net Hrs</th><th style="text-align:center;">Selfie</th></tr>
                 </thead>
                 <tbody id="ledgerModalTbody">
                 </tbody>
             </table>
         </div>
+    </div>
+  </div>
+
+  <!-- Selfie Viewer Popup Modal -->
+  <div id="selfieViewerModal" class="warning-modal-overlay" style="display:none; z-index:99999;">
+    <div class="warning-modal-box" style="max-width:400px; width:90%; padding:18px; text-align:center; border: 2px solid var(--accent); border-radius:14px; background:#fff;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 id="selfieViewerTitle" style="margin:0; font-size:15px; font-weight:700; color:#1e293b;">Punch Selfie Preview</h3>
+        <button onclick="closeSelfieModal()" style="background:none; border:none; font-size:24px; font-weight:bold; cursor:pointer; color:var(--text-light); line-height:1;">&times;</button>
+      </div>
+      <div style="width:100%; min-height:220px; max-height:360px; overflow:hidden; border-radius:10px; background:#f8fafc; display:flex; align-items:center; justify-content:center; border:1px solid #e2e8f0;">
+        <img id="selfieViewerImg" src="" alt="Punch Selfie" style="width:100%; height:auto; max-height:360px; object-fit:contain; border-radius:10px;">
+      </div>
+      <div style="margin-top:14px; display:flex; gap:10px;">
+        <a id="selfieViewerDriveLink" href="#" target="_blank" class="btn btn-green" style="flex:1; text-decoration:none; padding:10px; font-size:12px; font-weight:700; display:none;">Open in Drive</a>
+        <button onclick="closeSelfieModal()" class="btn btn-outline" style="flex:1; padding:10px; font-size:12px; font-weight:700;">Close</button>
+      </div>
     </div>
   </div>
 
@@ -326,6 +357,32 @@
     function closeWarningModal() { document.getElementById('missedPunchWarningModal').style.display = 'none'; }
     function closeLedgerModal() { document.getElementById('dailyLedgerModal').style.display = 'none'; }
 
+    function viewSelfiePhoto(url, title) {
+      document.getElementById('selfieViewerTitle').innerText = title || "Punch Selfie";
+      const imgEl = document.getElementById('selfieViewerImg');
+      const linkEl = document.getElementById('selfieViewerDriveLink');
+      
+      let displayUrl = url;
+      if (url.indexOf("drive.google.com/file/d/") > -1) {
+        let parts = url.split("/file/d/");
+        if (parts.length > 1) {
+          let fileId = parts[1].split("/")[0].split("?")[0];
+          displayUrl = "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w800";
+          linkEl.href = url;
+          linkEl.style.display = "block";
+        }
+      } else {
+        linkEl.style.display = "none";
+      }
+      imgEl.src = displayUrl;
+      document.getElementById('selfieViewerModal').style.display = "flex";
+    }
+
+    function closeSelfieModal() {
+      document.getElementById('selfieViewerModal').style.display = "none";
+      document.getElementById('selfieViewerImg').src = "";
+    }
+
     function openLedgerModal(staffId = null) {
         let logs = [];
         if (staffId) {
@@ -351,6 +408,24 @@
             }
 
             let breakDisplay = (l.breakMins && l.breakMins > 0) ? `<span style="color:var(--warning); font-weight:700;">-${l.breakMins}m</span>` : `<span style="color:var(--text-light);">-</span>`;
+            
+            let selfieHtml = "";
+            let inImg = l.inSelfie || "";
+            let outImg = l.outSelfie || "";
+            if (inImg.startsWith("http") || inImg.startsWith("data:image")) {
+              selfieHtml += `<button onclick="viewSelfiePhoto('${inImg}', '${l.date} - Punch In Selfie')" class="btn-selfie-tag in" title="Punch In Selfie">📸 In</button> `;
+            }
+            if (outImg.startsWith("http") || outImg.startsWith("data:image")) {
+              selfieHtml += `<button onclick="viewSelfiePhoto('${outImg}', '${l.date} - Punch Out Selfie')" class="btn-selfie-tag out" title="Punch Out Selfie">📸 Out</button>`;
+            }
+            if (!selfieHtml) {
+              if (inImg.includes("Failed") || outImg.includes("Failed")) {
+                selfieHtml = `<span style="font-size:10px; color:var(--danger); font-weight:600;" title="Drive Permission Not Granted by Owner">⚠️ Failed</span>`;
+              } else {
+                selfieHtml = `<span style="font-size:11px; color:var(--text-light);">-</span>`;
+              }
+            }
+
             let row = `<tr style="${trBg}">
                 <td style="font-size:11px;">${l.date}</td>
                 <td style="font-size:11px; font-weight:600; color:${statusColor}">${l.status}</td>
@@ -358,6 +433,7 @@
                 <td style="font-size:11px;">${l.out}</td>
                 <td style="font-size:11px; text-align:center;">${breakDisplay}</td>
                 <td style="font-size:12px; font-weight:700;">${l.hrs}h</td>
+                <td style="font-size:11px; text-align:center; white-space:nowrap;">${selfieHtml}</td>
             </tr>`;
             tbody.insertAdjacentHTML('beforeend', row);
         });
