@@ -10,11 +10,19 @@ function getAttendancePhotoFolder() {
   }
 }
 
-// ONE-CLICK AUTHORIZATION FUNCTION FOR GOOGLE DRIVE PERMISSIONS
+// ONE-CLICK AUTHORIZATION FUNCTION FOR GOOGLE DRIVE PERMISSIONS (FORCES FULL WRITE ACCESS)
 function authorizeDrivePermissions() {
   let targetFolder = getAttendancePhotoFolder();
-  Logger.log("? Google Drive Permissions successfully authorized! Folder: " + targetFolder.getName() + " (ID: " + targetFolder.getId() + ")");
-  return "? Drive Permissions Active for " + targetFolder.getName();
+  // EXPLICIT DRIVE WRITE: Calls createFile, setSharing, and setTrashed to force Google OAuth to prompt for FULL WRITE access
+  let testBlob = Utilities.newBlob("Selfie Upload Authorization Verification Test", "text/plain", "drive_auth_verify.txt");
+  let testFile = targetFolder.createFile(testBlob);
+  try {
+    testFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch(shErr) {}
+  let verifiedUrl = testFile.getUrl();
+  testFile.setTrashed(true);
+  Logger.log("✅ Google Drive FULL WRITE permissions verified! Folder: " + targetFolder.getName() + " (ID: " + targetFolder.getId() + ")");
+  return "✅ Success! Google Drive WRITE permissions active. Verified URL: " + verifiedUrl;
 }
 
 
@@ -80,12 +88,16 @@ function processDailyPunchLogs(punchesMap) {
 
 function doGet(e) {
   if (e && e.parameter && e.parameter.diag === "status") {
-    var result = { drive: null, logs: [] };
+    var result = { drive: null, logs: [], tokenScope: null };
+// Token check omitted
     try {
       var f = DriveApp.getFolderById(ATTENDANCE_DRIVE_FOLDER_ID);
-      result.drive = { authorized: true, folder: f.getName(), id: f.getId() };
+      var testBlob = Utilities.newBlob("check", "text/plain", "diag_test.txt");
+      var tFile = f.createFile(testBlob);
+      tFile.setTrashed(true);
+      result.drive = { authorized: true, writeAuthorized: true, folder: f.getName(), id: f.getId() };
     } catch(err) {
-      result.drive = { authorized: false, error: err.toString() };
+      result.drive = { authorized: false, writeAuthorized: false, error: err.toString() };
     }
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
