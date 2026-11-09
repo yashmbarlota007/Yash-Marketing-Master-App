@@ -16,14 +16,12 @@
         extend: {
           colors: {
             brand: {
-              dark: '#080d1a',
-              card: '#0f172a',
-              cardLight: '#1e293b',
-              border: '#334155',
-              accent: '#6366f1',
-              emerald: '#10b981',
-              amber: '#f59e0b',
-              rose: '#f43f5e'
+              blue: '#2563eb',
+              blueDark: '#1d4ed8',
+              emerald: '#059669',
+              amber: '#d97706',
+              purple: '#7c3aed',
+              rose: '#e11d48'
             }
           }
         }
@@ -32,128 +30,118 @@
   </script>
   <style>
     body {
-      background-color: #080d1a;
-      color: #f1f5f9;
+      background-color: #f8fafc;
+      color: #0f172a;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
-    .glass-panel {
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(51, 65, 85, 0.6);
-    }
-    .glass-card {
-      background: #0f172a;
-      border: 1px solid rgba(51, 65, 85, 0.5);
+    .clean-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
       transition: all 0.2s ease-in-out;
     }
-    .glass-card:hover {
-      border-color: rgba(99, 102, 241, 0.5);
+    .clean-card:hover {
+      border-color: #93c5fd;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
     }
     .custom-scrollbar::-webkit-scrollbar {
       width: 4px;
       height: 4px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #334155;
+      background: #cbd5e1;
       border-radius: 9999px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
       background: transparent;
     }
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
-      50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.6); }
-    }
-    .pulse-delivered {
-      animation: pulseGlow 2s infinite;
-    }
   </style>
 </head>
-<body class="min-h-screen pb-16 antialiased flex flex-col selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen pb-16 antialiased flex flex-col bg-slate-50 selection:bg-blue-600 selection:text-white">
 
-  <!-- TOP HEADER -->
-  <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80 px-4 py-3 shadow-lg">
+  <!-- TOP HEADER (CLEAN WHITE THEME) -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 shadow-xs">
     <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
       <!-- Brand & Profile -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 flex items-center justify-center font-black text-white text-base shadow-lg shadow-indigo-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-sm">
           YM
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-sm font-black tracking-wide text-white">YASH MARKETING</h1>
-            <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">DELIVERY & PAYMENT OS</span>
+            <h1 class="text-sm font-black tracking-wide text-slate-900">YASH MARKETING</h1>
+            <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">DELIVERY & PAYMENT OS</span>
           </div>
-          <div class="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <i class="fa-solid fa-user-circle text-indigo-400 text-[11px]"></i>
-            <span id="headerStaffName" onclick="promptChangeStaff()" class="cursor-pointer hover:text-white transition-colors underline decoration-dotted">Delivery Staff</span>
+          <div class="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+            <i class="fa-solid fa-user-circle text-blue-600 text-[12px]"></i>
+            <span id="headerStaffName" onclick="promptChangeStaff()" class="cursor-pointer hover:text-blue-700 transition-colors underline decoration-dotted font-bold text-slate-700">Delivery Staff</span>
           </div>
         </div>
       </div>
 
       <!-- Sync / Refresh Action -->
       <div class="flex items-center gap-2">
-        <button id="refreshBtn" onclick="fetchOrders(true)" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs px-3 py-2 rounded-xl border border-slate-700 transition shadow">
-          <i id="refreshIcon" class="fa-solid fa-arrows-rotate"></i>
-          <span class="hidden sm:inline font-bold">Sync</span>
+        <button id="refreshBtn" onclick="fetchOrders(true)" class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 text-xs px-3 py-2 rounded-xl border border-slate-300 font-bold transition shadow-2xs">
+          <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-blue-600"></i>
+          <span class="hidden sm:inline">Sync</span>
         </button>
       </div>
     </div>
 
-    <!-- PILL NAVIGATION TABS (MATCHING MASTER APP DESIGN) -->
+    <!-- PILL NAVIGATION TABS (MATCHING MASTER APP CLEAN PILL DESIGN) -->
     <div class="max-w-4xl mx-auto mt-3">
       <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1">
         <!-- Delivery Tab -->
-        <button id="tabBtnDelivery" onclick="switchTab('delivery')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+        <button id="tabBtnDelivery" onclick="switchTab('delivery')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-blue-600 text-white shadow-sm shadow-blue-500/20">
           <i class="fa-solid fa-truck-fast"></i>
           <span>Delivered</span>
-          <span id="badgePendingCount" class="bg-indigo-900/80 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1">0</span>
+          <span id="badgePendingCount" class="bg-blue-800 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1">0</span>
         </button>
 
         <!-- Payment Tab -->
-        <button id="tabBtnPayment" onclick="switchTab('payment')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/60">
-          <i class="fa-solid fa-credit-card"></i>
+        <button id="tabBtnPayment" onclick="switchTab('payment')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200">
+          <i class="fa-solid fa-credit-card text-emerald-600"></i>
           <span>Payment</span>
-          <span id="badgePaymentToday" class="bg-emerald-500/20 text-emerald-400 text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1">₹0</span>
+          <span id="badgePaymentToday" class="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1 border border-emerald-200">₹0</span>
         </button>
 
         <!-- History Tab -->
-        <button id="tabBtnHistory" onclick="switchTab('history')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/60">
-          <i class="fa-solid fa-clock-rotate-left"></i>
+        <button id="tabBtnHistory" onclick="switchTab('history')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200">
+          <i class="fa-solid fa-clock-rotate-left text-purple-600"></i>
           <span>History</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
+  <!-- MAIN CONTAINER (WHITE THEME) -->
   <main class="max-w-4xl mx-auto w-full px-4 pt-4 flex-1">
 
     <!-- KPI SUMMARY BAR -->
     <section class="grid grid-cols-3 gap-2.5 mb-4">
-      <div class="glass-card p-3 rounded-2xl border-t-2 border-t-amber-500">
-        <div class="text-[10px] uppercase font-black text-amber-400 tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-boxes-packing text-xs"></i> To Deliver
+      <div class="clean-card p-3 rounded-2xl border-t-4 border-t-amber-500">
+        <div class="text-[10px] uppercase font-black text-amber-700 tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-boxes-packing text-xs text-amber-600"></i> To Deliver
         </div>
-        <div id="statToDeliver" class="text-xl font-black text-white mt-1">--</div>
-        <div class="text-[9px] text-slate-400">Out for delivery</div>
+        <div id="statToDeliver" class="text-xl font-black text-slate-900 mt-1">--</div>
+        <div class="text-[9px] text-slate-500 font-medium">Out for delivery</div>
       </div>
 
-      <div class="glass-card p-3 rounded-2xl border-t-2 border-t-emerald-500">
-        <div class="text-[10px] uppercase font-black text-emerald-400 tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-circle-check text-xs"></i> Delivered
+      <div class="clean-card p-3 rounded-2xl border-t-4 border-t-emerald-500">
+        <div class="text-[10px] uppercase font-black text-emerald-700 tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check text-xs text-emerald-600"></i> Delivered
         </div>
-        <div id="statDelivered" class="text-xl font-black text-white mt-1">--</div>
-        <div class="text-[9px] text-slate-400">Completed today</div>
+        <div id="statDelivered" class="text-xl font-black text-slate-900 mt-1">--</div>
+        <div class="text-[9px] text-slate-500 font-medium">Completed today</div>
       </div>
 
-      <div class="glass-card p-3 rounded-2xl border-t-2 border-t-indigo-500">
-        <div class="text-[10px] uppercase font-black text-indigo-400 tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-indian-rupee-sign text-xs"></i> Collected
+      <div class="clean-card p-3 rounded-2xl border-t-4 border-t-blue-600">
+        <div class="text-[10px] uppercase font-black text-blue-700 tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-indian-rupee-sign text-xs text-blue-600"></i> Collected
         </div>
-        <div id="statCollected" class="text-xl font-black text-white mt-1">₹0</div>
-        <div class="text-[9px] text-slate-400">Total received</div>
+        <div id="statCollected" class="text-xl font-black text-slate-900 mt-1">₹0</div>
+        <div class="text-[9px] text-slate-500 font-medium">Total received</div>
       </div>
     </section>
 
@@ -162,25 +150,41 @@
     <!-- ======================================================== -->
     <section id="viewDelivery" class="space-y-3">
       <!-- Search & Filters -->
-      <div class="flex items-center gap-2">
-        <div class="relative flex-1">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div class="relative sm:col-span-1">
           <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-          <input type="text" id="orderSearchInput" oninput="filterOrders()" placeholder="Search Dealer Name, Order ID, Phone..." class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition shadow-inner">
+          <input type="text" id="orderSearchInput" oninput="filterOrders()" placeholder="Search Dealer, Order, Phone..." class="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition shadow-2xs font-semibold">
         </div>
-        <select id="stageFilterSelect" onchange="filterOrders()" class="bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-slate-300 font-bold focus:outline-none focus:border-indigo-500">
-          <option value="all">All Pending</option>
-          <option value="stage7" selected>Out For Delivery (Stage 7)</option>
-          <option value="cod">COD Only</option>
-          <option value="prepaid">Prepaid Only</option>
+        
+        <!-- Filter by Courier (Aadhunik / Ambika / etc.) -->
+        <select id="courierFilterSelect" onchange="filterOrders()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none focus:border-blue-500 shadow-2xs">
+          <option value="all">📦 All Couriers & Transport</option>
+          <option value="Aadhunik Courier">🚚 Aadhunik Courier</option>
+          <option value="Ambika Courier">🚚 Ambika Courier</option>
+          <option value="ACPL Courier">🚚 ACPL Courier</option>
+          <option value="Delhivery">🚚 Delhivery</option>
+          <option value="Blue Dart">🚚 Blue Dart</option>
+          <option value="Local">🏃 Local Delivery Boy</option>
+          <option value="Others">📦 Other Logistics</option>
+        </select>
+
+        <!-- Filter by Delivery Staff -->
+        <select id="staffFilterSelect" onchange="filterOrders()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none focus:border-blue-500 shadow-2xs">
+          <option value="all">👤 All Delivery Staff</option>
+          <option value="Vishal Gunjal">Vishal Gunjal</option>
+          <option value="Preetam Bogawat">Preetam Bogawat</option>
+          <option value="Raghav Korekar">Raghav Korekar</option>
+          <option value="Yash Barlota">Yash Barlota</option>
+          <option value="Rickshaw wala">Rickshaw wala</option>
         </select>
       </div>
 
       <!-- Orders Feed Container -->
       <div id="ordersContainer" class="space-y-3">
         <!-- Skeleton Loading placeholder -->
-        <div class="glass-card p-6 rounded-2xl text-center space-y-3">
-          <i class="fa-solid fa-circle-notch fa-spin text-3xl text-indigo-500"></i>
-          <p class="text-xs text-slate-400 font-semibold tracking-wide">Connecting to Yash Marketing Cloud & Fetching Orders...</p>
+        <div class="clean-card p-8 rounded-2xl text-center space-y-3">
+          <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600"></i>
+          <p class="text-xs text-slate-600 font-bold tracking-wide">Connecting to Yash Marketing Cloud & Loading Deliveries...</p>
         </div>
       </div>
     </section>
@@ -190,126 +194,126 @@
     <!-- ======================================================== -->
     <section id="viewPayment" class="space-y-4 hidden">
       <!-- Payment Entry Form Card -->
-      <div class="glass-panel p-5 rounded-2xl border border-slate-700/80 shadow-xl space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div class="clean-card p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
           <div>
-            <h2 class="text-base font-black text-white flex items-center gap-2">
-              <i class="fa-solid fa-receipt text-emerald-400"></i> Record Dealer Payment
+            <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-receipt text-emerald-600"></i> Record Dealer Payment
             </h2>
-            <p class="text-xs text-slate-400 mt-0.5">Capture Cash / Online Payment with Photo Proof</p>
+            <p class="text-xs text-slate-500 mt-0.5">Capture Cash / Online Payment with Photo Proof</p>
           </div>
-          <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-            Official Receipt
+          <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Payment Voucher
           </span>
         </div>
 
         <form id="paymentForm" onsubmit="handlePaymentSubmit(event)" class="space-y-4">
           <!-- Select Dealer / Order -->
           <div>
-            <label class="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5">
-              1. Select Dealer / Order <span class="text-rose-400">*</span>
+            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+              1. Select Dealer / Order <span class="text-rose-600">*</span>
             </label>
             <div class="relative">
-              <select id="payOrderSelect" onchange="onPaymentOrderSelected()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-3 text-xs text-white font-bold focus:outline-none focus:border-emerald-500 transition appearance-none">
+              <select id="payOrderSelect" onchange="onPaymentOrderSelected()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-3 text-xs text-slate-900 font-bold focus:outline-none focus:border-blue-600 focus:bg-white transition appearance-none shadow-2xs">
                 <option value="">-- Choose Order or Dealer --</option>
               </select>
               <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
             </div>
             <!-- Custom Dealer Input if not in list -->
             <div class="mt-2 flex items-center gap-2">
-              <input type="text" id="payCustomDealer" placeholder="Or enter Dealer Name manually if not in list..." class="w-full bg-slate-900/60 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+              <input type="text" id="payCustomDealer" placeholder="Or enter Dealer Name manually if not in list..." class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-medium">
             </div>
           </div>
 
           <!-- Mode of Payment: Cash vs Online -->
           <div>
-            <label class="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5">
-              2. Payment Mode <span class="text-rose-400">*</span>
+            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+              2. Payment Mode <span class="text-rose-600">*</span>
             </label>
             <div class="grid grid-cols-2 gap-3">
               <!-- Cash Option -->
-              <label class="relative flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all bg-slate-900/70 border-slate-700 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-500/10 has-[:checked]:text-amber-300">
-                <input type="radio" name="paymentMode" value="Cash" checked onchange="onPaymentModeChange()" class="accent-amber-500 w-4 h-4">
+              <label class="relative flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all bg-white border-slate-200 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50/60 shadow-2xs">
+                <input type="radio" name="paymentMode" value="Cash" checked onchange="onPaymentModeChange()" class="accent-amber-600 w-4 h-4">
                 <div>
-                  <div class="text-xs font-black flex items-center gap-1.5 text-white">
-                    <i class="fa-solid fa-money-bill-wave text-amber-400"></i> CASH
+                  <div class="text-xs font-black flex items-center gap-1.5 text-slate-900">
+                    <i class="fa-solid fa-money-bill-wave text-amber-600"></i> CASH
                   </div>
-                  <div class="text-[10px] text-slate-400">Physical Cash Received</div>
+                  <div class="text-[10px] text-slate-500">Physical Cash Handover</div>
                 </div>
               </label>
 
               <!-- Online Option -->
-              <label class="relative flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all bg-slate-900/70 border-slate-700 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-500/10 has-[:checked]:text-emerald-300">
-                <input type="radio" name="paymentMode" value="Online" onchange="onPaymentModeChange()" class="accent-emerald-500 w-4 h-4">
+              <label class="relative flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all bg-white border-slate-200 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/60 shadow-2xs">
+                <input type="radio" name="paymentMode" value="Online" onchange="onPaymentModeChange()" class="accent-blue-600 w-4 h-4">
                 <div>
-                  <div class="text-xs font-black flex items-center gap-1.5 text-white">
-                    <i class="fa-solid fa-qrcode text-emerald-400"></i> ONLINE (UPI / QR)
+                  <div class="text-xs font-black flex items-center gap-1.5 text-slate-900">
+                    <i class="fa-solid fa-qrcode text-blue-600"></i> ONLINE (UPI / QR)
                   </div>
-                  <div class="text-[10px] text-slate-400">GPay, PhonePe, Bank</div>
+                  <div class="text-[10px] text-slate-500">GPay, PhonePe, Bank</div>
                 </div>
               </label>
             </div>
           </div>
 
           <!-- Online Sub-Type Selector (Conditional) -->
-          <div id="onlineProvidersRow" class="hidden p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
-            <span class="text-[11px] font-black text-slate-400 uppercase tracking-wider">Select UPI / Bank:</span>
+          <div id="onlineProvidersRow" class="hidden p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <span class="text-[11px] font-black text-slate-600 uppercase tracking-wider">Select UPI / Bank:</span>
             <div class="flex flex-wrap gap-2">
-              <button type="button" onclick="setOnlineProvider('PhonePe')" class="online-tag px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 border border-slate-700 text-slate-300 hover:border-emerald-500">PhonePe</button>
-              <button type="button" onclick="setOnlineProvider('Google Pay')" class="online-tag px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 border border-slate-700 text-slate-300 hover:border-emerald-500">Google Pay</button>
-              <button type="button" onclick="setOnlineProvider('Paytm')" class="online-tag px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 border border-slate-700 text-slate-300 hover:border-emerald-500">Paytm</button>
-              <button type="button" onclick="setOnlineProvider('Direct Bank Transfer')" class="online-tag px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 border border-slate-700 text-slate-300 hover:border-emerald-500">Bank Transfer / NEFT</button>
+              <button type="button" onclick="setOnlineProvider('PhonePe')" class="online-tag px-3 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-700 hover:border-blue-500 shadow-2xs">PhonePe</button>
+              <button type="button" onclick="setOnlineProvider('Google Pay')" class="online-tag px-3 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-700 hover:border-blue-500 shadow-2xs">Google Pay</button>
+              <button type="button" onclick="setOnlineProvider('Paytm')" class="online-tag px-3 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-700 hover:border-blue-500 shadow-2xs">Paytm</button>
+              <button type="button" onclick="setOnlineProvider('Direct Bank Transfer')" class="online-tag px-3 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-700 hover:border-blue-500 shadow-2xs">Bank Transfer / NEFT</button>
             </div>
           </div>
 
           <!-- Amount Received -->
           <div>
-            <label class="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5">
-              3. Amount Received (₹) <span class="text-rose-400">*</span>
+            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+              3. Amount Received (₹) <span class="text-rose-600">*</span>
             </label>
             <div class="relative">
-              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-base font-black text-emerald-400">₹</span>
-              <input type="number" id="payAmountInput" required min="1" step="any" placeholder="Enter amount collected..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-3 text-base text-white font-black tracking-wide focus:outline-none focus:border-emerald-500 transition">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-base font-black text-emerald-600">₹</span>
+              <input type="number" id="payAmountInput" required min="1" step="any" placeholder="Enter amount collected..." class="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-3 text-base text-slate-900 font-black tracking-wide focus:outline-none focus:border-blue-600 shadow-2xs">
             </div>
           </div>
 
           <!-- Reference Number / Note (Optional) -->
           <div>
-            <label class="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1.5">
+            <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
               4. Reference / UTR Number (Optional)
             </label>
-            <input type="text" id="payRefInput" placeholder="e.g. UPI Ref / UTR / Cash voucher note..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+            <input type="text" id="payRefInput" placeholder="e.g. UPI Ref / UTR / Cash voucher note..." class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 shadow-2xs">
           </div>
 
           <!-- 📸 PAYMENT PHOTO PROOF UPLOAD (CORE FEATURE) -->
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <i class="fa-solid fa-camera text-indigo-400"></i>
-                5. Payment Proof Photo <span class="text-rose-400">*</span>
+              <label class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-camera text-blue-600"></i>
+                5. Payment Proof Photo <span class="text-rose-600">*</span>
               </label>
-              <span class="text-[10px] text-amber-400 font-bold">Screenshot / Cash Photo</span>
+              <span class="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Screenshot / Cash Photo</span>
             </div>
 
             <!-- Upload Box -->
-            <div id="photoDropArea" class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl p-4 text-center bg-slate-900/60 transition-colors cursor-pointer" onclick="document.getElementById('paymentPhotoFile').click()">
+            <div id="photoDropArea" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-4 text-center bg-slate-50 transition-colors cursor-pointer" onclick="document.getElementById('paymentPhotoFile').click()">
               <input type="file" id="paymentPhotoFile" accept="image/*" capture="environment" onchange="handlePhotoSelected(event)" class="hidden">
               
               <div id="uploadPrompt" class="space-y-2 py-3">
-                <div class="w-12 h-12 mx-auto rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl">
+                <div class="w-12 h-12 mx-auto rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 text-xl shadow-2xs">
                   <i class="fa-solid fa-cloud-arrow-up"></i>
                 </div>
-                <div class="text-xs font-black text-slate-200">Take Photo or Upload Screenshot</div>
-                <div class="text-[10px] text-slate-400">UPI payment success screenshot ya cash receipt ki photo upload karein</div>
+                <div class="text-xs font-black text-slate-800">Tap to Take Photo or Upload Screenshot</div>
+                <div class="text-[10px] text-slate-500">UPI payment screenshot ya cash receipt photo upload karein</div>
               </div>
 
               <!-- Live Photo Preview -->
               <div id="photoPreviewBox" class="hidden relative">
-                <img id="photoPreviewImg" src="" alt="Payment Proof" class="max-h-56 mx-auto rounded-xl object-contain border border-slate-700 shadow-md">
+                <img id="photoPreviewImg" src="" alt="Payment Proof" class="max-h-56 mx-auto rounded-xl object-contain border border-slate-300 shadow-md">
                 <button type="button" onclick="event.stopPropagation(); removePhotoProof()" class="absolute top-2 right-2 bg-rose-600 hover:bg-rose-500 text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg transition">
                   <i class="fa-solid fa-trash text-xs"></i>
                 </button>
-                <div class="mt-2 text-[10px] text-emerald-400 font-bold flex items-center justify-center gap-1">
+                <div class="mt-2 text-[10px] text-emerald-700 font-bold flex items-center justify-center gap-1">
                   <i class="fa-solid fa-circle-check"></i> Photo ready for cloud upload
                 </div>
               </div>
@@ -317,7 +321,7 @@
           </div>
 
           <!-- Submit Button -->
-          <button type="submit" id="submitPaymentBtn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 active:scale-[0.98] text-white font-black py-3.5 rounded-xl shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2 text-sm tracking-wide">
+          <button type="submit" id="submitPaymentBtn" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-black py-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm tracking-wide">
             <i class="fa-solid fa-cloud-arrow-up"></i>
             <span>Submit Payment & Save Proof</span>
           </button>
@@ -327,14 +331,14 @@
       <!-- RECENT PAYMENTS TODAY LIST -->
       <div class="space-y-2">
         <div class="flex items-center justify-between px-1">
-          <h3 class="text-xs font-black uppercase tracking-wider text-slate-300">
-            <i class="fa-solid fa-clock-rotate-left text-emerald-400 mr-1"></i> Today's Collected Payments
+          <h3 class="text-xs font-black uppercase tracking-wider text-slate-700">
+            <i class="fa-solid fa-clock-rotate-left text-emerald-600 mr-1"></i> Today's Collected Payments
           </h3>
-          <span id="paymentCountBadge" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-bold">0 records</span>
+          <span id="paymentCountBadge" class="text-[10px] bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full font-bold">0 records</span>
         </div>
         <div id="paymentsFeed" class="space-y-2">
           <!-- Feed items inserted by JS -->
-          <div class="glass-card p-4 rounded-xl text-center text-xs text-slate-500">
+          <div class="clean-card p-4 rounded-xl text-center text-xs text-slate-500">
             No payments recorded yet today.
           </div>
         </div>
@@ -345,11 +349,11 @@
     <!-- VIEW 3: DELIVERED HISTORY TAB -->
     <!-- ======================================================== -->
     <section id="viewHistory" class="space-y-3 hidden">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-        <h3 class="text-sm font-black text-white flex items-center gap-2">
-          <i class="fa-solid fa-clipboard-check text-emerald-400"></i> Completed Deliveries Today
+      <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+        <h3 class="text-sm font-black text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-clipboard-check text-emerald-600"></i> Completed Deliveries Today
         </h3>
-        <span id="historyCountBadge" class="text-xs font-bold text-slate-400">0 orders</span>
+        <span id="historyCountBadge" class="text-xs font-bold text-slate-500">0 orders</span>
       </div>
       <div id="historyContainer" class="space-y-2.5">
         <!-- Rendered by JS -->
@@ -359,75 +363,90 @@
   </main>
 
   <!-- ======================================================== -->
-  <!-- MODAL: MARK AS DELIVERED CONFIRMATION -->
+  <!-- MODAL: MARK AS DELIVERED CONFIRMATION (WHITE THEME) -->
   <!-- ======================================================== -->
-  <div id="deliverModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="glass-panel w-full max-w-md rounded-2xl border border-slate-700 p-5 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+  <div id="deliverModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-5 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-black">
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-black border border-emerald-200">
             <i class="fa-solid fa-box-open"></i>
           </div>
           <div>
-            <h3 class="text-sm font-black text-white">Mark Order as Delivered</h3>
-            <span class="text-[10px] text-slate-400">Updating Stage 8 (Delivered)</span>
+            <h3 class="text-sm font-black text-slate-900">Mark Order as Delivered</h3>
+            <span class="text-[10px] text-slate-500">Updating Stage 8 (Delivered)</span>
           </div>
         </div>
-        <button onclick="closeDeliverModal()" class="text-slate-400 hover:text-white p-1">
+        <button onclick="closeDeliverModal()" class="text-slate-400 hover:text-slate-700 p-1">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
       <!-- Order Details Summary -->
-      <div class="bg-slate-900/90 rounded-xl p-3 border border-slate-800 space-y-1.5">
+      <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
         <div class="flex justify-between items-center">
-          <span id="modalOrderId" class="text-xs font-mono font-black text-indigo-400">YM-...</span>
-          <span id="modalOrderAmount" class="text-xs font-black text-emerald-400">₹0</span>
+          <span id="modalOrderId" class="text-xs font-mono font-black text-blue-700">YM-...</span>
+          <span id="modalOrderAmount" class="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">₹0</span>
         </div>
-        <div id="modalShopName" class="text-xs font-bold text-white">Shop Name</div>
-        <div id="modalOrderPaymentMode" class="text-[10px] font-bold text-amber-400 uppercase">COD</div>
+        <div id="modalShopName" class="text-xs font-bold text-slate-900">Shop Name</div>
+        
+        <!-- Logistics Info Display in Modal -->
+        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 text-[11px]">
+          <div class="bg-white p-2 rounded-lg border border-slate-200">
+            <span class="text-[9px] text-slate-400 uppercase font-black block">Courier Partner:</span>
+            <span id="modalCourierName" class="font-bold text-blue-700 flex items-center gap-1 mt-0.5">
+              <i class="fa-solid fa-truck text-[10px]"></i> Aadhunik Courier
+            </span>
+          </div>
+          <div class="bg-white p-2 rounded-lg border border-slate-200">
+            <span class="text-[9px] text-slate-400 uppercase font-black block">Delivery Staff:</span>
+            <span id="modalStaffRunner" class="font-bold text-purple-700 flex items-center gap-1 mt-0.5">
+              <i class="fa-solid fa-user-check text-[10px]"></i> Vishal Gunjal
+            </span>
+          </div>
+        </div>
       </div>
 
       <!-- Proof Photo for Delivery (Handover Proof) -->
       <div>
-        <label class="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1">
+        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
           Delivery Photo Proof (Handover / Shop Front)
         </label>
-        <div class="border border-dashed border-slate-700 hover:border-emerald-500 rounded-xl p-3 text-center bg-slate-900/50 cursor-pointer" onclick="document.getElementById('deliveryProofFile').click()">
+        <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-3 text-center bg-slate-50 cursor-pointer" onclick="document.getElementById('deliveryProofFile').click()">
           <input type="file" id="deliveryProofFile" accept="image/*" capture="environment" onchange="handleDeliveryProofSelected(event)" class="hidden">
-          <div id="deliverPhotoPrompt" class="text-xs text-slate-400 py-1">
-            <i class="fa-solid fa-camera text-emerald-400 mr-1"></i> Tap to Click or Choose Delivery Photo
+          <div id="deliverPhotoPrompt" class="text-xs text-slate-600 font-bold py-1">
+            <i class="fa-solid fa-camera text-emerald-600 mr-1"></i> Tap to Click or Choose Delivery Photo
           </div>
           <div id="deliverPhotoPreviewBox" class="hidden">
-            <img id="deliverPhotoPreviewImg" src="" class="max-h-36 mx-auto rounded-lg object-contain border border-slate-700">
-            <div class="text-[10px] text-emerald-400 font-bold mt-1">Photo attached</div>
+            <img id="deliverPhotoPreviewImg" src="" class="max-h-36 mx-auto rounded-lg object-contain border border-slate-300">
+            <div class="text-[10px] text-emerald-700 font-bold mt-1">Photo attached</div>
           </div>
         </div>
       </div>
 
       <!-- Notes / Remarks -->
       <div>
-        <label class="block text-xs font-black text-slate-300 uppercase tracking-wider mb-1">
+        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
           Remarks / Handed Over To
         </label>
-        <input type="text" id="deliverNotesInput" placeholder="e.g. Received by owner Rahul / Security / Counter" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+        <input type="text" id="deliverNotesInput" placeholder="e.g. Received by owner Rahul / Security / Counter" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600">
       </div>
 
       <!-- Option to collect payment immediately -->
-      <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between">
+      <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
         <div>
-          <div class="text-xs font-black text-amber-300">Collect Payment Now?</div>
-          <div class="text-[10px] text-slate-400">Directly open payment tab with photo upload</div>
+          <div class="text-xs font-black text-amber-900">Collect Payment Now?</div>
+          <div class="text-[10px] text-amber-700">Directly open payment tab with photo upload</div>
         </div>
-        <input type="checkbox" id="deliverPaymentNowCheck" class="w-4 h-4 accent-amber-500 cursor-pointer">
+        <input type="checkbox" id="deliverPaymentNowCheck" class="w-4 h-4 accent-amber-600 cursor-pointer">
       </div>
 
       <!-- Action Buttons -->
       <div class="flex gap-2 pt-2">
-        <button onclick="closeDeliverModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold py-3 rounded-xl transition">
+        <button onclick="closeDeliverModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-3 rounded-xl transition">
           Cancel
         </button>
-        <button onclick="submitDeliveredStage()" id="modalConfirmDeliverBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black py-3 rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-1.5">
+        <button onclick="submitDeliveredStage()" id="modalConfirmDeliverBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black py-3 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-check-double"></i> Confirm Delivered
         </button>
       </div>
@@ -437,54 +456,62 @@
   <!-- ======================================================== -->
   <!-- MODAL: RECEIPT PREVIEW & WHATSAPP SHARE -->
   <!-- ======================================================== -->
-  <div id="receiptModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="glass-panel w-full max-w-sm rounded-2xl border border-emerald-500/40 p-5 space-y-4 shadow-2xl text-center">
-      <div class="w-14 h-14 mx-auto rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl border border-emerald-500/40 pulse-delivered">
+  <div id="receiptModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl border border-slate-200 p-5 space-y-4 shadow-xl text-center">
+      <div class="w-14 h-14 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl border border-emerald-200">
         <i class="fa-solid fa-circle-check"></i>
       </div>
       <div>
-        <h3 class="text-lg font-black text-white">Payment Recorded!</h3>
-        <p class="text-xs text-slate-400 mt-0.5">Dealer Payment & Proof Uploaded to Cloud</p>
+        <h3 class="text-lg font-black text-slate-900">Payment Recorded!</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Dealer Payment & Proof Uploaded to Cloud</p>
       </div>
 
       <!-- Receipt Card -->
-      <div class="bg-slate-900 rounded-xl p-4 border border-slate-800 text-left space-y-2 text-xs">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-          <span class="text-slate-400">Dealer:</span>
-          <span id="receiptDealer" class="font-black text-white">Dealer Name</span>
+      <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 text-left space-y-2 text-xs">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <span class="text-slate-500">Dealer:</span>
+          <span id="receiptDealer" class="font-black text-slate-900">Dealer Name</span>
         </div>
-        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-          <span class="text-slate-400">Order ID:</span>
-          <span id="receiptOrderId" class="font-mono font-bold text-indigo-400">YM-...</span>
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <span class="text-slate-500">Order ID:</span>
+          <span id="receiptOrderId" class="font-mono font-bold text-blue-700">YM-...</span>
         </div>
-        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-          <span class="text-slate-400">Amount Received:</span>
-          <span id="receiptAmount" class="font-black text-base text-emerald-400">₹0</span>
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <span class="text-slate-500">Amount Received:</span>
+          <span id="receiptAmount" class="font-black text-base text-emerald-700">₹0</span>
         </div>
-        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-          <span class="text-slate-400">Payment Mode:</span>
-          <span id="receiptMode" class="font-bold text-amber-400 uppercase">CASH</span>
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <span class="text-slate-500">Payment Mode:</span>
+          <span id="receiptMode" class="font-bold text-amber-700 uppercase">CASH</span>
+        </div>
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <span class="text-slate-500">Courier / Transport:</span>
+          <span id="receiptCourier" class="font-bold text-blue-700">Aadhunik / Ambika</span>
+        </div>
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+          <span class="text-slate-500">Delivered By:</span>
+          <span id="receiptStaff" class="font-bold text-purple-700">Vishal Gunjal</span>
         </div>
         <div class="flex justify-between items-center">
-          <span class="text-slate-400">Time:</span>
-          <span id="receiptTime" class="text-slate-300 font-mono text-[11px]">Just now</span>
+          <span class="text-slate-500">Time:</span>
+          <span id="receiptTime" class="text-slate-700 font-mono text-[11px]">Just now</span>
         </div>
       </div>
 
       <!-- WhatsApp Share Button -->
-      <button onclick="shareReceiptWhatsApp()" class="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2 text-xs">
-        <i class="fa-brands fa-whatsapp text-base"></i> Share Receipt to WhatsApp
+      <button onclick="shareReceiptWhatsApp()" class="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-black py-3 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-xs">
+        <i class="fa-brands fa-whatsapp text-base"></i> Share Receipt to Dealer WhatsApp
       </button>
 
-      <button onclick="closeReceiptModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition">
+      <button onclick="closeReceiptModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">
         Done
       </button>
     </div>
   </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
-  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900 border border-slate-700 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold transition-all duration-300 opacity-0 pointer-events-none translate-y-3">
-    <i id="toastIcon" class="fa-solid fa-circle-info text-indigo-400"></i>
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold transition-all duration-300 opacity-0 pointer-events-none translate-y-3">
+    <i id="toastIcon" class="fa-solid fa-circle-info text-blue-400"></i>
     <span id="toastMsg">Notification message</span>
   </div>
 
@@ -508,10 +535,9 @@
 
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', () => {
-      // Pick up staff name from URL parameters if available (from Master App iframe)
       const urlParams = new URLSearchParams(window.location.search);
       const urlEmp = urlParams.get('empId');
-      if (urlEmp && !currentStaff) {
+      if (urlEmp && (!currentStaff || currentStaff === 'Delivery Boy')) {
         currentStaff = urlEmp;
       }
       document.getElementById('headerStaffName').innerText = currentStaff;
@@ -521,7 +547,7 @@
 
     // Staff Name Change
     function promptChangeStaff() {
-      let name = prompt("Enter your Name for Delivery accountability:", currentStaff);
+      let name = prompt("Enter Delivery Staff Name:", currentStaff);
       if (name && name.trim()) {
         currentStaff = name.trim();
         localStorage.setItem('ym_delivery_staff', currentStaff);
@@ -546,10 +572,10 @@
       Object.keys(views).forEach(k => {
         if (k === tab) {
           views[k].classList.remove('hidden');
-          btns[k].className = "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-600/30";
+          btns[k].className = "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-blue-600 text-white shadow-sm shadow-blue-500/20";
         } else {
           views[k].classList.add('hidden');
-          btns[k].className = "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/60";
+          btns[k].className = "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200";
         }
       });
 
@@ -570,7 +596,7 @@
       } else if (type === "error") {
         toastIcon.className = "fa-solid fa-triangle-exclamation text-rose-400";
       } else {
-        toastIcon.className = "fa-solid fa-circle-info text-indigo-400";
+        toastIcon.className = "fa-solid fa-circle-info text-blue-400";
       }
 
       toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
@@ -579,9 +605,7 @@
       }, 3000);
     }
 
-    // ==========================================
-    // BACKEND API CALLER (Zero CORS Preflight)
-    // ==========================================
+    // Backend API Caller
     async function gasRequest(payloadObj) {
       try {
         const res = await fetch(API_URL, {
@@ -596,9 +620,7 @@
       }
     }
 
-    // ==========================================
-    // FETCH ORDERS & LIVE SYNC
-    // ==========================================
+    // Fetch Orders from Cloud
     async function fetchOrders(showManualToast = false) {
       const icon = document.getElementById('refreshIcon');
       icon.classList.add('fa-spin');
@@ -613,22 +635,11 @@
           throw new Error(response.message || "Could not retrieve orders");
         }
       } catch (err) {
-        console.warn("Using offline / cached data fallback if available:", err);
-        if (allOrders.length === 0) {
-          const cached = localStorage.getItem('ym_cached_orders');
-          if (cached) {
-            allOrders = JSON.parse(cached);
-            processOrdersData();
-          } else {
-            document.getElementById('ordersContainer').innerHTML = `
-              <div class="glass-card p-6 rounded-2xl text-center space-y-2 border border-rose-500/30">
-                <i class="fa-solid fa-cloud-slash text-rose-400 text-3xl"></i>
-                <div class="text-sm font-bold text-white">Network Sync Notice</div>
-                <div class="text-xs text-slate-400">Could not refresh live orders. Tap Sync to retry.</div>
-                <button onclick="fetchOrders(true)" class="mt-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-xl">Retry Sync</button>
-              </div>
-            `;
-          }
+        console.warn("Using offline / cached fallback:", err);
+        const cached = localStorage.getItem('ym_cached_orders');
+        if (cached) {
+          allOrders = JSON.parse(cached);
+          processOrdersData();
         }
         if (showManualToast) showToast("Failed to sync live orders", "error");
       } finally {
@@ -636,141 +647,207 @@
       }
     }
 
+    // Logistics Parser: Extracts Staff/Runner and Courier/Transport
+    function parseLogisticsInfo(order) {
+      let runner = order.runner || "";
+      let transport = order.transport || order.courier || "";
+
+      // Check Stage 6 in stageUrls (index 5)
+      if (order.stageUrls && order.stageUrls[5]) {
+        const cellData = String(order.stageUrls[5]);
+        const runnerMatch = cellData.match(/Runner:\s*([^|]+)/i);
+        if (runnerMatch) runner = runnerMatch[1].trim();
+
+        const transportMatch = cellData.match(/Transport:\s*([^||\n]+)/i);
+        if (transportMatch) transport = transportMatch[1].trim();
+      }
+
+      // Check for remarks/comments mentioning Aadhunik or Ambika
+      const rawText = `${order.comment || ''} ${order.remarks || ''} ${order.notes || ''}`.toLowerCase();
+      if (!transport) {
+        if (rawText.includes('aadhunik')) transport = 'Aadhunik Courier';
+        else if (rawText.includes('ambika')) transport = 'Ambika Courier';
+        else if (rawText.includes('acpl')) transport = 'ACPL Courier';
+        else if (rawText.includes('delhivery')) transport = 'Delhivery';
+        else if (rawText.includes('blue dart')) transport = 'Blue Dart';
+      }
+
+      return {
+        runner: runner || order.staffName || "Delivery Boy",
+        transport: transport || "Local Handover"
+      };
+    }
+
     function processOrdersData() {
       localStorage.setItem('ym_cached_orders', JSON.stringify(allOrders));
 
-      // Separate Delivered vs To-Deliver
       deliveredOrders = allOrders.filter(o => o.isFullyCompleted || (Number(o.completedStages) || 0) >= 8);
-      
-      // Update KPIs
       const toDeliverOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 8);
+
       document.getElementById('statToDeliver').innerText = toDeliverOrders.length;
       document.getElementById('statDelivered').innerText = deliveredOrders.length;
       document.getElementById('badgePendingCount').innerText = toDeliverOrders.length;
 
-      // Populate Payment Select Dropdown
       populatePaymentOrderDropdown(allOrders);
-
-      // Render Orders
       filterOrders();
     }
 
-    // Populate Dealer/Order dropdown in Payment tab
     function populatePaymentOrderDropdown(orders) {
       const select = document.getElementById('payOrderSelect');
       select.innerHTML = '<option value="">-- Choose Order or Dealer --</option>';
 
       orders.forEach(o => {
+        const log = parseLogisticsInfo(o);
         let opt = document.createElement('option');
         opt.value = o.orderId;
-        opt.textContent = `${o.shopName || 'Unknown'} (${o.orderId}) - ₹${o.totalValue || 0} [${o.paymentMode || 'COD'}]`;
+        opt.textContent = `${o.shopName || 'Unknown'} (${o.orderId}) - ₹${o.totalValue || 0} [${log.transport} / ${log.runner}]`;
         opt.setAttribute('data-shop', o.shopName || '');
         opt.setAttribute('data-amount', o.totalValue || 0);
         opt.setAttribute('data-mode', o.paymentMode || 'COD');
         opt.setAttribute('data-phone', o.phone || '');
+        opt.setAttribute('data-courier', log.transport);
+        opt.setAttribute('data-runner', log.runner);
         select.appendChild(opt);
       });
     }
 
-    // ==========================================
-    // RENDER ORDERS FEED (DELIVERY TAB)
-    // ==========================================
+    // Filter Deliveries
     function filterOrders() {
       const query = (document.getElementById('orderSearchInput').value || '').toLowerCase();
-      const filter = document.getElementById('stageFilterSelect').value;
+      const courierFilter = document.getElementById('courierFilterSelect').value;
+      const staffFilter = document.getElementById('staffFilterSelect').value;
 
       let filtered = allOrders.filter(o => {
         const isCompleted = o.isFullyCompleted || (Number(o.completedStages) || 0) >= 8;
         if (isCompleted) return false;
 
-        const stages = Number(o.completedStages) || 0;
-        if (filter === 'stage7' && stages < 6) return false;
-        
-        const isCod = (o.paymentMode && o.paymentMode.toUpperCase().includes('COD'));
-        if (filter === 'cod' && !isCod) return false;
-        if (filter === 'prepaid' && isCod) return false;
+        const log = parseLogisticsInfo(o);
 
-        const str = `${o.orderId} ${o.shopName} ${o.phone}`.toLowerCase();
+        // Filter by Courier
+        if (courierFilter !== 'all') {
+          if (!log.transport.toLowerCase().includes(courierFilter.toLowerCase())) return false;
+        }
+
+        // Filter by Staff
+        if (staffFilter !== 'all') {
+          if (!log.runner.toLowerCase().includes(staffFilter.toLowerCase())) return false;
+        }
+
+        const str = `${o.orderId} ${o.shopName} ${o.phone} ${log.transport} ${log.runner}`.toLowerCase();
         return str.includes(query);
       });
 
       renderOrderCards(filtered);
     }
 
+    // Render Order Cards (White Theme with Courier & Staff Badges)
     function renderOrderCards(orders) {
       const container = document.getElementById('ordersContainer');
       if (orders.length === 0) {
         container.innerHTML = `
-          <div class="glass-card p-8 rounded-2xl text-center space-y-3">
-            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-2xl text-emerald-400">
+          <div class="clean-card p-8 rounded-2xl text-center space-y-3">
+            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-2xl text-emerald-600">
               <i class="fa-solid fa-check"></i>
             </div>
-            <h3 class="text-base font-black text-white">All Deliveries Clear!</h3>
-            <p class="text-xs text-slate-400">No pending orders matching the current filter.</p>
+            <h3 class="text-base font-black text-slate-800">All Deliveries Clear!</h3>
+            <p class="text-xs text-slate-500">No pending orders matching the current filter.</p>
           </div>
         `;
         return;
       }
 
       container.innerHTML = orders.map(order => {
+        const log = parseLogisticsInfo(order);
         const isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
         const payBadge = isCod 
-          ? `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">COD: ₹${order.totalValue || '0'}</span>`
-          : `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">PREPAID: ₹${order.totalValue || '0'}</span>`;
+          ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">COD: ₹${order.totalValue || '0'}</span>`
+          : `<span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">PREPAID: ₹${order.totalValue || '0'}</span>`;
 
         const itemsCount = (order.items || []).reduce((acc, it) => acc + (Number(it.qty) || 1), 0);
         const stageNum = Number(order.completedStages) || 0;
 
+        // Courier styling
+        const isAadhunik = log.transport.toLowerCase().includes('aadhunik');
+        const isAmbika = log.transport.toLowerCase().includes('ambika');
+        const courierBadgeClass = (isAadhunik || isAmbika) 
+          ? 'bg-blue-50 text-blue-700 border-blue-200 font-extrabold' 
+          : 'bg-slate-100 text-slate-700 border-slate-200 font-bold';
+
         return `
-          <div class="glass-card p-4 rounded-2xl space-y-3 hover:border-indigo-500/50 shadow-md">
+          <div class="clean-card p-4 rounded-2xl space-y-3">
             <!-- Header Row -->
             <div class="flex items-start justify-between gap-2">
               <div>
-                <span class="text-[10px] font-mono text-indigo-400 font-black tracking-wider block">${order.orderId}</span>
-                <h3 class="text-sm font-black text-white leading-tight mt-0.5">${order.shopName || 'Dealer'}</h3>
+                <span class="text-[10px] font-mono text-blue-700 font-black tracking-wider block">${order.orderId}</span>
+                <h3 class="text-sm font-black text-slate-900 leading-tight mt-0.5">${order.shopName || 'Dealer'}</h3>
               </div>
               <div class="text-right">
                 ${payBadge}
               </div>
             </div>
 
+            <!-- LOGISTICS INFORMATION BADGES (COURIER & STAFF ACCOUNTABILITY) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <!-- Courier Partner Badge -->
+              <div class="flex items-center gap-2 p-2 rounded-xl border ${courierBadgeClass} text-xs">
+                <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 text-xs">
+                  <i class="fa-solid fa-truck-ramp-box"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[9px] uppercase tracking-wider text-slate-500 font-bold leading-none">Courier Partner:</div>
+                  <div class="text-xs font-black truncate">${log.transport}</div>
+                </div>
+              </div>
+
+              <!-- Delivery Staff / Runner Badge -->
+              <div class="flex items-center gap-2 p-2 rounded-xl bg-purple-50 text-purple-800 border border-purple-200 text-xs">
+                <div class="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 text-xs">
+                  <i class="fa-solid fa-user-check"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[9px] uppercase tracking-wider text-purple-600 font-bold leading-none">Delivery Staff:</div>
+                  <div class="text-xs font-black truncate">${log.runner}</div>
+                </div>
+              </div>
+            </div>
+
             <!-- Meta details -->
-            <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-300">
-              <span class="bg-slate-900 px-2 py-1 rounded-lg border border-slate-800 text-slate-400">
-                <i class="fa-solid fa-boxes-stacked text-indigo-400 mr-1"></i> Qty: <b class="text-white">${itemsCount} items</b>
+            <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+              <span class="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 font-semibold">
+                <i class="fa-solid fa-boxes-stacked text-blue-600 mr-1"></i> Qty: <b class="text-slate-900">${itemsCount} items</b>
               </span>
-              <span class="bg-slate-900 px-2 py-1 rounded-lg border border-slate-800 text-slate-400">
-                <i class="fa-solid fa-layer-group text-cyan-400 mr-1"></i> Stage: <b class="text-white">${stageNum}/9</b>
+              <span class="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 font-semibold">
+                <i class="fa-solid fa-layer-group text-slate-500 mr-1"></i> Stage: <b class="text-slate-900">${stageNum}/9</b>
               </span>
               ${order.phone ? `
-                <span class="bg-slate-900 px-2 py-1 rounded-lg border border-slate-800 text-slate-400 font-mono">
-                  <i class="fa-solid fa-phone text-emerald-400 mr-1"></i> ${order.phone}
+                <span class="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 font-mono font-semibold">
+                  <i class="fa-solid fa-phone text-emerald-600 mr-1"></i> ${order.phone}
                 </span>
               ` : ''}
             </div>
 
             <!-- Action Buttons Grid -->
-            <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-800/80">
-              <!-- Call -->
+            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
+              <!-- Direct Call -->
               ${order.phone ? `
-                <a href="tel:${order.phone}" class="flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold py-2.5 rounded-xl border border-slate-700 transition">
-                  <i class="fa-solid fa-phone text-emerald-400 text-xs"></i> Call
+                <a href="tel:${order.phone}" class="flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-bold py-2.5 rounded-xl border border-slate-200 transition">
+                  <i class="fa-solid fa-phone text-emerald-600 text-xs"></i> Call
                 </a>
               ` : `
-                <button disabled class="opacity-40 bg-slate-800 text-slate-500 text-xs py-2.5 rounded-xl">No Phone</button>
+                <button disabled class="opacity-40 bg-slate-100 text-slate-400 text-xs py-2.5 rounded-xl">No Phone</button>
               `}
 
-              <!-- WhatsApp -->
+              <!-- WhatsApp to Dealer with Courier & Staff details -->
               ${order.phone ? `
-                <button onclick="openWhatsApp('${order.orderId}', '${escapeQuote(order.shopName)}', '${order.phone}', '${order.totalValue}')" class="flex items-center justify-center gap-1.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 active:scale-95 text-emerald-400 text-xs font-bold py-2.5 rounded-xl border border-[#25D366]/30 transition">
-                  <i class="fa-brands fa-whatsapp text-sm"></i> Chat
+                <button onclick="openWhatsAppWithLogistics('${order.orderId}', '${escapeQuote(order.shopName)}', '${order.phone}', '${order.totalValue}', '${order.paymentMode || 'COD'}', '${escapeQuote(log.transport)}', '${escapeQuote(log.runner)}', '${itemsCount}')" class="flex items-center justify-center gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 active:scale-95 text-[#128C7E] text-xs font-bold py-2.5 rounded-xl border border-[#25D366]/30 transition">
+                  <i class="fa-brands fa-whatsapp text-sm text-[#25D366]"></i> Chat
                 </button>
               ` : `
-                <button disabled class="opacity-40 bg-slate-800 text-slate-500 text-xs py-2.5 rounded-xl">No WA</button>
+                <button disabled class="opacity-40 bg-slate-100 text-slate-400 text-xs py-2.5 rounded-xl">No WA</button>
               `}
 
               <!-- Mark Delivered Button -->
-              <button onclick="openDeliverModal('${order.orderId}')" class="flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 active:scale-95 text-white text-xs font-black py-2.5 rounded-xl shadow-lg shadow-emerald-500/25 transition">
+              <button onclick="openDeliverModal('${order.orderId}')" class="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black py-2.5 rounded-xl shadow-xs transition">
                 <i class="fa-solid fa-circle-check"></i> Deliver
               </button>
             </div>
@@ -783,25 +860,29 @@
       return (str || '').replace(/'/g, "\\'");
     }
 
-    function openWhatsApp(orderId, shopName, phone, amount) {
+    // Dealer WhatsApp Message with Courier and Delivery Staff information
+    function openWhatsAppWithLogistics(orderId, shopName, phone, amount, paymentMode, courierName, staffName, itemsCount) {
       const cleanPhone = phone.replace(/[^0-9]/g, '');
       const num = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
-      const msg = `Namaste ${shopName},\n\nYash Marketing se aapka order #${orderId} (Amount: ₹${amount}) out for delivery hai. Humara delivery staff jald hi aapke shop par pahunch raha hai. Dhanyawad!`;
+
+      const msg = `*YASH MARKETING - DISPATCH & DELIVERY UPDATE*\n\nNamaste *${shopName}*,\n\nAapka order delivery ke liye nikal chuka hai!\n\n📋 *Order ID:* ${orderId}\n🚚 *Courier / Transport:* ${courierName}\n👤 *Delivery Person:* ${staffName}\n💰 *Amount:* ₹${amount} (${paymentMode})\n📦 *Total Items:* ${itemsCount} items\n\nKripya delivery receive karte waqt payment ready rakhein. Koi query ho toh reply karein. Dhanyawad!`;
+      
       window.open(`https://api.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    // ==========================================
-    // DELIVERED MODAL & STAGE 8 UPDATE
-    // ==========================================
+    // Deliver Modal
     function openDeliverModal(orderId) {
       currentActiveOrder = allOrders.find(o => o.orderId === orderId);
       if (!currentActiveOrder) return;
 
+      const log = parseLogisticsInfo(currentActiveOrder);
+
       document.getElementById('modalOrderId').innerText = currentActiveOrder.orderId;
       document.getElementById('modalShopName').innerText = currentActiveOrder.shopName || 'Dealer';
       document.getElementById('modalOrderAmount').innerText = '₹' + (currentActiveOrder.totalValue || '0');
-      document.getElementById('modalOrderPaymentMode').innerText = currentActiveOrder.paymentMode || 'COD';
-      
+      document.getElementById('modalCourierName').innerText = log.transport;
+      document.getElementById('modalStaffRunner').innerText = log.runner;
+
       const isCod = currentActiveOrder.paymentMode && currentActiveOrder.paymentMode.toUpperCase().includes('COD');
       document.getElementById('deliverPaymentNowCheck').checked = isCod;
 
@@ -844,14 +925,15 @@
 
       const notes = document.getElementById('deliverNotesInput').value;
       const collectPaymentNow = document.getElementById('deliverPaymentNowCheck').checked;
+      const log = parseLogisticsInfo(currentActiveOrder);
 
       let payload = {
         action: 'updateStage',
         orderId: currentActiveOrder.orderId,
         stage: 8, // 8 = Delivered
         files: [],
-        staffName: currentStaff,
-        comment: notes,
+        staffName: log.runner || currentStaff,
+        comment: `Delivered by: ${log.runner} | Courier: ${log.transport} | Notes: ${notes || 'Handed Over'}`,
         isNoResponse: false,
         isWhatsAppOnly: false
       };
@@ -868,7 +950,7 @@
         const res = await gasRequest(payload);
         if (res && res.status === 'success') {
           confetti({ particleCount: 75, spread: 60, origin: { y: 0.7 } });
-          showToast(`Order #${currentActiveOrder.orderId} Marked as Delivered!`, "success");
+          showToast(`Order #${currentActiveOrder.orderId} Delivered by ${log.runner}!`, "success");
 
           currentActiveOrder.completedStages = 8;
           currentActiveOrder.isFullyCompleted = true;
@@ -892,15 +974,12 @@
       }
     }
 
-    // ==========================================
-    // PAYMENT TAB LOGIC & PHOTO PROOF UPLOAD
-    // ==========================================
+    // Payment Tab Logic
     function onPaymentOrderSelected() {
       const select = document.getElementById('payOrderSelect');
       const selectedOpt = select.options[select.selectedIndex];
       if (!selectedOpt || !selectedOpt.value) return;
 
-      const shop = selectedOpt.getAttribute('data-shop');
       const amount = selectedOpt.getAttribute('data-amount');
       const mode = selectedOpt.getAttribute('data-mode') || 'COD';
 
@@ -927,9 +1006,9 @@
     function setOnlineProvider(providerName) {
       document.querySelectorAll('.online-tag').forEach(b => {
         if (b.innerText === providerName) {
-          b.className = "online-tag px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white border border-emerald-500";
+          b.className = "online-tag px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white border border-blue-600 shadow-2xs";
         } else {
-          b.className = "online-tag px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 border border-slate-700 text-slate-300 hover:border-emerald-500";
+          b.className = "online-tag px-3 py-1 rounded-lg text-xs font-bold bg-white border border-slate-300 text-slate-700 hover:border-blue-500 shadow-2xs";
         }
       });
       document.getElementById('payRefInput').value = `${providerName} - `;
@@ -1003,6 +1082,8 @@
       const customDealer = document.getElementById('payCustomDealer').value.trim();
       const shopName = (selectedOpt && selectedOpt.value ? selectedOpt.getAttribute('data-shop') : customDealer) || 'Dealer';
       const dealerPhone = (selectedOpt && selectedOpt.value ? selectedOpt.getAttribute('data-phone') : '') || '';
+      const courierName = (selectedOpt && selectedOpt.value ? selectedOpt.getAttribute('data-courier') : '') || 'Aadhunik / Ambika';
+      const staffRunner = (selectedOpt && selectedOpt.value ? selectedOpt.getAttribute('data-runner') : '') || currentStaff;
 
       const mode = document.querySelector('input[name="paymentMode"]:checked').value;
       const amount = document.getElementById('payAmountInput').value;
@@ -1031,7 +1112,8 @@
         mode: mode,
         amount: Number(amount),
         ref: ref,
-        staff: currentStaff,
+        courier: courierName,
+        staff: staffRunner,
         timestamp: new Date().toISOString(),
         photo: selectedPaymentPhotoBase64
       };
@@ -1042,8 +1124,8 @@
         shopName: shopName,
         amount: Number(amount),
         mode: mode,
-        ref: ref,
-        staffName: currentStaff,
+        ref: `Courier: ${courierName} | Runner: ${staffRunner} | ${ref || ''}`,
+        staffName: staffRunner,
         files: [{
           name: `payment_${orderId}_${Date.now()}.jpg`,
           mimeType: 'image/jpeg',
@@ -1090,37 +1172,40 @@
       countBadge.innerText = `${collectedPayments.length} records`;
 
       if (collectedPayments.length === 0) {
-        feed.innerHTML = `<div class="glass-card p-4 rounded-xl text-center text-xs text-slate-500">No payments recorded yet today.</div>`;
+        feed.innerHTML = `<div class="clean-card p-4 rounded-xl text-center text-xs text-slate-500">No payments recorded yet today.</div>`;
         return;
       }
 
       feed.innerHTML = collectedPayments.map(p => {
         const isOnline = p.mode === 'Online';
         const modeBadge = isOnline 
-          ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black px-2 py-0.5 rounded uppercase">ONLINE</span>`
-          : `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-black px-2 py-0.5 rounded uppercase">CASH</span>`;
+          ? `<span class="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">ONLINE</span>`
+          : `<span class="bg-amber-50 text-amber-800 border border-amber-200 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">CASH</span>`;
 
         return `
-          <div class="glass-card p-3 rounded-xl flex items-center justify-between gap-3 border border-slate-800">
+          <div class="clean-card p-3 rounded-xl flex items-center justify-between gap-3 border border-slate-200">
             <div class="flex items-center gap-3">
               ${p.photo ? `
-                <img src="${p.photo}" class="w-12 h-12 rounded-lg object-cover border border-slate-700 shrink-0" onclick="previewImage('${p.photo}')">
+                <img src="${p.photo}" class="w-12 h-12 rounded-lg object-cover border border-slate-200 shrink-0 cursor-pointer shadow-2xs" onclick="previewImage('${p.photo}')">
               ` : `
-                <div class="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
+                <div class="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
                   <i class="fa-solid fa-receipt"></i>
                 </div>
               `}
               <div>
-                <h4 class="text-xs font-black text-white leading-tight">${p.shopName}</h4>
-                <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-mono">
-                  <span>${p.orderId}</span>
+                <h4 class="text-xs font-black text-slate-900 leading-tight">${p.shopName}</h4>
+                <div class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-medium">
+                  <span class="font-mono text-blue-700">${p.orderId}</span>
+                  <span>•</span>
+                  <span class="text-purple-700 font-bold">By: ${p.staff}</span>
                   <span>•</span>
                   <span>${new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                 </div>
+                ${p.courier ? `<div class="text-[9px] text-slate-500 font-semibold mt-0.5">🚚 ${p.courier}</div>` : ''}
               </div>
             </div>
             <div class="text-right">
-              <div class="text-sm font-black text-emerald-400">₹${Number(p.amount).toLocaleString()}</div>
+              <div class="text-sm font-black text-emerald-700">₹${Number(p.amount).toLocaleString()}</div>
               <div class="mt-0.5">${modeBadge}</div>
             </div>
           </div>
@@ -1130,7 +1215,7 @@
 
     function previewImage(src) {
       const w = window.open("");
-      w.document.write(`<img src="${src}" style="max-width:100%; height:auto; display:block; margin:auto; background:#111;">`);
+      w.document.write(`<img src="${src}" style="max-width:100%; height:auto; display:block; margin:auto; background:#fff; padding:20px;">`);
     }
 
     function showReceipt(p) {
@@ -1138,6 +1223,8 @@
       document.getElementById('receiptOrderId').innerText = p.orderId;
       document.getElementById('receiptAmount').innerText = '₹' + Number(p.amount).toLocaleString();
       document.getElementById('receiptMode').innerText = p.mode;
+      document.getElementById('receiptCourier').innerText = p.courier || 'Aadhunik / Ambika Courier';
+      document.getElementById('receiptStaff').innerText = p.staff || currentStaff;
       document.getElementById('receiptTime').innerText = new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
       document.getElementById('receiptModal').classList.remove('hidden');
@@ -1154,12 +1241,13 @@
       const cleanPhone = (lastReceiptData.phone || '').replace(/[^0-9]/g, '');
       const num = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
 
-      const msg = `*PAYMENT RECEIPT - YASH MARKETING*\n\n*Dealer:* ${lastReceiptData.shopName}\n*Order ID:* ${lastReceiptData.orderId}\n*Amount Received:* ₹${lastReceiptData.amount}\n*Payment Mode:* ${lastReceiptData.mode}\n*Received By:* ${lastReceiptData.staff}\n*Date & Time:* ${new Date(lastReceiptData.timestamp).toLocaleString()}\n\n_Dhanyawad! Payment successfully recorded in Yash Marketing OS._`;
+      const msg = `*PAYMENT RECEIPT - YASH MARKETING*\n\n*Dealer:* ${lastReceiptData.shopName}\n*Order ID:* ${lastReceiptData.orderId}\n*Amount Received:* ₹${lastReceiptData.amount}\n*Payment Mode:* ${lastReceiptData.mode}\n*Courier / Transport:* ${lastReceiptData.courier || 'Courier'}\n*Collected By:* ${lastReceiptData.staff}\n*Date & Time:* ${new Date(lastReceiptData.timestamp).toLocaleString()}\n\n_Dhanyawad! Payment successfully recorded in Yash Marketing OS._`;
       
       const targetUrl = num ? `https://api.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(msg)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
       window.open(targetUrl, '_blank');
     }
 
+    // History Tab
     function renderHistory() {
       const container = document.getElementById('historyContainer');
       const countBadge = document.getElementById('historyCountBadge');
@@ -1167,28 +1255,35 @@
 
       if (deliveredOrders.length === 0) {
         container.innerHTML = `
-          <div class="glass-card p-6 rounded-2xl text-center text-slate-500 text-xs">
+          <div class="clean-card p-6 rounded-2xl text-center text-slate-500 text-xs">
             No completed deliveries yet today.
           </div>
         `;
         return;
       }
 
-      container.innerHTML = deliveredOrders.map(o => `
-        <div class="glass-card p-3 rounded-xl flex items-center justify-between border border-slate-800">
-          <div>
-            <span class="text-[9px] font-mono text-indigo-400 font-bold">${o.orderId}</span>
-            <h4 class="text-xs font-black text-white mt-0.5">${o.shopName || 'Dealer'}</h4>
-            <span class="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-1">
-              <i class="fa-solid fa-circle-check"></i> Delivered Successfully
-            </span>
+      container.innerHTML = deliveredOrders.map(o => {
+        const log = parseLogisticsInfo(o);
+        return `
+          <div class="clean-card p-3 rounded-xl flex items-center justify-between border border-slate-200">
+            <div>
+              <span class="text-[9px] font-mono text-blue-700 font-bold">${o.orderId}</span>
+              <h4 class="text-xs font-black text-slate-900 mt-0.5">${o.shopName || 'Dealer'}</h4>
+              <div class="flex items-center gap-2 mt-1 flex-wrap text-[10px]">
+                <span class="text-emerald-700 font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-circle-check"></i> Delivered
+                </span>
+                <span class="text-purple-700 font-bold">👤 ${log.runner}</span>
+                <span class="text-blue-700 font-bold">🚚 ${log.transport}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-black text-slate-900">₹${o.totalValue || '0'}</span>
+              <span class="block text-[9px] text-slate-500 font-bold uppercase mt-0.5">${o.paymentMode || 'COD'}</span>
+            </div>
           </div>
-          <div class="text-right">
-            <span class="text-xs font-black text-white">₹${o.totalValue || '0'}</span>
-            <span class="block text-[9px] text-slate-400 font-bold uppercase mt-0.5">${o.paymentMode || 'COD'}</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
   </script>
 </body>
