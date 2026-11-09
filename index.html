@@ -194,6 +194,28 @@
       letter-spacing: 0.5px; 
     }
     
+    .btn-direct-open { 
+      background: #eff6ff; 
+      color: var(--accent); 
+      border: 1px solid #bfdbfe; 
+      padding: 7px 12px; 
+      border-radius: 8px; 
+      font-size: 12px; 
+      font-weight: 700; 
+      cursor: pointer; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 5px; 
+      transition: all 0.2s; 
+    }
+    .btn-direct-open:hover { 
+      background: #dbeafe; 
+      border-color: #93c5fd; 
+    }
+    .btn-direct-open:active { 
+      transform: scale(0.96); 
+    }
+    
     .btn-logout { 
       background: #fef2f2; 
       color: var(--danger); 
@@ -428,6 +450,9 @@
           <button id="btnOpenSalesTracker" onclick="openSalesTrackerModal()" style="display:none; background:#ecfdf5; border:1px solid #10b981; color:#047857; padding:7px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; align-items:center; gap:5px;">
             &#128205; Track Sales Staff
           </button>
+          <button id="btnOpenDirectTab" onclick="openCurrentAppInDirectTab()" class="btn-direct-open" title="Open active app directly in full browser window">
+            <span>↗️</span> <span>Open Direct</span>
+          </button>
           <button onclick="logout()" class="btn-logout">Logout</button>
         </div>
       </div>
@@ -439,6 +464,10 @@
       <div class="nav-slider" id="appButtonsContainer"></div>
     </div>
     
+    <div id="braveHintBanner" style="display:none; background:#eff6ff; border-bottom:1px solid #dbeafe; padding:8px 16px; font-size:12px; color:#1e40af; justify-content:space-between; align-items:center; z-index:90;">
+      <span>💡 <b>Brave / AdBlock User?</b> Agar screen par Google error ya blank dikhe, toh <a href="javascript:void(0)" onclick="openCurrentAppInDirectTab()" style="color:#2563eb; font-weight:700; text-decoration:underline;">yahan tap karke Direct Tab me kholein ↗️</a></span>
+      <button onclick="this.parentElement.style.display='none'" style="background:none; border:none; font-size:16px; color:#64748b; cursor:pointer; line-height:1; padding:0 4px;">&times;</button>
+    </div>
     <div id="iframesContainer"></div>
   </div>
 
@@ -465,6 +494,31 @@
     
 
     let loggedInUser = { empId: "", role: "", pass: "" };
+    let currentActiveAppUrl = "";
+    let currentActiveAppName = "";
+
+    function openCurrentAppInDirectTab() {
+      if (currentActiveAppUrl) {
+        window.open(currentActiveAppUrl, "_blank");
+      } else {
+        const activeFrame = document.querySelector(".app-frame.active");
+        if (activeFrame && (activeFrame.dataset.src || activeFrame.src)) {
+          window.open(activeFrame.dataset.src || activeFrame.src, "_blank");
+        } else {
+          showNotification("Notice", "Koi app active nahi hai.");
+        }
+      }
+    }
+
+    // Auto-detect Brave browser and display helpful hint banner if needed
+    if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+      navigator.brave.isBrave().then(function(isB) {
+        if (isB) {
+          var b = document.getElementById("braveHintBanner");
+          if (b) b.style.display = "flex";
+        }
+      }).catch(function(){});
+    }
 
     // ==========================================
     // OPTIMISTIC UI: INSTANT LOAD CACHED USER
@@ -712,12 +766,16 @@
         
         if (isActiveApp) {
             frame.src = secureUrl; // Boot the active app immediately
+            currentActiveAppUrl = secureUrl;
+            currentActiveAppName = app.name;
         }
         
         iframeContainer.appendChild(frame);
 
         // Tab Switching & Lazy Load Trigger
         btn.onclick = function() {
+          currentActiveAppUrl = secureUrl;
+          currentActiveAppName = app.name;
           // SAVE STATE: Remember this tab for future refreshes
           localStorage.setItem('ym_active_app', index);
 
