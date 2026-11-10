@@ -212,6 +212,11 @@
       background: #dbeafe; 
       border-color: #93c5fd; 
     }
+    
+    @media (max-width: 600px) {
+      .header-top { flex-wrap: wrap; gap: 10px; }
+      .btn-direct-open span:last-child { display: none; }
+    }
     .btn-direct-open:active { 
       transform: scale(0.96); 
     }
@@ -464,9 +469,13 @@
       <div class="nav-slider" id="appButtonsContainer"></div>
     </div>
     
-    <div id="braveHintBanner" style="display:none; background:#eff6ff; border-bottom:1px solid #dbeafe; padding:8px 16px; font-size:12px; color:#1e40af; justify-content:space-between; align-items:center; z-index:90;">
-      <span>💡 <b>Brave / AdBlock User?</b> Agar screen par Google error ya blank dikhe, toh <a href="javascript:void(0)" onclick="openCurrentAppInDirectTab()" style="color:#2563eb; font-weight:700; text-decoration:underline;">yahan tap karke Direct Tab me kholein ↗️</a></span>
-      <button onclick="this.parentElement.style.display='none'" style="background:none; border:none; font-size:16px; color:#64748b; cursor:pointer; line-height:1; padding:0 4px;">&times;</button>
+    <div id="directActionBar" style="background:#eff6ff; border-bottom:1px solid #bfdbfe; padding:6px 14px; font-size:12px; color:#1e40af; display:flex; justify-content:space-between; align-items:center; z-index:90;">
+      <span style="display:flex; align-items:center; gap:6px; font-weight:600;">
+        <span>⚡</span> <span>Google error ya blank screen aa raha hai?</span>
+      </span>
+      <button onclick="openCurrentAppInDirectTab()" style="background:#2563eb; color:#ffffff; border:none; padding:5px 12px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 1px 3px rgba(37,99,235,0.25); white-space:nowrap;">
+        <span>↗️</span> <span>Direct Tab me kholein</span>
+      </button>
     </div>
     <div id="iframesContainer"></div>
   </div>
