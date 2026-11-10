@@ -67,6 +67,13 @@
     #message { text-align: center; margin-top: 15px; font-weight: bold; font-size: 15px; }
     .hint { font-size: 11px; color: #e91e63; margin-top: 2px; }
     .req { color: red; font-weight: bold; font-size: 14px; margin-left: 3px; }
+    .photo-box-pending { background: #fff8e1; border: 2px dashed #f57c00 !important; border-radius: 6px; padding: 10px; transition: 0.3s; }
+    .photo-box-missing { background: #ffebee !important; border: 2px dashed #d32f2f !important; border-radius: 6px; padding: 10px; }
+    .photo-box-done { background: #e8f5e9 !important; border: 2px solid #2e7d32 !important; border-radius: 6px; padding: 10px; transition: 0.3s; }
+    .photo-status-badge { display: inline-block; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+    .photo-badge-missing { color: #d32f2f; background: #ffcdd2; border: 1px solid #ef9a9a; }
+    .photo-badge-done { color: #1b5e20; background: #c8e6c9; border: 1px solid #a5d6a7; }
+    .item-missing-highlight { border: 2px solid #d32f2f !important; box-shadow: 0 0 10px rgba(211,47,47,0.3) !important; }
     #photoWarning { color: #d32f2f; background: #ffebee; font-weight: bold; text-align: center; padding: 12px; border-radius: 6px; border: 1px dashed #d32f2f; margin-top: 15px; }
 
     /* INVOICE VIEW CSS */
@@ -166,11 +173,10 @@
               <div><label>Shortage Qty</label><input type="text" name="shortageQty" value="0" readonly title="Auto Calculated" class="qty-ok"></div>
               <div><label>DOA / Damaged Qty</label><input type="number" name="doaQty" value="0"></div>
               
-              <!-- 🔥 capture="environment" HATA DIYA HAI TAKI CAMERA AUR GALLERY DONO AAYE 🔥 -->
-              <div style="grid-column: 1 / -1; background:#e3f2fd; padding:10px; border-radius:6px; border:1px dashed #90caf9;">
-                <label style="color:#1565c0;">📸 Product Photo <span class="req">*</span></label>
+              <div class="item-photo-container photo-box-pending" style="grid-column: 1 / -1;">
+                <label style="color:#1565c0; font-weight:bold;">📸 Product Photo <span class="req">*</span> <span class="photo-status-badge photo-badge-missing">❌ Photo Missing (MANDATORY)</span></label>
                 <input type="file" name="productPhoto" accept="image/*" onchange="checkPhotosRequired()" required>
-                <div class="hint" style="color:#1565c0;">Click to take Live Photo or select from Gallery</div>
+                <div class="hint" style="color:#c62828; font-weight:bold;">⚠️ Har item ki photo upload karna mandatory hai! Bina photo ke submit nahi hoga.</div>
               </div>
             </div>
           </div>
@@ -267,26 +273,83 @@
   }
 
   function checkPhotosRequired() {
-    let invLen = document.getElementById("invoicePhotos").files.length;
-    let boxLen = document.getElementById("boxPhotos").files.length;
-    let pavtiLen = document.getElementById("pavtiPhotos").files.length;
+    let invInput = document.getElementById("invoicePhotos");
+    let boxInput = document.getElementById("boxPhotos");
+    let pavtiInput = document.getElementById("pavtiPhotos");
+
+    let invLen = invInput && invInput.files ? invInput.files.length : 0;
+    let boxLen = boxInput && boxInput.files ? boxInput.files.length : 0;
+    let pavtiLen = pavtiInput && pavtiInput.files ? pavtiInput.files.length : 0;
     
-    let allProductPhotosOk = true;
-    document.querySelectorAll('[name="productPhoto"]').forEach(input => {
-      if(input.files.length === 0) {
-        allProductPhotosOk = false;
+    let productBoxes = document.querySelectorAll('.product-box');
+    let totalItems = productBoxes.length;
+    let itemsWithPhoto = 0;
+    let missingItemNumbers = [];
+
+    productBoxes.forEach((box, index) => {
+      let input = box.querySelector('[name="productPhoto"]');
+      let statusContainer = box.querySelector('.item-photo-container');
+      let badge = box.querySelector('.photo-status-badge');
+      let itemNum = index + 1;
+      let modName = box.querySelector('[name="modelName"]') ? box.querySelector('[name="modelName"]').value.trim() : "";
+      let itemText = `Item ${itemNum}` + (modName ? ` (${modName})` : "");
+
+      if (input && input.files && input.files.length > 0) {
+        itemsWithPhoto++;
+        if (statusContainer) {
+          statusContainer.className = 'item-photo-container photo-box-done';
+        }
+        if (badge) {
+          badge.className = 'photo-status-badge photo-badge-done';
+          badge.innerText = `✅ Photo Attached (${input.files[0].name})`;
+        }
+        box.classList.remove('item-missing-highlight');
+      } else {
+        missingItemNumbers.push(itemText);
+        if (statusContainer) {
+          statusContainer.className = 'item-photo-container photo-box-pending';
+        }
+        if (badge) {
+          badge.className = 'photo-status-badge photo-badge-missing';
+          badge.innerText = '❌ Photo Missing (MANDATORY)';
+        }
       }
     });
 
     let btn = document.getElementById("submitBtn");
     let warning = document.getElementById("photoWarning");
 
-    if(invLen > 0 && boxLen > 0 && pavtiLen > 0 && allProductPhotosOk) {
-      btn.disabled = false; 
-      warning.style.display = "none"; 
+    let commonPhotosOk = (invLen > 0 && boxLen > 0 && pavtiLen > 0);
+    let allProductPhotosOk = (totalItems > 0 && itemsWithPhoto === totalItems);
+
+    if (commonPhotosOk && allProductPhotosOk) {
+      btn.disabled = false;
+      btn.classList.add("btn-ready");
+      if (warning) {
+        warning.style.display = "block";
+        warning.style.background = "#e8f5e9";
+        warning.style.color = "#2e7d32";
+        warning.style.borderColor = "#2e7d32";
+        warning.innerText = `✅ All ${totalItems} Product Photos + Invoice + Box + Pavti Uploaded! Ready to Submit.`;
+      }
     } else {
-      btn.disabled = true; 
-      warning.style.display = "block"; 
+      btn.disabled = true;
+      btn.classList.remove("btn-ready");
+      if (warning) {
+        warning.style.display = "block";
+        warning.style.background = "#ffebee";
+        warning.style.color = "#d32f2f";
+        warning.style.borderColor = "#d32f2f";
+        
+        let missingReasons = [];
+        if (invLen === 0) missingReasons.push("Invoice Photo");
+        if (boxLen === 0) missingReasons.push("Box Photo");
+        if (pavtiLen === 0) missingReasons.push("Pavti Photo");
+        if (missingItemNumbers.length > 0) {
+          missingReasons.push(`${missingItemNumbers.length} of ${totalItems} Items Missing Photo`);
+        }
+        warning.innerText = `⚠️ MANDATORY: Saare photos upload karein! Missing: ${missingReasons.join(" | ")}`;
+      }
     }
   }
 
@@ -447,11 +510,10 @@
         <div><label>Shortage Qty</label><input type="text" name="shortageQty" value="0" readonly title="Auto Calculated" class="qty-ok"></div>
         <div><label>DOA / Damaged Qty</label><input type="number" name="doaQty" value="0"></div>
         
-        <!-- 🔥 Yahan se bhi capture="environment" hata diya hai 🔥 -->
-        <div style="grid-column: 1 / -1; background:#e3f2fd; padding:10px; border-radius:6px; border:1px dashed #90caf9;">
-          <label style="color:#1565c0;">📸 Product Photo <span class="req">*</span></label>
+        <div class="item-photo-container photo-box-pending" style="grid-column: 1 / -1;">
+          <label style="color:#1565c0; font-weight:bold;">📸 Product Photo <span class="req">*</span> <span class="photo-status-badge photo-badge-missing">❌ Photo Missing (MANDATORY)</span></label>
           <input type="file" name="productPhoto" accept="image/*" onchange="checkPhotosRequired()" required>
-          <div class="hint" style="color:#1565c0;">Click to take Live Photo or select from Gallery</div>
+          <div class="hint" style="color:#c62828; font-weight:bold;">⚠️ Har item ki photo upload karna mandatory hai! Bina photo ke submit nahi hoga.</div>
         </div>
       </div>
     `;
@@ -596,14 +658,73 @@
 
   async function submitData() {
     const form = document.getElementById("stockForm"); 
-    
+    const btn = document.getElementById("submitBtn");
+    const msg = document.getElementById("message");
+
+    // 1. STRICT FORM VALIDATION
     if (!form.checkValidity()) {
       form.reportValidity(); 
       return; 
     }
 
-    const btn = document.getElementById("submitBtn");
-    const msg = document.getElementById("message");
+    let productBoxes = document.querySelectorAll('.product-box');
+    if (productBoxes.length === 0) {
+      alert("⚠️ Kripya kam se kam 1 Product Item add karein!");
+      return;
+    }
+
+    // 2. STRICT COMMON PHOTOS VALIDATION
+    let invInput = document.getElementById("invoicePhotos");
+    let boxInput = document.getElementById("boxPhotos");
+    let pavtiInput = document.getElementById("pavtiPhotos");
+
+    let invLen = invInput && invInput.files ? invInput.files.length : 0;
+    let boxLen = boxInput && boxInput.files ? boxInput.files.length : 0;
+    let pavtiLen = pavtiInput && pavtiInput.files ? pavtiInput.files.length : 0;
+
+    if (invLen === 0) {
+      alert("❌ Invoice Photo upload karna COMPULSORY hai!");
+      invInput.focus();
+      return;
+    }
+    if (boxLen === 0) {
+      alert("❌ Box Photo upload karna COMPULSORY hai!");
+      boxInput.focus();
+      return;
+    }
+    if (pavtiLen === 0) {
+      alert("❌ Pavti Photo upload karna COMPULSORY hai!");
+      pavtiInput.focus();
+      return;
+    }
+
+    // 3. STRICT VALIDATION: EVERY PRODUCT ITEM MUST HAVE A PHOTO
+    let missingPhotoItems = [];
+    for (let i = 0; i < productBoxes.length; i++) {
+      let box = productBoxes[i];
+      let pPhotoInput = box.querySelector('[name="productPhoto"]');
+      let modName = box.querySelector('[name="modelName"]') ? box.querySelector('[name="modelName"]').value.trim() : "";
+      let itemLabel = `Item ${i + 1}` + (modName ? ` (${modName})` : "");
+      let statusContainer = box.querySelector('.item-photo-container');
+
+      if (!pPhotoInput || !pPhotoInput.files || pPhotoInput.files.length === 0) {
+        missingPhotoItems.push(itemLabel);
+        box.classList.add('item-missing-highlight');
+        if (statusContainer) {
+          statusContainer.className = 'item-photo-container photo-box-missing';
+        }
+      } else {
+        box.classList.remove('item-missing-highlight');
+      }
+    }
+
+    if (missingPhotoItems.length > 0) {
+      alert("❌ ORDER INCOMPLETE! Har item ka photo upload karna MANDATORY hai.\n\nNiche diye gaye " + missingPhotoItems.length + " items ki photo missing hai:\n• " + missingPhotoItems.join("\n• ") + "\n\nKripya sabhi items ki photo upload karein, bina photo ke order submit nahi hoga!");
+      msg.style.color = "red";
+      msg.innerText = `❌ ${missingPhotoItems.length} items ki photo missing hai! Pehle sabhi photos upload karein.`;
+      checkPhotosRequired();
+      return;
+    }
 
     btn.disabled = true;
     btn.classList.remove("btn-ready");
@@ -630,17 +751,21 @@
       let pavtiPhotosB64 = await getB64Array('pavtiPhotos', 'Pavti');
 
       let items = [];
-      let productBoxes = document.querySelectorAll('.product-box');
-      
       for (let i = 0; i < productBoxes.length; i++) {
          let box = productBoxes[i];
          let pPhotoInput = box.querySelector('[name="productPhoto"]');
          let pPhotoFile = pPhotoInput && pPhotoInput.files ? pPhotoInput.files[0] : null;
-         let pPhotoB64 = null;
-         if (pPhotoFile) {
-            btn.innerText = `Compressing Item ${i + 1} Photo ⏳`;
-            msg.innerText = `Processing Product Photo for Item ${i + 1}...`;
-            pPhotoB64 = await compressImage(pPhotoFile, `Item ${i + 1} Photo`);
+         
+         if (!pPhotoFile) {
+           throw new Error(`Item ${i + 1} ki photo missing hai! Sabhi photos compulsory hain.`);
+         }
+
+         btn.innerText = `Compressing Item ${i + 1} Photo ⏳`;
+         msg.innerText = `Processing Product Photo for Item ${i + 1}...`;
+         let pPhotoB64 = await compressImage(pPhotoFile, `Item ${i + 1} Photo`);
+
+         if (!pPhotoB64 || !pPhotoB64.data || pPhotoB64.data.length < 50) {
+           throw new Error(`Item ${i + 1} photo encode nahi ho payi. Kripya photo dobara choose karein.`);
          }
 
          items.push({
@@ -680,14 +805,14 @@
           msg.innerText = response;
           if (response && response.includes("✅")) {
             msg.style.color = "green";
-            form.reset();
-            setDefaultDateTimeIfEmpty(); 
+            form.reset(); 
             document.querySelectorAll('.product-box:not(:first-child)').forEach(el => el.remove());
             document.querySelectorAll('.qty-short, .qty-extra').forEach(el => {
                 el.className = 'qty-ok';
                 el.value = '0';
             });
             productCount = 1;
+            setDefaultDateTimeIfEmpty();
             checkPhotosRequired(); 
           } else {
             msg.style.color = "red";
@@ -704,7 +829,8 @@
     } catch (e) {
       console.error("Submission error:", e);
       msg.style.color = "red";
-      msg.innerText = "Error processing photos: " + (e ? e.message : "Unknown error");
+      msg.innerText = "Error: " + (e ? e.message : "Unknown error");
+      alert("❌ " + (e ? e.message : "Error processing photos!"));
       checkPhotosRequired();
     }
   }
