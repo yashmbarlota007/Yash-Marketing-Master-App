@@ -680,7 +680,8 @@
           msg.innerText = response;
           if (response && response.includes("✅")) {
             msg.style.color = "green";
-            form.reset(); 
+            form.reset();
+            setDefaultDateTimeIfEmpty(); 
             document.querySelectorAll('.product-box:not(:first-child)').forEach(el => el.remove());
             document.querySelectorAll('.qty-short, .qty-extra').forEach(el => {
                 el.className = 'qty-ok';
@@ -785,14 +786,22 @@
           photoHtml += '</div>';
           if(!hasPhotos) photoHtml = '';
 
+          let timeBadge = (inv.inwardTime && inv.inwardTime !== '-' && inv.inwardTime !== 'undefined')
+            ? ` • ⏰ ${inv.inwardTime}`
+            : '';
+          let timeRow = (inv.inwardTime && inv.inwardTime !== '-' && inv.inwardTime !== 'undefined')
+            ? `<p>⏰ <b>Inward Time:</b> <span style="color:#1a237e; font-weight:bold;">${inv.inwardTime}</span></p>`
+            : '';
+
           html += `
             <div class="invoice-card" onclick="toggleDetails(event, 'inv_${index}')">
               <div class="hc-title">
                 <div>🧾 Inv: ${inv.invoice}</div>
-                <div style="font-size:12px; font-weight:normal; color:#555;">${inv.inwardDate}</div>
+                <div style="font-size:12px; font-weight:bold; color:#1a237e; text-align:right;">📅 ${inv.inwardDate || '-'}${timeBadge}</div>
               </div>
               <p>🏷️ <b>Brand Name:</b> ${inv.commonBrand}</p>
               <p>🚗 <b>Transporter:</b> ${inv.transporter}</p>
+              ${timeRow}
               <p>📦 <b>Total Items Logged:</b> ${inv.items.length}</p>
               <p>👤 <b>Checker:</b> ${inv.staff}</p>
               <div class="click-hint">▼ Click to View Inside Items ▼</div>
@@ -850,6 +859,23 @@ function saveFormData() {
 document.getElementById('stockForm').addEventListener('input', saveFormData);
 
 // 3. REFRESH HONE PAR DATA WAPAS LAANE KA FUNCTION
+function setDefaultDateTimeIfEmpty() {
+  const dateInput = document.querySelector('[name="inwardDate"]');
+  const timeInput = document.querySelector('[name="inwardTime"]');
+  const now = new Date();
+  if (dateInput && !dateInput.value) {
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+  }
+  if (timeInput && !timeInput.value) {
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    timeInput.value = `${hh}:${min}`;
+  }
+}
+
 function loadFormData() {
   const savedData = localStorage.getItem('yashStockDraft');
   if (savedData) {
@@ -861,6 +887,7 @@ function loadFormData() {
     document.querySelector('[name="invoiceNo"]').value = formData.invoiceNo || '';
     document.querySelector('[name="invoiceDate"]').value = formData.invoiceDate || '';
   }
+  setDefaultDateTimeIfEmpty();
 }
 
 // 4. PAGE LOAD HOTE HI DATA BHAR DEGA
