@@ -395,7 +395,7 @@
       </div>
       <button id="loginBtn" class="btn-login" onclick="executeLogin()">Secure Login</button>
       <button type="button" onclick="loginAsTvMode()" style="margin-top: 12px; width: 100%; padding: 12px; background: rgba(79, 70, 229, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #a5b4fc; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px;">
-        ≡ƒô║ Office TV Display (No Permissions)
+        &#128250; Office TV Display (No Permissions)
       </button>
       <div id="loginError" class="error-msg"></div>
     </div>
@@ -408,7 +408,7 @@
       <div style="padding:16px 20px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
         <div>
           <h3 style="margin:0; font-size:17px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-            <span>≡ƒôì</span> Sales Staff Live GPS Tracking
+            <span>&#128205;</span> Sales Staff Live GPS Tracking
           </h3>
           <p style="margin:2px 0 0 0; font-size:12px; color:#64748b;">Real-time Field Executive positions & Google Maps sync</p>
         </div>
@@ -419,7 +419,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <span style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">Active Field Executives</span>
           <button onclick="refreshSalesTrackingData()" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:4px;">
-            ≡ƒöä Refresh
+            &#128260; Refresh
           </button>
         </div>
 
@@ -482,7 +482,7 @@
 
   <script>
     // ==========================================
-    // ≡ƒöù API CONNECTION (PASTE GAS WEB APP URL)
+    // API CONNECTION (PASTE GAS WEB APP URL)
     // ==========================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwZO9fZ5HT91iDruilFmavDYigdga0d6D88tXAyL0ySJMl01nu-zyneiHTq7MmrXZDG/exec";
 
@@ -541,7 +541,7 @@
       
       document.getElementById("welcomeUser").innerText = "Office TV Display";
       document.getElementById("welcomeRole").innerText = "TV Mode";
-      document.getElementById("userInitial").innerText = "≡ƒô║";
+      document.getElementById("userInitial").innerText = "📺";
       buildPortalEngine("TV");
     }
 
@@ -562,6 +562,7 @@
         // INSTANT BOOT - Zero server wait time for returning staff
         loggedInUser.empId = cachedId;
         loggedInUser.role = cachedRole;
+        loggedInUser.name = cachedName;
         
         document.getElementById("welcomeUser").innerText = cachedName;
         document.getElementById("welcomeRole").innerText = cachedRole;
@@ -610,7 +611,7 @@
           (position) => { console.log("System Status: GPS Location access granted."); },
           (error) => {
             console.warn("System Status: GPS Location access denied.", error);
-            showNotification("Permission Required", "ΓÜá∩╕Å Please allow Location access in your browser settings for accurate tracking.");
+            showNotification("Permission Required", "⚠️ Please allow Location access in your browser settings for accurate tracking.");
           },
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
@@ -629,7 +630,7 @@
         }
       } catch (err) {
         console.warn("System Status: Camera access denied.", err);
-        showNotification("Permission Required", "≡ƒô╕ Please allow Camera access in your browser settings to capture live proofs.");
+        showNotification("Permission Required", "📷 Please allow Camera access in your browser settings to capture live proofs.");
       }
     }
 
@@ -665,7 +666,8 @@
           loggedInUser.empId = result.empId || id;
           const displayRole = (result.role && result.role.toUpperCase() === 'OWNER') ? 'CEO' : result.role;
           loggedInUser.role = displayRole;
-          loggedInUser.pass = pass; 
+          loggedInUser.pass = pass;
+          loggedInUser.name = uName; 
           
           const uName = result.username || result.name || id;
           // CACHE EVERYTHING FOR INSTANT NEXT LOAD
@@ -751,7 +753,8 @@
       allowedApps.forEach((app, index) => {
         let separator = app.url.includes("?") ? "&" : "?";
         let targetRole = (loggedInUser.role && loggedInUser.role.toUpperCase() === "OWNER") ? "CEO" : loggedInUser.role;
-        let secureUrl = `${app.url}${separator}empId=${encodeURIComponent(loggedInUser.empId)}&role=${encodeURIComponent(targetRole)}`;
+        let userName = loggedInUser.name || (localStorage.getItem('ym_master_name') || "");
+        let secureUrl = `${app.url}${separator}empId=${encodeURIComponent(loggedInUser.empId)}&role=${encodeURIComponent(targetRole)}&name=${encodeURIComponent(userName)}`;
         if (isTvMode) {
           secureUrl += `&tv=1`;
         }
@@ -915,7 +918,7 @@
         if (badge) {
           if (isCeoExclusive) {
             badge.style.display = "inline-flex";
-            badge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#10b981; border-radius:50%; box-shadow:0 0 8px #10b981;"></span> ≡ƒôì Live Field GPS: ${distKm}km (${speed} km/h)`;
+            badge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#10b981; border-radius:50%; box-shadow:0 0 8px #10b981;"></span> &#128205; Live Field GPS: ${distKm}km (${speed} km/h)`;
           } else {
             badge.style.display = "none";
             badge.innerHTML = "";
@@ -928,7 +931,7 @@
         if (badge) {
           if (isCeoExclusive) {
             badge.style.display = "inline-flex";
-            badge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#f59e0b; border-radius:50%;"></span> ≡ƒôì Field GPS: Retrying satellite lock...`;
+            badge.innerHTML = `<span style="display:inline-block; width:6px; height:6px; background:#f59e0b; border-radius:50%;"></span> &#128205; Field GPS: Retrying satellite lock...`;
           } else {
             badge.style.display = "none";
             badge.innerHTML = "";
@@ -962,7 +965,7 @@
       const container = document.getElementById("salesStaffListContainer");
       if (!container) return;
 
-      container.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b;">≡ƒôí Scanning active field signals...</div>`;
+      container.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b;">&#128225; Scanning active field signals...</div>`;
 
       let registry = {};
       try {
@@ -974,7 +977,7 @@
       if (staffList.length === 0) {
         container.innerHTML = `
           <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; padding:25px; text-align:center;">
-            <p style="font-size:24px; margin:0 0 8px 0;">≡ƒôì</p>
+            <p style="font-size:24px; margin:0 0 8px 0;">&#128205;</p>
             <p style="font-weight:700; color:#0f172a; margin:0 0 4px 0;">No Live Sales Staff Signals Yet</p>
             <p style="font-size:12px; color:#64748b; margin:0;">Sales staff jaise hi Master App me login karenge, unka live location yahan dikhna shuru ho jayega.</p>
           </div>
@@ -1001,16 +1004,16 @@
                 </span>
               </div>
               <div style="font-size:12px; color:#64748b; margin-top:4px; display:flex; gap:12px; flex-wrap:wrap;">
-                <span>≡ƒôì Lat: ${staff.lat.toFixed(5)}, Lng: ${staff.lng.toFixed(5)}</span>
-                <span>≡ƒôÅ <strong>${staff.distKm} km</strong> from Office</span>
-                <span>ΓÅ▒∩╕Å ${timeText}</span>
-                ${staff.speed > 0 ? `<span>ΓÜí ${staff.speed} km/h</span>` : ''}
+                <span>&#128205; Lat: ${staff.lat.toFixed(5)}, Lng: ${staff.lng.toFixed(5)}</span>
+                <span>&#128207; <strong>${staff.distKm} km</strong> from Office</span>
+                <span>&#9201;&#65039; ${timeText}</span>
+                ${staff.speed > 0 ? `<span>&#9889; ${staff.speed} km/h</span>` : ''}
               </div>
             </div>
 
             <div>
               <a href="${staff.mapsUrl}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; background:#2563eb; color:#ffffff; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:700; text-decoration:none; box-shadow:0 2px 4px rgba(37,99,235,0.2);">
-                <span>≡ƒù║∩╕Å</span> Open Google Maps
+                <span>&#128506;&#65039;</span> Open Google Maps
               </a>
             </div>
           </div>
