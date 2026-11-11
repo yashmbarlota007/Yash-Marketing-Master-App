@@ -663,13 +663,13 @@
         const result = await response.json();
 
         if(result.success) {
+          const uName = result.username || result.name || id;
           loggedInUser.empId = result.empId || id;
           const displayRole = (result.role && result.role.toUpperCase() === 'OWNER') ? 'CEO' : result.role;
           loggedInUser.role = displayRole;
           loggedInUser.pass = pass;
-          loggedInUser.name = uName; 
+          loggedInUser.name = uName;
           
-          const uName = result.username || result.name || id;
           // CACHE EVERYTHING FOR INSTANT NEXT LOAD
           localStorage.setItem('ym_master_id', id);
           localStorage.setItem('ym_master_role', displayRole);
@@ -688,7 +688,8 @@
           btn.disabled = false;
         }
       } catch (e) {
-        errorBox.innerText = "Network Error. Check connection.";
+        console.error("Login Error:", e);
+        errorBox.innerText = (e && e.name === "TypeError" && e.message.includes("fetch")) ? "Network Error. Check connection." : (e && e.message ? e.message : "Network Error. Check connection.");
         errorBox.style.display = "block";
         btn.innerText = "Secure Login";
         btn.style.opacity = "1";
