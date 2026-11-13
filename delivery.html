@@ -159,6 +159,7 @@
         <!-- Filter by Courier (Aadhunik / Ambika / etc.) -->
         <select id="courierFilterSelect" onchange="filterOrders()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none focus:border-blue-500 shadow-2xs">
           <option value="all">📦 All Couriers & Transport</option>
+          <option value="Dealer Self-Pickup">🏢 Dealer Self-Pickup</option>
           <option value="Aadhunik Courier">🚚 Aadhunik Courier</option>
           <option value="Ambika Courier">🚚 Ambika Courier</option>
           <option value="ACPL Courier">🚚 ACPL Courier</option>
@@ -171,6 +172,7 @@
         <!-- Filter by Delivery Staff -->
         <select id="staffFilterSelect" onchange="filterOrders()" class="bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none focus:border-blue-500 shadow-2xs">
           <option value="all">👤 All Delivery Staff</option>
+          <option value="Dealer">🏢 Dealer / Self-Pickup</option>
           <option value="Vishal Gunjal">Vishal Gunjal</option>
           <option value="Preetam Bogawat">Preetam Bogawat</option>
           <option value="Raghav Korekar">Raghav Korekar</option>
@@ -390,37 +392,82 @@
         </div>
         <div id="modalShopName" class="text-xs font-bold text-slate-900">Shop Name</div>
         
-        <!-- Logistics Info Display in Modal -->
-        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 text-[11px]">
+        <!-- Handover / Delivery Type Selector -->
+        <div>
+          <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+            Delivery / Handover Type:
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="deliverTypeBtnOut" onclick="setDeliverMode('out')" class="py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-800 font-black text-xs flex items-center justify-center gap-1.5 transition shadow-2xs">
+              <i class="fa-solid fa-truck text-xs"></i> Office Se Bheja
+            </button>
+            <button type="button" id="deliverTypeBtnSelf" onclick="setDeliverMode('self')" class="py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+              <i class="fa-solid fa-building-user text-xs text-amber-600"></i> Dealer Khud Aaya
+            </button>
+          </div>
+        </div>
+
+        <!-- Option 1: Office Se Bheja Logistics Display -->
+        <div id="modalOutLogisticsBox" class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 text-[11px]">
           <div class="bg-white p-2 rounded-lg border border-slate-200">
             <span class="text-[9px] text-slate-400 uppercase font-black block">Courier Partner:</span>
-            <span id="modalCourierName" class="font-bold text-blue-700 flex items-center gap-1 mt-0.5">
+            <span id="modalCourierName" class="font-bold text-blue-700 flex items-center gap-1 mt-0.5 truncate">
               <i class="fa-solid fa-truck text-[10px]"></i> Aadhunik Courier
             </span>
           </div>
           <div class="bg-white p-2 rounded-lg border border-slate-200">
             <span class="text-[9px] text-slate-400 uppercase font-black block">Delivery Staff:</span>
-            <span id="modalStaffRunner" class="font-bold text-purple-700 flex items-center gap-1 mt-0.5">
+            <span id="modalStaffRunner" class="font-bold text-purple-700 flex items-center gap-1 mt-0.5 truncate">
               <i class="fa-solid fa-user-check text-[10px]"></i> Vishal Gunjal
             </span>
+          </div>
+        </div>
+
+        <!-- Option 2: Dealer Khud Aaya Box -->
+        <div id="modalSelfLogisticsBox" class="hidden bg-amber-50 border border-amber-300 rounded-xl p-3 space-y-2">
+          <div class="flex items-center gap-1.5 text-xs font-black text-amber-900">
+            <i class="fa-solid fa-building-user text-amber-600"></i> Office Counter Handover (Dealer Self-Pickup)
+          </div>
+          <div>
+            <label class="block text-[10px] font-black text-amber-800 uppercase tracking-wider mb-1">
+              Kaun aaya hai stock lene? (Dealer / Relative / Driver Name) *
+            </label>
+            <input type="text" id="modalCollectorName" placeholder="e.g. Rahul Patil (Owner) / Sachin (Driver)" class="w-full bg-white border border-amber-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs">
           </div>
         </div>
       </div>
 
       <!-- Proof Photo for Delivery (Handover Proof) -->
       <div>
-        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
+        <label id="deliverPhotoTitle" class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
           Delivery Photo Proof (Handover / Shop Front)
         </label>
+        <div id="dealerPhotoBanner" class="hidden bg-amber-100/80 border border-amber-300 text-amber-950 p-2.5 rounded-xl text-[11px] font-bold mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-camera text-amber-600 text-base shrink-0"></i>
+          <span>Dealer/Person ko stock dete waqt unka live photo khinchein taki pakka proof rahe kisne stock receive kiya.</span>
+        </div>
+
         <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-3 text-center bg-slate-50 cursor-pointer" onclick="document.getElementById('deliveryProofFile').click()">
           <input type="file" id="deliveryProofFile" accept="image/*" capture="environment" onchange="handleDeliveryProofSelected(event)" class="hidden">
           <div id="deliverPhotoPrompt" class="text-xs text-slate-600 font-bold py-1">
-            <i class="fa-solid fa-camera text-emerald-600 mr-1"></i> Tap to Click or Choose Delivery Photo
+            <i class="fa-solid fa-camera text-emerald-600 mr-1 text-sm"></i>
+            <span id="deliverPhotoPromptText">Tap to Click Live Camera or Choose Photo</span>
           </div>
           <div id="deliverPhotoPreviewBox" class="hidden">
             <img id="deliverPhotoPreviewImg" src="" class="max-h-36 mx-auto rounded-lg object-contain border border-slate-300">
-            <div class="text-[10px] text-emerald-700 font-bold mt-1">Photo attached</div>
+            <div class="text-[10px] text-emerald-700 font-black mt-1 flex items-center justify-center gap-1">
+              <i class="fa-solid fa-check-circle"></i> Photo Verified & Attached (Click to Change)
+            </div>
           </div>
+        </div>
+        <div class="flex gap-2 mt-1.5">
+          <button type="button" onclick="document.getElementById('deliveryProofFile').click()" class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-[11px] font-bold text-slate-700 flex items-center justify-center gap-1 shadow-2xs">
+            <i class="fa-solid fa-camera text-emerald-600"></i> Live Camera
+          </button>
+          <label class="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-[11px] font-bold text-slate-700 flex items-center justify-center gap-1 cursor-pointer shadow-2xs">
+            <i class="fa-solid fa-images text-blue-600"></i> Gallery
+            <input type="file" accept="image/*" onchange="handleDeliveryProofSelected(event)" class="hidden">
+          </label>
         </div>
       </div>
 
@@ -454,6 +501,32 @@
   </div>
 
   <!-- ======================================================== -->
+  <!-- ======================================================== -->
+  <!-- MODAL: IMAGE PROOF VIEWER (LIGHTBOX) -->
+  <!-- ======================================================== -->
+  <div id="imageProofModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl border border-slate-200 p-4 space-y-3 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+        <div>
+          <h4 id="proofModalTitle" class="text-xs font-black text-slate-900">Proof Photo</h4>
+          <span id="proofModalSub" class="text-[10px] text-slate-500 font-mono">YM-...</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <a id="proofModalDirectLink" href="#" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-bold px-2 py-1 bg-blue-50 rounded-lg border border-blue-200">
+            <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Open Original
+          </a>
+          <button onclick="closeProofViewer()" class="text-slate-400 hover:text-slate-700 p-1">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+      <div class="bg-slate-100 rounded-xl p-2 flex items-center justify-center min-h-[250px] max-h-[70vh] overflow-hidden">
+        <img id="proofModalImg" src="" alt="Proof Photo" class="max-w-full max-h-[65vh] object-contain rounded-lg shadow-sm">
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
   <!-- MODAL: RECEIPT PREVIEW & WHATSAPP SHARE -->
   <!-- ======================================================== -->
   <div id="receiptModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
@@ -647,10 +720,11 @@
       }
     }
 
-    // Logistics Parser: Extracts Staff/Runner and Courier/Transport
+    // Logistics Parser: Extracts Staff/Runner, Courier/Transport, Proof URLs, and Self-Pickup Status
     function parseLogisticsInfo(order) {
       let runner = order.runner || "";
       let transport = order.transport || order.courier || "";
+      let proofUrl = null;
 
       // Check Stage 6 in stageUrls (index 5)
       if (order.stageUrls && order.stageUrls[5]) {
@@ -660,12 +734,27 @@
 
         const transportMatch = cellData.match(/Transport:\s*([^||\n]+)/i);
         if (transportMatch) transport = transportMatch[1].trim();
+
+        const urlMatch = cellData.match(/https?:\/\/[^\s|,]+/i);
+        if (urlMatch) proofUrl = urlMatch[0];
       }
 
-      // Check for remarks/comments mentioning Aadhunik or Ambika
-      const rawText = `${order.comment || ''} ${order.remarks || ''} ${order.notes || ''}`.toLowerCase();
+      // Check Stage 8 in stageUrls (index 7)
+      if (order.stageUrls && order.stageUrls[7]) {
+        const cellData8 = String(order.stageUrls[7]);
+        const urlMatch8 = cellData8.match(/https?:\/\/[^\s|,]+/i);
+        if (urlMatch8) proofUrl = urlMatch8[0];
+        
+        const selfMatch8 = cellData8.match(/Dealer Self-Pickup:\s*([^||\n]+)/i);
+        if (selfMatch8 && !runner) runner = "Dealer Self-Pickup: " + selfMatch8[1].trim();
+      }
+
+      const rawText = `${runner} ${transport} ${order.comment || ''} ${order.remarks || ''} ${order.notes || ''}`.toLowerCase();
+      const isSelfPickup = rawText.includes('dealer') || rawText.includes('self pickup') || rawText.includes('pickup') || rawText.includes('counter handover');
+
       if (!transport) {
-        if (rawText.includes('aadhunik')) transport = 'Aadhunik Courier';
+        if (isSelfPickup) transport = 'Office Counter Handover';
+        else if (rawText.includes('aadhunik')) transport = 'Aadhunik Courier';
         else if (rawText.includes('ambika')) transport = 'Ambika Courier';
         else if (rawText.includes('acpl')) transport = 'ACPL Courier';
         else if (rawText.includes('delhivery')) transport = 'Delhivery';
@@ -674,7 +763,9 @@
 
       return {
         runner: runner || order.staffName || "Delivery Boy",
-        transport: transport || "Local Handover"
+        transport: transport || (isSelfPickup ? "Office Counter Handover" : "Local Handover"),
+        isSelfPickup: isSelfPickup,
+        proofUrl: proofUrl || order.deliveryProofUrl || null
       };
     }
 
@@ -723,13 +814,17 @@
 
         const log = parseLogisticsInfo(o);
 
-        // Filter by Courier
-        if (courierFilter !== 'all') {
+        // Filter by Courier or Dealer Self-Pickup
+        if (courierFilter === 'Dealer Self-Pickup') {
+          if (!log.isSelfPickup) return false;
+        } else if (courierFilter !== 'all') {
           if (!log.transport.toLowerCase().includes(courierFilter.toLowerCase())) return false;
         }
 
-        // Filter by Staff
-        if (staffFilter !== 'all') {
+        // Filter by Staff or Dealer
+        if (staffFilter === 'Dealer') {
+          if (!log.isSelfPickup) return false;
+        } else if (staffFilter !== 'all') {
           if (!log.runner.toLowerCase().includes(staffFilter.toLowerCase())) return false;
         }
 
@@ -787,29 +882,55 @@
             </div>
 
             <!-- LOGISTICS INFORMATION BADGES (COURIER & STAFF ACCOUNTABILITY) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-              <!-- Courier Partner Badge -->
-              <div class="flex items-center gap-2 p-2 rounded-xl border ${courierBadgeClass} text-xs">
-                <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 text-xs">
-                  <i class="fa-solid fa-truck-ramp-box"></i>
+            ${log.isSelfPickup ? `
+              <div class="p-2.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-300 flex items-center justify-between gap-2 text-xs shadow-2xs">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="w-7 h-7 rounded-lg bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 text-sm font-black">
+                    <i class="fa-solid fa-building-user"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <div class="text-[9px] uppercase tracking-wider text-amber-800 font-extrabold leading-none">Office Handover / Self-Pickup:</div>
+                    <div class="text-xs font-black truncate mt-0.5">${log.runner}</div>
+                  </div>
                 </div>
-                <div class="min-w-0">
-                  <div class="text-[9px] uppercase tracking-wider text-slate-500 font-bold leading-none">Courier Partner:</div>
-                  <div class="text-xs font-black truncate">${log.transport}</div>
-                </div>
+                ${log.proofUrl ? `
+                  <button onclick="openProofViewer('${log.proofUrl}', '${order.orderId}')" class="shrink-0 bg-white hover:bg-amber-100 text-amber-900 text-[10px] font-black px-2.5 py-1.5 rounded-lg border border-amber-300 shadow-2xs flex items-center gap-1 transition">
+                    <i class="fa-solid fa-image text-amber-600"></i> View Proof
+                  </button>
+                ` : ''}
               </div>
+            ` : `
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <!-- Courier Partner Badge -->
+                <div class="flex items-center gap-2 p-2 rounded-xl border ${courierBadgeClass} text-xs">
+                  <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 text-xs">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-[9px] uppercase tracking-wider text-slate-500 font-bold leading-none">Courier Partner:</div>
+                    <div class="text-xs font-black truncate mt-0.5">${log.transport}</div>
+                  </div>
+                </div>
 
-              <!-- Delivery Staff / Runner Badge -->
-              <div class="flex items-center gap-2 p-2 rounded-xl bg-purple-50 text-purple-800 border border-purple-200 text-xs">
-                <div class="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 text-xs">
-                  <i class="fa-solid fa-user-check"></i>
-                </div>
-                <div class="min-w-0">
-                  <div class="text-[9px] uppercase tracking-wider text-purple-600 font-bold leading-none">Delivery Staff:</div>
-                  <div class="text-xs font-black truncate">${log.runner}</div>
+                <!-- Delivery Staff / Runner Badge -->
+                <div class="flex items-center justify-between p-2 rounded-xl bg-purple-50 text-purple-800 border border-purple-200 text-xs">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-6 h-6 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 text-xs">
+                      <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-[9px] uppercase tracking-wider text-purple-600 font-bold leading-none">Delivery Staff:</div>
+                      <div class="text-xs font-black truncate mt-0.5">${log.runner}</div>
+                    </div>
+                  </div>
+                  ${log.proofUrl ? `
+                    <button onclick="openProofViewer('${log.proofUrl}', '${order.orderId}')" class="shrink-0 bg-white hover:bg-purple-100 text-purple-900 text-[10px] font-black px-2 py-1 rounded-md border border-purple-300 shadow-2xs flex items-center gap-1 transition">
+                      <i class="fa-solid fa-image text-purple-600"></i> Proof
+                    </button>
+                  ` : ''}
                 </div>
               </div>
-            </div>
+            `}
 
             <!-- Meta details -->
             <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
@@ -839,7 +960,7 @@
 
               <!-- WhatsApp to Dealer with Courier & Staff details -->
               ${order.phone ? `
-                <button onclick="openWhatsAppWithLogistics('${order.orderId}', '${escapeQuote(order.shopName)}', '${order.phone}', '${order.totalValue}', '${order.paymentMode || 'COD'}', '${escapeQuote(log.transport)}', '${escapeQuote(log.runner)}', '${itemsCount}')" class="flex items-center justify-center gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 active:scale-95 text-[#128C7E] text-xs font-bold py-2.5 rounded-xl border border-[#25D366]/30 transition">
+                <button onclick="openWhatsAppWithLogistics('${order.orderId}', '${escapeQuote(order.shopName)}', '${order.phone}', '${order.totalValue}', '${order.paymentMode || 'COD'}', '${escapeQuote(log.transport)}', '${escapeQuote(log.runner)}', '${itemsCount}', ${log.isSelfPickup})" class="flex items-center justify-center gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 active:scale-95 text-[#128C7E] text-xs font-bold py-2.5 rounded-xl border border-[#25D366]/30 transition">
                   <i class="fa-brands fa-whatsapp text-sm text-[#25D366]"></i> Chat
                 </button>
               ` : `
@@ -861,13 +982,52 @@
     }
 
     // Dealer WhatsApp Message with Courier and Delivery Staff information
-    function openWhatsAppWithLogistics(orderId, shopName, phone, amount, paymentMode, courierName, staffName, itemsCount) {
+    function openWhatsAppWithLogistics(orderId, shopName, phone, amount, paymentMode, courierName, staffName, itemsCount, isSelf) {
       const cleanPhone = phone.replace(/[^0-9]/g, '');
       const num = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
 
-      const msg = `*YASH MARKETING - DISPATCH & DELIVERY UPDATE*\n\nNamaste *${shopName}*,\n\nAapka order delivery ke liye nikal chuka hai!\n\n📋 *Order ID:* ${orderId}\n🚚 *Courier / Transport:* ${courierName}\n👤 *Delivery Person:* ${staffName}\n💰 *Amount:* ₹${amount} (${paymentMode})\n📦 *Total Items:* ${itemsCount} items\n\nKripya delivery receive karte waqt payment ready rakhein. Koi query ho toh reply karein. Dhanyawad!`;
+      let msg = '';
+      if (isSelf) {
+        msg = `*YASH MARKETING - STOCK HANDOVER CONFIRMATION*\n\nNamaste *${shopName}*,\n\nAapka order hamare office counter se collect kar liya gaya hai!\n\n📋 *Order ID:* ${orderId}\n🏢 *Handover Type:* Office Counter Pickup\n👤 *Received By:* ${staffName}\n💰 *Amount:* ₹${amount} (${paymentMode})\n📦 *Total Items:* ${itemsCount} items\n\nStock lene ke liye dhanyawad! Koi query ho toh reply karein.`;
+      } else {
+        msg = `*YASH MARKETING - DISPATCH & DELIVERY UPDATE*\n\nNamaste *${shopName}*,\n\nAapka order delivery ke liye nikal chuka hai!\n\n📋 *Order ID:* ${orderId}\n🚚 *Courier / Transport:* ${courierName}\n👤 *Delivery Person:* ${staffName}\n💰 *Amount:* ₹${amount} (${paymentMode})\n📦 *Total Items:* ${itemsCount} items\n\nKripya delivery receive karte waqt payment ready rakhein. Koi query ho toh reply karein. Dhanyawad!`;
+      }
       
       window.open(`https://api.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // Deliver Mode State: 'out' (Office se bheja) vs 'self' (Dealer khud aaya)
+    let currentDeliverMode = 'out';
+
+    function setDeliverMode(mode) {
+      currentDeliverMode = mode;
+      const btnOut = document.getElementById('deliverTypeBtnOut');
+      const btnSelf = document.getElementById('deliverTypeBtnSelf');
+      const outBox = document.getElementById('modalOutLogisticsBox');
+      const selfBox = document.getElementById('modalSelfLogisticsBox');
+      const banner = document.getElementById('dealerPhotoBanner');
+      const title = document.getElementById('deliverPhotoTitle');
+      const promptText = document.getElementById('deliverPhotoPromptText');
+
+      if (!btnOut || !btnSelf) return;
+
+      if (mode === 'self') {
+        btnOut.className = "py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition";
+        btnSelf.className = "py-2.5 px-3 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900 font-black text-xs flex items-center justify-center gap-1.5 transition shadow-2xs";
+        if (outBox) outBox.classList.add('hidden');
+        if (selfBox) selfBox.classList.remove('hidden');
+        if (banner) banner.classList.remove('hidden');
+        if (title) title.innerText = "📸 DEALER PHOTO PROOF (STOCK HANDOVER PHOTO)";
+        if (promptText) promptText.innerText = "📸 Take Photo of Dealer Receiving Stock (Live Camera)";
+      } else {
+        btnOut.className = "py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-800 font-black text-xs flex items-center justify-center gap-1.5 transition shadow-2xs";
+        btnSelf.className = "py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition";
+        if (outBox) outBox.classList.remove('hidden');
+        if (selfBox) selfBox.classList.add('hidden');
+        if (banner) banner.classList.add('hidden');
+        if (title) title.innerText = "Delivery Photo Proof (Handover / Shop Front)";
+        if (promptText) promptText.innerText = "Tap to Click Live Camera or Choose Photo";
+      }
     }
 
     // Deliver Modal
@@ -880,8 +1040,18 @@
       document.getElementById('modalOrderId').innerText = currentActiveOrder.orderId;
       document.getElementById('modalShopName').innerText = currentActiveOrder.shopName || 'Dealer';
       document.getElementById('modalOrderAmount').innerText = '₹' + (currentActiveOrder.totalValue || '0');
-      document.getElementById('modalCourierName').innerText = log.transport;
-      document.getElementById('modalStaffRunner').innerText = log.runner;
+      document.getElementById('modalCourierName').innerHTML = `<i class="fa-solid fa-truck text-[10px]"></i> ${log.transport}`;
+      document.getElementById('modalStaffRunner').innerHTML = `<i class="fa-solid fa-user-check text-[10px]"></i> ${log.runner}`;
+
+      // Set Handover Mode
+      if (log.isSelfPickup) {
+        setDeliverMode('self');
+        const cleanName = log.runner.replace(/dealer khud aaya|self pickup|counter handover/gi, '').replace(/^[\s\-:]+/, '').trim();
+        document.getElementById('modalCollectorName').value = cleanName;
+      } else {
+        setDeliverMode('out');
+        document.getElementById('modalCollectorName').value = '';
+      }
 
       const isCod = currentActiveOrder.paymentMode && currentActiveOrder.paymentMode.toUpperCase().includes('COD');
       document.getElementById('deliverPaymentNowCheck').checked = isCod;
@@ -923,24 +1093,44 @@
       btn.disabled = true;
       btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...`;
 
-      const notes = document.getElementById('deliverNotesInput').value;
+      const notes = document.getElementById('deliverNotesInput').value.trim();
       const collectPaymentNow = document.getElementById('deliverPaymentNowCheck').checked;
       const log = parseLogisticsInfo(currentActiveOrder);
+
+      let staffRecorded = log.runner || currentStaff;
+      let commentRecorded = '';
+      let fileName = `delivered_${currentActiveOrder.orderId}.jpg`;
+
+      if (currentDeliverMode === 'self') {
+        const collector = document.getElementById('modalCollectorName').value.trim();
+        if (!collector) {
+          alert("Kripya stock lene wale vyakti ka naam darj karein (e.g. Rahul Patil - Owner / Driver).");
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          return;
+        }
+        staffRecorded = `Dealer Self-Pickup: ${collector}`;
+        commentRecorded = `🏢 Dealer Self-Pickup (${collector}) | Handover at Office Counter | Notes: ${notes || 'Stock collected in person'}`;
+        fileName = `dealer_pickup_${currentActiveOrder.orderId}.jpg`;
+      } else {
+        commentRecorded = `Delivered by: ${log.runner} | Courier: ${log.transport} | Notes: ${notes || 'Handed Over'}`;
+      }
 
       let payload = {
         action: 'updateStage',
         orderId: currentActiveOrder.orderId,
         stage: 8, // 8 = Delivered
         files: [],
-        staffName: log.runner || currentStaff,
-        comment: `Delivered by: ${log.runner} | Courier: ${log.transport} | Notes: ${notes || 'Handed Over'}`,
+        staffName: staffRecorded,
+        comment: commentRecorded,
+        actionText: commentRecorded,
         isNoResponse: false,
         isWhatsAppOnly: false
       };
 
       if (selectedDeliveryPhotoBase64) {
         payload.files.push({
-          name: `delivered_${currentActiveOrder.orderId}.jpg`,
+          name: fileName,
           mimeType: 'image/jpeg',
           base64: selectedDeliveryPhotoBase64
         });
@@ -950,10 +1140,14 @@
         const res = await gasRequest(payload);
         if (res && res.status === 'success') {
           confetti({ particleCount: 75, spread: 60, origin: { y: 0.7 } });
-          showToast(`Order #${currentActiveOrder.orderId} Delivered by ${log.runner}!`, "success");
+          showToast(`Order #${currentActiveOrder.orderId} Delivered successfully!`, "success");
 
           currentActiveOrder.completedStages = 8;
           currentActiveOrder.isFullyCompleted = true;
+          if (currentDeliverMode === 'self') {
+            currentActiveOrder.runner = staffRecorded;
+            currentActiveOrder.transport = 'Office Counter Handover';
+          }
           processOrdersData();
 
           closeDeliverModal();
@@ -972,6 +1166,23 @@
         btn.disabled = false;
         btn.innerHTML = originalText;
       }
+    }
+
+    // Lightbox Proof Photo Viewer
+    function openProofViewer(url, orderId) {
+      if (!url) return;
+      document.getElementById('proofModalTitle').innerText = "Delivery / Handover Proof Photo";
+      document.getElementById('proofModalSub').innerText = orderId || "";
+      document.getElementById('proofModalDirectLink').href = url;
+      document.getElementById('proofModalImg').src = url;
+      document.getElementById('imageProofModal').classList.remove('hidden');
+      document.getElementById('imageProofModal').classList.add('flex');
+    }
+
+    function closeProofViewer() {
+      document.getElementById('imageProofModal').classList.add('hidden');
+      document.getElementById('imageProofModal').classList.remove('flex');
+      document.getElementById('proofModalImg').src = "";
     }
 
     // Payment Tab Logic
