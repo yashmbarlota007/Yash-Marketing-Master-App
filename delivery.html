@@ -93,10 +93,18 @@
     <div class="max-w-4xl mx-auto mt-3">
       <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1">
         <!-- Delivery Tab -->
+        <!-- Step 8: To Deliver Tab -->
         <button id="tabBtnDelivery" onclick="switchTab('delivery')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-blue-600 text-white shadow-sm shadow-blue-500/20">
           <i class="fa-solid fa-truck-fast"></i>
-          <span>To Deliver</span>
+          <span>8. To Deliver</span>
           <span id="badgePendingCount" class="bg-blue-800 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1">0</span>
+        </button>
+
+        <!-- Step 9: Final Call Tab -->
+        <button id="tabBtnFinalCall" onclick="switchTab('finalCall')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200">
+          <i class="fa-solid fa-phone-volume text-purple-600"></i>
+          <span>9. Final Call (Rating)</span>
+          <span id="badgeFinalCallCount" class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1 border border-purple-200">0</span>
         </button>
 
         <!-- Payment Tab -->
@@ -119,21 +127,29 @@
   <main class="max-w-4xl mx-auto w-full px-4 pt-4 flex-1">
 
     <!-- KPI SUMMARY BAR -->
-    <section class="grid grid-cols-3 gap-2.5 mb-4">
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
       <div class="clean-card p-3 rounded-2xl border-t-4 border-t-amber-500">
         <div class="text-[10px] uppercase font-black text-amber-700 tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-boxes-packing text-xs text-amber-600"></i> To Deliver
+          <i class="fa-solid fa-truck-fast text-xs text-amber-600"></i> 8. To Deliver
         </div>
         <div id="statToDeliver" class="text-xl font-black text-slate-900 mt-1">--</div>
-        <div class="text-[9px] text-slate-500 font-medium">Out for delivery</div>
+        <div class="text-[9px] text-slate-500 font-medium">Pending handover</div>
+      </div>
+
+      <div class="clean-card p-3 rounded-2xl border-t-4 border-t-purple-500">
+        <div class="text-[10px] uppercase font-black text-purple-700 tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-phone-volume text-xs text-purple-600"></i> 9. Final Call
+        </div>
+        <div id="statFinalCall" class="text-xl font-black text-slate-900 mt-1">--</div>
+        <div class="text-[9px] text-slate-500 font-medium">Rating pending</div>
       </div>
 
       <div class="clean-card p-3 rounded-2xl border-t-4 border-t-emerald-500">
         <div class="text-[10px] uppercase font-black text-emerald-700 tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-circle-check text-xs text-emerald-600"></i> Delivered
+          <i class="fa-solid fa-circle-check text-xs text-emerald-600"></i> Completed
         </div>
         <div id="statDelivered" class="text-xl font-black text-slate-900 mt-1">--</div>
-        <div class="text-[9px] text-slate-500 font-medium">Completed today</div>
+        <div class="text-[9px] text-slate-500 font-medium">Steps 8 & 9 done</div>
       </div>
 
       <div class="clean-card p-3 rounded-2xl border-t-4 border-t-blue-600">
@@ -188,6 +204,30 @@
           <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600"></i>
           <p class="text-xs text-slate-600 font-bold tracking-wide">Connecting to Yash Marketing Cloud & Loading Deliveries...</p>
         </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW: STEP 9 FINAL CALL & RATING TAB -->
+    <!-- ======================================================== -->
+    <section id="viewFinalCall" class="space-y-3 hidden">
+      <!-- Search & Info Bar -->
+      <div class="clean-card p-3.5 rounded-xl border border-purple-200 bg-purple-50/60 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-sm shadow-2xs">
+            <i class="fa-solid fa-phone-volume"></i>
+          </div>
+          <div>
+            <h3 class="text-xs font-black text-purple-950">Step 9: Final Call & Customer Rating</h3>
+            <p class="text-[10px] text-purple-700 font-semibold">Orders delivered at Step 8 ready for verification call and 1-5 star rating.</p>
+          </div>
+        </div>
+        <span id="finalCallCountBadge" class="bg-purple-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-2xs">0 Orders</span>
+      </div>
+
+      <!-- Final Call Orders List Container -->
+      <div id="finalCallContainer" class="space-y-3">
+        <!-- Rendered by renderFinalCallCards() -->
       </div>
     </section>
 
@@ -367,6 +407,100 @@
   <!-- ======================================================== -->
   <!-- MODAL: MARK AS DELIVERED CONFIRMATION (WHITE THEME) -->
   <!-- ======================================================== -->
+  <!-- ======================================================== -->
+  <!-- MODAL: STEP 9 FINAL CALL & CUSTOMER RATING -->
+  <!-- ======================================================== -->
+  <div id="finalCallModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-5 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-black border border-purple-200">
+            <i class="fa-solid fa-phone-volume"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-900">Step 9: Final Call & Rating</h3>
+            <span class="text-[10px] text-slate-500">Post-Delivery Customer Satisfaction</span>
+          </div>
+        </div>
+        <button onclick="closeFinalCallModal()" class="text-slate-400 hover:text-slate-700 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Order Details Summary -->
+      <div class="bg-purple-50/50 rounded-xl p-3 border border-purple-200 space-y-1.5">
+        <div class="flex justify-between items-center">
+          <span id="fcModalOrderId" class="text-xs font-mono font-black text-purple-800">YM-...</span>
+          <span id="fcModalAmount" class="text-xs font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">₹0</span>
+        </div>
+        <div id="fcModalShopName" class="text-xs font-black text-slate-900">Dealer Name</div>
+        <div id="fcModalLogistics" class="text-[10px] text-slate-600 font-semibold truncate"></div>
+        <div id="fcModalPhoneRow" class="flex items-center justify-between pt-1 text-[11px] text-slate-600">
+          <span id="fcModalPhone" class="font-mono font-bold text-slate-800"></span>
+          <a id="fcModalCallBtn" href="#" class="bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-[10px] font-black px-3 py-1 rounded-lg flex items-center gap-1 shadow-2xs transition">
+            <i class="fa-solid fa-phone"></i> Call Dealer
+          </a>
+        </div>
+      </div>
+
+      <!-- 1 to 5 Star Rating Picker -->
+      <div>
+        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2 text-center">
+          Dealer Rating (1 to 5 Stars) <span class="text-rose-600">*</span>
+        </label>
+        <div class="flex items-center justify-center gap-3 py-1" id="starRatingContainer">
+          <button type="button" onclick="setFinalCallRating(1)" class="star-btn text-3xl text-amber-400 hover:scale-110 transition" data-star="1"><i class="fa-solid fa-star"></i></button>
+          <button type="button" onclick="setFinalCallRating(2)" class="star-btn text-3xl text-amber-400 hover:scale-110 transition" data-star="2"><i class="fa-solid fa-star"></i></button>
+          <button type="button" onclick="setFinalCallRating(3)" class="star-btn text-3xl text-amber-400 hover:scale-110 transition" data-star="3"><i class="fa-solid fa-star"></i></button>
+          <button type="button" onclick="setFinalCallRating(4)" class="star-btn text-3xl text-amber-400 hover:scale-110 transition" data-star="4"><i class="fa-solid fa-star"></i></button>
+          <button type="button" onclick="setFinalCallRating(5)" class="star-btn text-3xl text-amber-400 hover:scale-110 transition" data-star="5"><i class="fa-solid fa-star"></i></button>
+        </div>
+        <div id="starRatingLabel" class="text-center text-xs font-black text-amber-600 mt-1">⭐⭐⭐⭐⭐ 5 Stars - Excellent Service</div>
+        <input type="hidden" id="finalCallRatingValue" value="5">
+      </div>
+
+      <!-- Quick Feedback Tags -->
+      <div>
+        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+          Quick Feedback Tags:
+        </label>
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" onclick="addFeedbackTag('Stock Intact & Verified')" class="text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 shadow-2xs">✓ Stock Intact</button>
+          <button type="button" onclick="addFeedbackTag('Delivered to Owner')" class="text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 shadow-2xs">✓ Received by Owner</button>
+          <button type="button" onclick="addFeedbackTag('Payment / Cash Verified')" class="text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 shadow-2xs">✓ Payment Done</button>
+          <button type="button" onclick="addFeedbackTag('Dealer Satisfied')" class="text-[10px] font-bold px-2 py-1 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 shadow-2xs">✓ Very Happy</button>
+        </div>
+      </div>
+
+      <!-- Remarks / Feedback Notes -->
+      <div>
+        <label class="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
+          Call Notes / Remarks:
+        </label>
+        <textarea id="finalCallNotesInput" rows="2" placeholder="e.g. Spoke with dealer owner. Verified stock and delivery satisfaction." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-purple-600 shadow-2xs"></textarea>
+      </div>
+
+      <!-- Optional Audio File Upload -->
+      <div>
+        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+          <i class="fa-solid fa-microphone text-purple-600"></i> Record Audio / Call Recording (Optional)
+        </label>
+        <input type="file" id="finalCallAudioFile" accept="audio/*,image/*" onchange="handleFinalCallAudioSelected(event)" class="w-full text-xs text-slate-700 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-bold file:bg-purple-100 file:text-purple-800 bg-slate-50 p-1.5 rounded-xl border border-slate-200 cursor-pointer">
+        <span id="finalCallAudioStatus" class="text-[10px] text-emerald-700 font-bold hidden mt-1"></span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeFinalCallModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-3 rounded-xl transition">
+          Cancel
+        </button>
+        <button onclick="submitFinalCallStage()" id="modalConfirmFinalCallBtn" class="flex-1 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-black py-3 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-check-double"></i> Confirm Step 9 & Finish
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="deliverModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-2xl border border-slate-200 p-5 space-y-4 shadow-xl">
       <div class="flex items-center justify-between border-b border-slate-200 pb-3">
@@ -633,26 +767,37 @@
     function switchTab(tab) {
       const views = {
         delivery: document.getElementById('viewDelivery'),
+        finalCall: document.getElementById('viewFinalCall'),
         payment: document.getElementById('viewPayment'),
         history: document.getElementById('viewHistory')
       };
       const btns = {
         delivery: document.getElementById('tabBtnDelivery'),
+        finalCall: document.getElementById('tabBtnFinalCall'),
         payment: document.getElementById('tabBtnPayment'),
         history: document.getElementById('tabBtnHistory')
       };
 
       Object.keys(views).forEach(k => {
+        if (!views[k] || !btns[k]) return;
         if (k === tab) {
           views[k].classList.remove('hidden');
-          btns[k].className = "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-blue-600 text-white shadow-sm shadow-blue-500/20";
+          const activeColors = {
+            delivery: 'bg-blue-600 text-white shadow-sm shadow-blue-500/20',
+            finalCall: 'bg-purple-600 text-white shadow-sm shadow-purple-500/20',
+            payment: 'bg-emerald-600 text-white shadow-sm shadow-emerald-500/20',
+            history: 'bg-slate-800 text-white shadow-sm shadow-slate-700/20'
+          };
+          btns[k].className = "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all " + (activeColors[k] || 'bg-blue-600 text-white');
         } else {
           views[k].classList.add('hidden');
           btns[k].className = "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200";
         }
       });
 
-      if (tab === 'history') {
+      if (tab === 'finalCall') {
+        renderFinalCallCards();
+      } else if (tab === 'history') {
         renderHistory();
       }
     }
@@ -772,15 +917,36 @@
     function processOrdersData() {
       localStorage.setItem('ym_cached_orders', JSON.stringify(allOrders));
 
-      deliveredOrders = allOrders.filter(o => o.isFullyCompleted || (Number(o.completedStages) || 0) >= 8);
+      // Step 8: Orders needing delivery handover (< 8)
       const toDeliverOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 8);
 
-      document.getElementById('statToDeliver').innerText = toDeliverOrders.length;
-      document.getElementById('statDelivered').innerText = deliveredOrders.length;
-      document.getElementById('badgePendingCount').innerText = toDeliverOrders.length;
+      // Step 9: Orders that completed Step 8 but need Step 9 Final Call & Rating (=== 8)
+      const finalCallOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) === 8);
+
+      // Completed: Step 9 completed or marked fully complete
+      deliveredOrders = allOrders.filter(o => o.isFullyCompleted || (Number(o.completedStages) || 0) >= 9);
+
+      const elToDeliver = document.getElementById('statToDeliver');
+      if (elToDeliver) elToDeliver.innerText = toDeliverOrders.length;
+
+      const elFinalCall = document.getElementById('statFinalCall');
+      if (elFinalCall) elFinalCall.innerText = finalCallOrders.length;
+
+      const elDelivered = document.getElementById('statDelivered');
+      if (elDelivered) elDelivered.innerText = deliveredOrders.length;
+
+      const elBadgePending = document.getElementById('badgePendingCount');
+      if (elBadgePending) elBadgePending.innerText = toDeliverOrders.length;
+
+      const elBadgeFC = document.getElementById('badgeFinalCallCount');
+      if (elBadgeFC) elBadgeFC.innerText = finalCallOrders.length;
+
+      const elFcCountBadge = document.getElementById('finalCallCountBadge');
+      if (elFcCountBadge) elFcCountBadge.innerText = finalCallOrders.length + ' Orders';
 
       populatePaymentOrderDropdown(allOrders);
       filterOrders();
+      renderFinalCallCards();
     }
 
     function populatePaymentOrderDropdown(orders) {
@@ -1153,12 +1319,21 @@
           }
           processOrdersData();
 
+          const justDeliveredId = currentActiveOrder.orderId;
           closeDeliverModal();
 
           if (collectPaymentNow) {
             switchTab('payment');
-            document.getElementById('payOrderSelect').value = currentActiveOrder.orderId;
+            document.getElementById('payOrderSelect').value = justDeliveredId;
             onPaymentOrderSelected();
+          } else {
+            // Prompt user if they want to complete Step 9 Final Call immediately
+            setTimeout(() => {
+              if (confirm("Order #" + justDeliveredId + " Delivered successfully!\n\nKya aap abhi Step 9 (Final Call & Customer Rating) complete karna chahte hain?")) {
+                switchTab('finalCall');
+                openFinalCallModal(justDeliveredId);
+              }
+            }, 600);
           }
         } else {
           throw new Error(res.message || "Failed to update delivery stage in backend");
@@ -1285,6 +1460,234 @@
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+    }
+
+    
+    // ==========================================
+    // STEP 9: FINAL CALL & RATING ENGINE
+    // ==========================================
+    let selectedFinalCallAudioBase64 = null;
+    let currentFinalCallRating = 5;
+
+    function renderFinalCallCards() {
+      const container = document.getElementById('finalCallContainer');
+      if (!container) return;
+
+      const finalCallOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) === 8);
+
+      if (finalCallOrders.length === 0) {
+        container.innerHTML = `
+          <div class="clean-card p-8 rounded-2xl text-center space-y-3">
+            <div class="w-16 h-16 mx-auto rounded-full bg-purple-50 border border-purple-200 flex items-center justify-center text-2xl text-purple-600">
+              <i class="fa-solid fa-phone-slash"></i>
+            </div>
+            <h3 class="text-base font-black text-slate-800">No Final Calls Pending!</h3>
+            <p class="text-xs text-slate-500">All delivered orders have completed Step 9 customer rating.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = finalCallOrders.map(order => {
+        const log = parseLogisticsInfo(order);
+        const isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
+        const payBadge = isCod 
+          ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">COD: ₹${order.totalValue || '0'}</span>`
+          : `<span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">PREPAID: ₹${order.totalValue || '0'}</span>`;
+
+        return `
+          <div class="clean-card p-4 rounded-2xl space-y-3 border-2 border-purple-200/60 shadow-xs">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <span class="text-[10px] font-mono text-purple-700 font-black tracking-wider block">${order.orderId}</span>
+                <h3 class="text-sm font-black text-slate-900 leading-tight mt-0.5">${order.shopName || 'Dealer'}</h3>
+              </div>
+              <div class="text-right flex items-center gap-1.5">
+                ${payBadge}
+                <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">
+                  ✔ 8. Delivered
+                </span>
+              </div>
+            </div>
+
+            <!-- Handover info & photo proof -->
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center shrink-0 text-xs font-black">
+                  <i class="fa-solid fa-truck-ramp-box"></i>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[9px] uppercase tracking-wider text-slate-500 font-bold leading-none">Delivered Via:</div>
+                  <div class="text-xs font-black truncate mt-0.5">${log.transport} • ${log.runner}</div>
+                </div>
+              </div>
+              ${log.proofUrl ? `
+                <button onclick="openProofViewer('${log.proofUrl}', '${order.orderId}')" class="shrink-0 bg-white hover:bg-emerald-50 text-emerald-800 text-[10px] font-black px-2.5 py-1.5 rounded-lg border border-emerald-300 shadow-2xs flex items-center gap-1 transition">
+                  <i class="fa-solid fa-image text-emerald-600"></i> View Proof
+                </button>
+              ` : ''}
+            </div>
+
+            <!-- Action Buttons Grid -->
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+              ${order.phone ? `
+                <a href="tel:${order.phone}" class="flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-bold py-2.5 rounded-xl border border-slate-200 transition">
+                  <i class="fa-solid fa-phone text-purple-600 text-xs"></i> Call Dealer
+                </a>
+              ` : `
+                <button disabled class="opacity-40 bg-slate-100 text-slate-400 text-xs py-2.5 rounded-xl">No Phone</button>
+              `}
+              <button onclick="openFinalCallModal('${order.orderId}')" class="flex items-center justify-center gap-1.5 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-black py-2.5 rounded-xl shadow-xs transition">
+                <i class="fa-solid fa-star"></i> Step 9: Final Call
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openFinalCallModal(orderId) {
+      currentActiveOrder = allOrders.find(o => o.orderId === orderId);
+      if (!currentActiveOrder) return;
+
+      const log = parseLogisticsInfo(currentActiveOrder);
+
+      document.getElementById('fcModalOrderId').innerText = currentActiveOrder.orderId;
+      document.getElementById('fcModalShopName').innerText = currentActiveOrder.shopName || 'Dealer';
+      document.getElementById('fcModalAmount').innerText = '₹' + (currentActiveOrder.totalValue || '0');
+      document.getElementById('fcModalLogistics').innerText = 'Delivered: ' + log.transport + ' | ' + log.runner;
+
+      const phoneEl = document.getElementById('fcModalPhone');
+      const callBtn = document.getElementById('fcModalCallBtn');
+      if (currentActiveOrder.phone) {
+        phoneEl.innerText = '📞 ' + currentActiveOrder.phone;
+        callBtn.href = 'tel:' + currentActiveOrder.phone;
+        callBtn.classList.remove('hidden');
+      } else {
+        phoneEl.innerText = 'No phone recorded';
+        callBtn.classList.add('hidden');
+      }
+
+      setFinalCallRating(5);
+      document.getElementById('finalCallNotesInput').value = '';
+      selectedFinalCallAudioBase64 = null;
+      document.getElementById('finalCallAudioFile').value = '';
+      const audStatus = document.getElementById('finalCallAudioStatus');
+      audStatus.classList.add('hidden');
+
+      document.getElementById('finalCallModal').classList.remove('hidden');
+      document.getElementById('finalCallModal').classList.add('flex');
+    }
+
+    function closeFinalCallModal() {
+      document.getElementById('finalCallModal').classList.add('hidden');
+      document.getElementById('finalCallModal').classList.remove('flex');
+    }
+
+    function setFinalCallRating(val) {
+      currentFinalCallRating = Number(val);
+      document.getElementById('finalCallRatingValue').value = currentFinalCallRating;
+      
+      const starBtns = document.querySelectorAll('#starRatingContainer .star-btn');
+      starBtns.forEach(btn => {
+        const starNum = Number(btn.getAttribute('data-star'));
+        if (starNum <= currentFinalCallRating) {
+          btn.className = "star-btn text-3xl text-amber-400 hover:scale-110 transition";
+        } else {
+          btn.className = "star-btn text-3xl text-slate-300 hover:scale-110 transition";
+        }
+      });
+
+      const labels = {
+        1: "⭐ 1 Star - Poor / Issue Reported",
+        2: "⭐⭐ 2 Stars - Below Average",
+        3: "⭐⭐⭐ 3 Stars - Average / Neutral",
+        4: "⭐⭐⭐⭐ 4 Stars - Good Experience",
+        5: "⭐⭐⭐⭐⭐ 5 Stars - Excellent Service"
+      };
+      document.getElementById('starRatingLabel').innerText = labels[currentFinalCallRating] || (currentFinalCallRating + " Stars");
+    }
+
+    function addFeedbackTag(text) {
+      const textarea = document.getElementById('finalCallNotesInput');
+      if (!textarea.value.includes(text)) {
+        textarea.value = textarea.value ? textarea.value + ' | ' + text : text;
+      }
+    }
+
+    async function handleFinalCallAudioSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const audStatus = document.getElementById('finalCallAudioStatus');
+      try {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          selectedFinalCallAudioBase64 = ev.target.result.split(',')[1];
+          audStatus.innerText = "✓ Audio file attached: " + file.name;
+          audStatus.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        alert("Could not read audio file: " + err.message);
+      }
+    }
+
+    async function submitFinalCallStage() {
+      if (!currentActiveOrder) return;
+
+      const btn = document.getElementById('modalConfirmFinalCallBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting Final Call...`;
+
+      const rating = document.getElementById('finalCallRatingValue').value || 5;
+      const notes = document.getElementById('finalCallNotesInput').value.trim();
+
+      let commentRecorded = `Final Call (Step 9): Rating ${rating}/5 Stars | Notes: ${notes || 'Post-delivery verification complete'} | Staff: ${currentStaff}`;
+
+      let payload = {
+        action: 'updateStage',
+        orderId: currentActiveOrder.orderId,
+        stage: 9, // 9 = Final Call (Rating)
+        rating: Number(rating),
+        files: [],
+        staffName: currentStaff,
+        comment: commentRecorded,
+        actionText: commentRecorded,
+        isNoResponse: false,
+        isWhatsAppOnly: false
+      };
+
+      if (selectedFinalCallAudioBase64) {
+        payload.files.push({
+          name: `final_call_${currentActiveOrder.orderId}.mp3`,
+          mimeType: 'audio/mp3',
+          base64: selectedFinalCallAudioBase64
+        });
+      }
+
+      try {
+        const res = await gasRequest(payload);
+        if (res && res.status === 'success') {
+          confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } });
+          showToast(`Step 9 (Final Call) Completed! Order #${currentActiveOrder.orderId} 100% Finished.`, "success");
+
+          currentActiveOrder.completedStages = 9;
+          currentActiveOrder.isFullyCompleted = true;
+          currentActiveOrder.rating = Number(rating);
+          processOrdersData();
+
+          closeFinalCallModal();
+        } else {
+          throw new Error(res.message || "Failed to update Stage 9 in backend");
+        }
+      } catch (err) {
+        alert("Final Call update notice: " + (err.message || "Connection timeout. Please retry."));
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     }
 
     async function handlePaymentSubmit(e) {
