@@ -583,6 +583,80 @@
       }
     }
 
+    
+    // Format Order Received Date & Time with Relative Age
+    function formatOrderDateTime(dateStr) {
+      if (!dateStr) return { fullText: "Date N/A", timeStr: "", relativeLabel: "N/A", timeAgo: "", badgeClass: "bg-slate-100 text-slate-600 border-slate-200" };
+      
+      let d;
+      if (dateStr instanceof Date) d = dateStr;
+      else if (typeof dateStr === 'number') d = new Date(dateStr);
+      else {
+        const s = String(dateStr).trim();
+        if (/^\d{11,14}$/.test(s)) d = new Date(parseInt(s, 10));
+        else d = new Date(s);
+      }
+      
+      if (isNaN(d.getTime())) {
+        return { fullText: String(dateStr), timeStr: "", relativeLabel: "ORDER", timeAgo: "", badgeClass: "bg-slate-100 text-slate-600 border-slate-200" };
+      }
+
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      
+      let hours = d.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      
+      const timeStr = hours + ':' + mins + ' ' + ampm;
+      const fullText = day + '/' + month + '/' + year + ' ' + timeStr;
+
+      const now = new Date();
+      const diffMs = now.getTime() - d.getTime();
+      const diffMins = Math.floor(diffMs / (60 * 1000));
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      let timeAgo = "";
+      let badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
+      let relativeLabel = "";
+
+      const isToday = now.getDate() === d.getDate() && now.getMonth() === d.getMonth() && now.getFullYear() === d.getFullYear();
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      const isYesterday = yesterday.getDate() === d.getDate() && yesterday.getMonth() === d.getMonth() && yesterday.getFullYear() === d.getFullYear();
+
+      if (isToday) {
+        relativeLabel = "TODAY";
+        badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-300 font-black";
+        if (diffMins < 60) timeAgo = Math.max(1, diffMins) + 'm ago';
+        else timeAgo = diffHours + 'h ' + (diffMins % 60) + 'm ago';
+      } else if (isYesterday) {
+        relativeLabel = "YESTERDAY";
+        badgeClass = "bg-blue-50 text-blue-800 border-blue-300 font-black";
+        timeAgo = "1d ago";
+      } else if (diffDays > 0) {
+        relativeLabel = diffDays + 'D AGO';
+        badgeClass = diffDays > 3 ? "bg-amber-50 text-amber-900 border-amber-300 font-black" : "bg-slate-100 text-slate-700 border-slate-200 font-bold";
+        timeAgo = diffDays + 'd ago';
+      } else {
+        relativeLabel = "TODAY";
+        badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-300 font-black";
+        timeAgo = "Just now";
+      }
+
+      return {
+        fullText: fullText,
+        timeStr: timeStr,
+        relativeLabel: relativeLabel,
+        timeAgo: timeAgo,
+        badgeClass: badgeClass
+      };
+    }
+
     function parseLogisticsInfo(order) {
       let runner = order.runner || "";
       let transport = order.transport || order.courier || "";
@@ -736,6 +810,7 @@
         const stageNum = Number(order.completedStages) || 0;
         const itemsCount = (order.items || []).reduce((acc, it) => acc + (Number(it.qty) || 1), 0);
         const log = parseLogisticsInfo(order);
+        const dt = formatOrderDateTime(order.date);
         const isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
         const payBadge = isCod 
           ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">COD: ₹${order.totalValue || '0'}</span>`
@@ -744,11 +819,23 @@
         return `
           <div class="clean-card p-4 rounded-2xl space-y-3 hover:border-blue-400 transition cursor-pointer shadow-2xs" onclick="openOrderModal('${order.orderId}')">
             <div class="flex items-start justify-between gap-2">
-              <div>
+              <div class="min-w-0 flex-1">
                 <span class="text-[10px] font-mono text-blue-700 font-black tracking-wider block">${order.orderId}</span>
                 <h3 class="text-sm font-black text-slate-900 leading-tight mt-0.5">${order.shopName || 'Dealer'}</h3>
+                
+                <!-- Order Received Date & Time -->
+                <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  <span class="text-[9px] uppercase px-1.5 py-0.5 rounded border ${dt.badgeClass}">
+                    ${dt.relativeLabel}
+                  </span>
+                  <span class="text-[10px] text-slate-700 font-bold flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-mono">
+                    <i class="fa-regular fa-clock text-blue-600 text-[10px]"></i>
+                    Received: ${dt.fullText}
+                  </span>
+                  ${dt.timeAgo ? `<span class="text-[10px] text-slate-500 font-semibold font-mono">(${dt.timeAgo})</span>` : ''}
+                </div>
               </div>
-              <div class="text-right flex items-center gap-1.5">
+              <div class="text-right shrink-0 flex flex-col items-end gap-1">
                 ${payBadge}
                 <span class="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">
                   🚚 Out for Delivery
@@ -816,6 +903,7 @@
 
       container.innerHTML = finalCallOrders.map(order => {
         const log = parseLogisticsInfo(order);
+        const dt = formatOrderDateTime(order.date);
         const isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
         const payBadge = isCod 
           ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">COD: ₹${order.totalValue || '0'}</span>`
@@ -824,11 +912,23 @@
         return `
           <div class="clean-card p-4 rounded-2xl space-y-3 border-2 border-purple-200 hover:border-purple-400 transition cursor-pointer shadow-2xs" onclick="openOrderModal('${order.orderId}')">
             <div class="flex items-start justify-between gap-2">
-              <div>
+              <div class="min-w-0 flex-1">
                 <span class="text-[10px] font-mono text-purple-700 font-black tracking-wider block">${order.orderId}</span>
                 <h3 class="text-sm font-black text-slate-900 leading-tight mt-0.5">${order.shopName || 'Dealer'}</h3>
+                
+                <!-- Order Received Date & Time -->
+                <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  <span class="text-[9px] uppercase px-1.5 py-0.5 rounded border ${dt.badgeClass}">
+                    ${dt.relativeLabel}
+                  </span>
+                  <span class="text-[10px] text-slate-700 font-bold flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-mono">
+                    <i class="fa-regular fa-clock text-purple-600 text-[10px]"></i>
+                    Received: ${dt.fullText}
+                  </span>
+                  ${dt.timeAgo ? `<span class="text-[10px] text-slate-500 font-semibold font-mono">(${dt.timeAgo})</span>` : ''}
+                </div>
               </div>
-              <div class="text-right flex items-center gap-1.5">
+              <div class="text-right shrink-0 flex flex-col items-end gap-1">
                 ${payBadge}
                 <span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">
                   ✔ 8. Delivered
@@ -878,7 +978,8 @@
       document.getElementById('omShopName').innerText = currentActiveOrder.shopName || 'Dealer';
       document.getElementById('omAmountBadge').innerText = '₹' + (currentActiveOrder.totalValue || '0');
       document.getElementById('omPayModeBadge').innerText = isCod ? 'COD' : 'PREPAID';
-      document.getElementById('omDateBadge').innerText = currentActiveOrder.date || '';
+      const dt = formatOrderDateTime(currentActiveOrder.date);
+      document.getElementById('omDateBadge').innerHTML = '<span class="bg-slate-100 text-slate-800 border border-slate-200 font-mono font-bold px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-regular fa-clock text-blue-600"></i> Received: ' + dt.fullText + '</span> <span class="px-1.5 py-0.5 rounded border ' + dt.badgeClass + ' uppercase font-black text-[9px]">' + dt.relativeLabel + ' (' + dt.timeAgo + ')</span>';
 
       document.getElementById('omCourierName').innerHTML = '<i class="fa-solid fa-truck text-[10px] mr-1"></i> ' + log.transport;
       document.getElementById('omStaffRunner').innerHTML = '<i class="fa-solid fa-user-check text-[10px] mr-1"></i> ' + log.runner;
@@ -1734,12 +1835,16 @@
 
       container.innerHTML = deliveredOrders.map(o => {
         const log = parseLogisticsInfo(o);
+        const dt = formatOrderDateTime(o.date);
         const rating = o.rating || 5;
         return `
           <div class="clean-card p-3 rounded-xl flex items-center justify-between border border-slate-200 hover:border-blue-400 transition cursor-pointer" onclick="openOrderModal('${o.orderId}')">
             <div>
               <span class="text-[9px] font-mono text-blue-700 font-bold">${o.orderId}</span>
               <h4 class="text-xs font-black text-slate-900 mt-0.5">${o.shopName || 'Dealer'}</h4>
+              <div class="text-[10px] font-mono text-slate-500 mt-0.5 flex items-center gap-1">
+                <i class="fa-regular fa-clock text-slate-400 text-[9px]"></i> Received: ${dt.fullText} (${dt.relativeLabel})
+              </div>
               <div class="flex items-center gap-2 mt-1 flex-wrap text-[10px]">
                 <span class="text-emerald-700 font-bold flex items-center gap-1">
                   <i class="fa-solid fa-circle-check"></i> Completed
