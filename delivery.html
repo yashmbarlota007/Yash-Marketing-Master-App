@@ -200,6 +200,7 @@
     <!-- VIEW 2: STEP 9 (FINAL CALL & RATING) ORDERS TAB -->
     <!-- ======================================================== -->
     <section id="viewFinalCall" class="space-y-3 hidden">
+      <!-- Banner / Summary -->
       <div class="clean-card p-3.5 rounded-xl border border-purple-200 bg-purple-50/60 flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center text-sm shadow-2xs">
@@ -211,6 +212,27 @@
           </div>
         </div>
         <span id="finalCallCountBadge" class="bg-purple-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-2xs">0 Orders</span>
+      </div>
+
+      <!-- Final Call Filter Pills & Live Search -->
+      <div class="clean-card p-3 rounded-2xl border border-purple-100 bg-white space-y-2.5 shadow-2xs">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-2">
+            <button id="fcFilterBtnAll" type="button" onclick="setFinalCallSubFilter('all')" class="px-3 py-1.5 rounded-xl text-xs font-black bg-purple-600 text-white shadow-xs transition flex items-center gap-1.5">
+              <span>📋 All Pending</span>
+              <span id="fcCountAll" class="bg-white/20 px-1.5 py-0.2 rounded-md text-[10px]">0</span>
+            </button>
+            <button id="fcFilterBtnToday" type="button" onclick="setFinalCallSubFilter('today')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition flex items-center gap-1.5">
+              <span>🔥 Today & Recent</span>
+              <span id="fcCountToday" class="bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-md text-[10px]">0</span>
+            </button>
+          </div>
+          <span class="text-[10px] text-slate-400 font-semibold">Live Calling List</span>
+        </div>
+        <div class="relative">
+          <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="fcSearchInput" oninput="filterFinalCallSearch(this.value)" placeholder="Search Dealer, Order, Phone in Final Call..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 focus:border-purple-500 rounded-xl text-xs outline-none font-semibold text-slate-800 transition">
+        </div>
       </div>
 
       <div id="finalCallContainer" class="space-y-3"></div>
@@ -702,12 +724,33 @@
       };
     }
 
+    function isOrderFinalCallPending(o) {
+      if (!o) return false;
+      const stageNum = Number(o.completedStages) || 0;
+      // 1. Explicitly stopped at Stage 8 and not fully completed
+      if (!o.isFullyCompleted && stageNum === 8) return true;
+      
+      // 2. Has stage 8 delivered proof, but stage 9 is empty, System Authorized, or missing real rating & call audio
+      const s8 = o.stageUrls && o.stageUrls[7] ? String(o.stageUrls[7]).trim() : '';
+      const s9 = o.stageUrls && o.stageUrls[8] ? String(o.stageUrls[8]).trim() : '';
+      
+      if (s8 !== '') {
+        if (!s9) return true;
+        if (s9.includes('System Authorized')) return true;
+        if (!s9.includes('http') && !s9.includes('drive.google.com') && !o.rating && !s9.includes('Rating:')) {
+          return true;
+        }
+      }
+      return false;
+    }
+    window.isOrderFinalCallPending = isOrderFinalCallPending;
+
     function processOrdersData() {
       localStorage.setItem('ym_cached_orders', JSON.stringify(allOrders));
 
-      const toDeliverOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 8);
-      const finalCallOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) === 8);
-      deliveredOrders = allOrders.filter(o => o.isFullyCompleted || (Number(o.completedStages) || 0) >= 9);
+      const toDeliverOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 8 && !isOrderFinalCallPending(o));
+      const finalCallOrders = allOrders.filter(o => isOrderFinalCallPending(o));
+      deliveredOrders = allOrders.filter(o => (o.isFullyCompleted || (Number(o.completedStages) || 0) >= 9) && !isOrderFinalCallPending(o));
 
       const elToDeliver = document.getElementById('statToDeliver');
       if (elToDeliver) elToDeliver.innerText = toDeliverOrders.length;
@@ -766,6 +809,7 @@
       const staffFilter = document.getElementById('staffFilterSelect')?.value || 'all';
 
       let filtered = allOrders.filter(o => {
+        if (isOrderFinalCallPending(o)) return false;
         const stageNum = Number(o.completedStages) || 0;
         if (o.isFullyCompleted || stageNum >= 8) return false;
 
@@ -882,26 +926,73 @@
       }).join('');
     }
 
+    let finalCallSubFilter = 'all';
+    let finalCallSearchQuery = '';
+
+    function setFinalCallSubFilter(mode) {
+      finalCallSubFilter = mode;
+      const btnAll = document.getElementById('fcFilterBtnAll');
+      const btnToday = document.getElementById('fcFilterBtnToday');
+      if (btnAll && btnToday) {
+        if (mode === 'today') {
+          btnToday.className = 'px-3 py-1.5 rounded-xl text-xs font-black bg-purple-600 text-white shadow-xs transition flex items-center gap-1.5';
+          btnAll.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition flex items-center gap-1.5';
+        } else {
+          btnAll.className = 'px-3 py-1.5 rounded-xl text-xs font-black bg-purple-600 text-white shadow-xs transition flex items-center gap-1.5';
+          btnToday.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition flex items-center gap-1.5';
+        }
+      }
+      renderFinalCallCards();
+    }
+    window.setFinalCallSubFilter = setFinalCallSubFilter;
+
+    function filterFinalCallSearch(query) {
+      finalCallSearchQuery = (query || '').toLowerCase().trim();
+      renderFinalCallCards();
+    }
+    window.filterFinalCallSearch = filterFinalCallSearch;
+
     function renderFinalCallCards() {
       const container = document.getElementById('finalCallContainer');
       if (!container) return;
 
-      const finalCallOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) === 8);
+      const allPendingFC = allOrders.filter(o => isOrderFinalCallPending(o));
 
-      if (finalCallOrders.length === 0) {
+      // Calculate today count (orders touched today or dated 16/11/2026)
+      const todayPendingFC = allPendingFC.filter(o => {
+        const s = JSON.stringify(o.stageUrls || []);
+        return s.includes('17948') || (o.date && o.date.includes('2026-11-16'));
+      });
+
+      const countAllEl = document.getElementById('fcCountAll');
+      if (countAllEl) countAllEl.innerText = allPendingFC.length;
+      const countTodayEl = document.getElementById('fcCountToday');
+      if (countTodayEl) countTodayEl.innerText = todayPendingFC.length;
+
+      let list = finalCallSubFilter === 'today' ? todayPendingFC : allPendingFC;
+
+      if (finalCallSearchQuery) {
+        list = list.filter(o => {
+          const log = parseLogisticsInfo(o);
+          const str = (o.orderId + ' ' + (o.shopName || '') + ' ' + (o.phone || '') + ' ' + log.transport + ' ' + log.runner).toLowerCase();
+          return str.includes(finalCallSearchQuery);
+        });
+      }
+
+      if (list.length === 0) {
         container.innerHTML = `
           <div class="clean-card p-8 rounded-2xl text-center space-y-3">
             <div class="w-16 h-16 mx-auto rounded-full bg-purple-50 border border-purple-200 flex items-center justify-center text-2xl text-purple-600">
               <i class="fa-solid fa-phone-slash"></i>
             </div>
-            <h3 class="text-base font-black text-slate-800">No Final Calls Pending!</h3>
-            <p class="text-xs text-slate-500">All delivered orders have completed Step 9 customer rating.</p>
+            <h3 class="text-base font-black text-slate-800">${finalCallSearchQuery ? 'No matching final calls' : 'No Final Calls in this filter!'}</h3>
+            <p class="text-xs text-slate-500">${finalCallSearchQuery ? 'Try clearing the search box.' : 'Select "All Pending (' + allPendingFC.length + ')" to see all pending customer verification calls.'}</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = finalCallOrders.map(order => {
+      container.innerHTML = list.map(order => {
         const log = parseLogisticsInfo(order);
         const dt = formatOrderDateTime(order.date);
         const isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
@@ -951,20 +1042,21 @@
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100" onclick="event.stopPropagation()">
               ${order.phone ? `
                 <a href="tel:${order.phone}" class="flex items-center justify-center gap-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-bold py-2 rounded-xl border border-slate-200 transition">
-                  <i class="fa-solid fa-phone text-purple-600"></i> Call Dealer
+                  <i class="fa-solid fa-phone text-emerald-600"></i> Call Dealer
                 </a>
               ` : `<button disabled class="opacity-40 bg-slate-100 text-slate-400 text-xs py-2 rounded-xl">No Phone</button>`}
 
               <button onclick="openOrderModal('${order.orderId}')" class="flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 active:scale-95 text-white text-xs font-black py-2 rounded-xl shadow-xs transition">
-                <i class="fa-solid fa-star"></i> Step 9: Final Call
+                <i class="fa-solid fa-star text-amber-300 text-xs"></i>
+                <span>Step 9: Final Call</span>
               </button>
             </div>
           </div>
         `;
       }).join('');
     }
+    window.renderFinalCallCards = renderFinalCallCards;
 
-    // ========================================================
     // UNIFIED ORDER STEPPER MODAL ENGINE (STEPS 8 & 9)
     // ========================================================
     function openOrderModal(orderId) {
@@ -1026,9 +1118,10 @@
       const container = document.getElementById('omStagesStepperContainer');
       if (!container) return;
 
+      const isFcPending = isOrderFinalCallPending(order);
       const stageNum = Number(order.completedStages) || 0;
-      const isStage8Done = stageNum >= 8;
-      const isStage9Done = stageNum >= 9 || order.isFullyCompleted;
+      const isStage8Done = stageNum >= 8 || Boolean(order.stageUrls && order.stageUrls[7] && order.stageUrls[7].trim());
+      const isStage9Done = !isFcPending && (stageNum >= 9 || order.isFullyCompleted);
 
       const log = parseLogisticsInfo(order);
 
@@ -1493,13 +1586,16 @@
           confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
 
           currentActiveOrder.completedStages = stageNum;
-          if (stageNum === 9) currentActiveOrder.isFullyCompleted = true;
+          if (stageNum === 9) {
+            currentActiveOrder.isFullyCompleted = true;
+            currentActiveOrder.rating = Number(payload.rating) || 5;
+          }
 
           if (!currentActiveOrder.stageUrls) currentActiveOrder.stageUrls = Array(9).fill("");
           if (res.fileUrls && res.fileUrls.length > 0) {
-            currentActiveOrder.stageUrls[stageNum - 1] = res.fileUrls.join(',') + ' || STAFF: ' + payload.staffName + ' || TIME: ' + Date.now();
+            currentActiveOrder.stageUrls[stageNum - 1] = res.fileUrls.join(',') + (stageNum === 9 ? ' || Rating: ' + payload.rating : '') + ' || STAFF: ' + payload.staffName + ' || TIME: ' + Date.now();
           } else {
-            currentActiveOrder.stageUrls[stageNum - 1] = 'COMPLETED || STAFF: ' + payload.staffName + ' || TIME: ' + Date.now();
+            currentActiveOrder.stageUrls[stageNum - 1] = (stageNum === 9 ? '[Completed - Verified by Call] || Rating: ' + payload.rating : 'COMPLETED') + ' || STAFF: ' + payload.staffName + ' || TIME: ' + Date.now();
           }
 
           queuedFilesByStage[stageNum] = [];
