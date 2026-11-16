@@ -852,6 +852,8 @@
       }
 
       container.innerHTML = orders.map(order => {
+        const stageNum = Number(order.completedStages) || 0;
+        const itemsCount = (order.items || []).reduce((acc, it) => acc + (Number(it.qty) || 1), 0);
         const log = parseLogisticsInfo(order);
         const isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
         const payBadge = isCod 
@@ -861,9 +863,6 @@
         const stageStatusBadge = stageNum >= 6 
           ? `<span class="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ml-1">🚚 Out for Delivery</span>`
           : `<span class="bg-slate-100 text-slate-600 border border-slate-200 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ml-1">⏳ Processing (Stage ${stageNum}/9)</span>`;
-
-        const itemsCount = (order.items || []).reduce((acc, it) => acc + (Number(it.qty) || 1), 0);
-        const stageNum = Number(order.completedStages) || 0;
 
         // Courier styling
         const isAadhunik = log.transport.toLowerCase().includes('aadhunik');
