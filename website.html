@@ -298,11 +298,17 @@
           </div>
         </div>
         <div class="col-md-4">
-          <div class="media-box">
-            <i class="fas fa-rotate"></i>
-            <h6 class="fw-bold">Dedicated Replacement Processing</h6>
-            <p class="small text-white-50 mb-2">Replacement claims ko fast verify aur dispatch karne ka live system.</p>
-            <span class="badge bg-warning text-dark">Replacement Video 2</span>
+          <div class="media-box position-relative overflow-hidden" onclick="openVideoModal('./assets/replacement_video_2.mp4', 'Dedicated Replacement Processing')" style="cursor: pointer; transition: transform 0.25s ease, box-shadow 0.25s ease; min-height: 230px;" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.3)';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';" title="Click to play video">
+            <video src="./assets/replacement_video_2.mp4" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.35; z-index: 1; pointer-events: none;"></video>
+            <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(180deg, rgba(17,17,17,0.7) 0%, rgba(17,17,17,0.92) 100%); z-index: 2;"></div>
+            <div style="position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 12px;">
+              <div class="mb-2" style="width: 50px; height: 50px; background: rgba(255, 193, 7, 0.2); border: 2px solid #ffc107; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;">
+                <i class="fas fa-play text-warning fa-lg" style="margin-left: 3px;"></i>
+              </div>
+              <h6 class="fw-bold text-white mb-1">Dedicated Replacement Processing</h6>
+              <p class="small text-white-50 mb-2">Replacement claims ko fast verify aur dispatch karne ka live system.</p>
+              <span class="badge bg-warning text-dark"><i class="fas fa-circle-play me-1"></i> Watch Replacement Video 2</span>
+            </div>
           </div>
         </div>
         <div class="col-md-4">
@@ -627,6 +633,16 @@
 
     
     document.addEventListener("DOMContentLoaded", function() {
+      var vModal = document.getElementById('galleryVideoModal');
+      if (vModal) {
+        vModal.addEventListener('hidden.bs.modal', function () {
+          var videoPlayer = document.getElementById('galleryModalVideo');
+          if (videoPlayer) {
+            videoPlayer.pause();
+            videoPlayer.src = "";
+          }
+        });
+      }
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
@@ -667,6 +683,22 @@
     }
   </script>
 
+  
+  <!-- VIDEO PLAYER MODAL -->
+  <div class="modal fade" id="galleryVideoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary py-2">
+          <h5 class="modal-title fs-6" id="videoModalLabel"><i class="fas fa-play-circle text-warning me-2"></i>Dedicated Replacement Processing</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-0" style="background: #000;">
+          <video id="galleryModalVideo" src="" controls playsinline style="max-height: 80vh; width: 100%; outline: none; border-radius: 0 0 6px 6px;"></video>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- PHOTO ZOOM MODAL -->
   <div class="modal fade" id="galleryPhotoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -683,6 +715,16 @@
   </div>
 
   <script>
+    function openVideoModal(videoSrc, title) {
+      var videoPlayer = document.getElementById('galleryModalVideo');
+      videoPlayer.src = videoSrc;
+      document.getElementById('videoModalLabel').innerHTML = '<i class="fas fa-play-circle text-warning me-2"></i>' + title;
+      var modalEl = document.getElementById('galleryVideoModal');
+      var myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      myModal.show();
+      videoPlayer.play().catch(function(e) {});
+    }
+
     function openPhotoModal(imgSrc, title) {
       document.getElementById('galleryModalImg').src = imgSrc;
       document.getElementById('galleryPhotoModalLabel').innerHTML = '<i class="fas fa-images text-warning me-2"></i>' + title;
