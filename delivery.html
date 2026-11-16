@@ -833,6 +833,44 @@
       renderOrderCards(filtered);
     }
 
+    
+    function getPaymentBadgeInfo(rawMode) {
+      const mode = String(rawMode || 'COD').trim().toUpperCase();
+      if (mode.includes('COD')) {
+        return {
+          text: 'COD',
+          badgeClass: 'bg-amber-50 text-amber-800 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider'
+        };
+      } else if (mode.includes('DAILY')) {
+        return {
+          text: 'DAILY',
+          badgeClass: 'bg-blue-50 text-blue-800 border border-blue-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider'
+        };
+      } else if (mode.includes('NO_DISCOUNT') || mode.includes('NO DISCOUNT')) {
+        return {
+          text: 'NO DISCOUNT',
+          badgeClass: 'bg-purple-50 text-purple-800 border border-purple-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider'
+        };
+      } else if (mode.includes('UPI') || mode.includes('PREPAID') || mode.includes('ONLINE')) {
+        return {
+          text: 'UPI / PREPAID',
+          badgeClass: 'bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider'
+        };
+      } else {
+        const clean = mode.replace(/_/g, ' ');
+        return {
+          text: clean,
+          badgeClass: 'bg-slate-100 text-slate-800 border border-slate-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider'
+        };
+      }
+    }
+
+    function formatPaymentBadge(rawMode, totalValue) {
+      const info = getPaymentBadgeInfo(rawMode);
+      const val = totalValue ? '₹' + totalValue : '₹0';
+      return '<span class="' + info.badgeClass + '">' + info.text + ': ' + val + '</span>';
+    }
+
     function renderOrderCards(orders) {
       const container = document.getElementById('ordersContainer');
       if (!container) return;
@@ -855,10 +893,7 @@
         const itemsCount = (order.items || []).reduce((acc, it) => acc + (Number(it.qty) || 1), 0);
         const log = parseLogisticsInfo(order);
         const dt = formatOrderDateTime(order.date);
-        const isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
-        const payBadge = isCod 
-          ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">COD: ₹${order.totalValue || '0'}</span>`
-          : `<span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">PREPAID: ₹${order.totalValue || '0'}</span>`;
+        const payBadge = formatPaymentBadge(order.paymentMode, order.totalValue);
 
         return `
           <div class="clean-card p-4 rounded-2xl space-y-3 hover:border-blue-400 transition cursor-pointer shadow-2xs" onclick="openOrderModal('${order.orderId}')">
@@ -995,10 +1030,7 @@
       container.innerHTML = list.map(order => {
         const log = parseLogisticsInfo(order);
         const dt = formatOrderDateTime(order.date);
-        const isCod = order.paymentMode && order.paymentMode.toUpperCase().includes('COD');
-        const payBadge = isCod 
-          ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">COD: ₹${order.totalValue || '0'}</span>`
-          : `<span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">PREPAID: ₹${order.totalValue || '0'}</span>`;
+        const payBadge = formatPaymentBadge(order.paymentMode, order.totalValue);
 
         return `
           <div class="clean-card p-4 rounded-2xl space-y-3 border-2 border-purple-200 hover:border-purple-400 transition cursor-pointer shadow-2xs" onclick="openOrderModal('${order.orderId}')">
@@ -1069,7 +1101,12 @@
       document.getElementById('omOrderId').innerText = currentActiveOrder.orderId;
       document.getElementById('omShopName').innerText = currentActiveOrder.shopName || 'Dealer';
       document.getElementById('omAmountBadge').innerText = '₹' + (currentActiveOrder.totalValue || '0');
-      document.getElementById('omPayModeBadge').innerText = isCod ? 'COD' : 'PREPAID';
+      const payInfo = getPaymentBadgeInfo(currentActiveOrder.paymentMode);
+      const omPayBadgeEl = document.getElementById('omPayModeBadge');
+      if (omPayBadgeEl) {
+        omPayBadgeEl.innerText = payInfo.text;
+        omPayBadgeEl.className = payInfo.badgeClass;
+      }
       const dt = formatOrderDateTime(currentActiveOrder.date);
       document.getElementById('omDateBadge').innerHTML = '<span class="bg-slate-100 text-slate-800 border border-slate-200 font-mono font-bold px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-regular fa-clock text-blue-600"></i> Received: ' + dt.fullText + '</span> <span class="px-1.5 py-0.5 rounded border ' + dt.badgeClass + ' uppercase font-black text-[9px]">' + dt.relativeLabel + ' (' + dt.timeAgo + ')</span>';
 
