@@ -95,7 +95,7 @@
         <!-- Delivery Tab -->
         <button id="tabBtnDelivery" onclick="switchTab('delivery')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-blue-600 text-white shadow-sm shadow-blue-500/20">
           <i class="fa-solid fa-truck-fast"></i>
-          <span>Delivered</span>
+          <span>To Deliver</span>
           <span id="badgePendingCount" class="bg-blue-800 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1">0</span>
         </button>
 
@@ -109,7 +109,7 @@
         <!-- History Tab -->
         <button id="tabBtnHistory" onclick="switchTab('history')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200">
           <i class="fa-solid fa-clock-rotate-left text-purple-600"></i>
-          <span>History</span>
+          <span>Delivered History</span>
         </button>
       </div>
     </div>
@@ -857,6 +857,10 @@
         const payBadge = isCod 
           ? `<span class="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">COD: ₹${order.totalValue || '0'}</span>`
           : `<span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">PREPAID: ₹${order.totalValue || '0'}</span>`;
+        
+        const stageStatusBadge = stageNum >= 6 
+          ? `<span class="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider ml-1">🚚 Out for Delivery</span>`
+          : `<span class="bg-slate-100 text-slate-600 border border-slate-200 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ml-1">⏳ Processing (Stage ${stageNum}/9)</span>`;
 
         const itemsCount = (order.items || []).reduce((acc, it) => acc + (Number(it.qty) || 1), 0);
         const stageNum = Number(order.completedStages) || 0;
@@ -876,8 +880,8 @@
                 <span class="text-[10px] font-mono text-blue-700 font-black tracking-wider block">${order.orderId}</span>
                 <h3 class="text-sm font-black text-slate-900 leading-tight mt-0.5">${order.shopName || 'Dealer'}</h3>
               </div>
-              <div class="text-right">
-                ${payBadge}
+              <div class="text-right flex items-center gap-1.5">
+                ${payBadge}${stageStatusBadge}
               </div>
             </div>
 
@@ -1486,6 +1490,11 @@
                 </span>
                 <span class="text-purple-700 font-bold">👤 ${log.runner}</span>
                 <span class="text-blue-700 font-bold">🚚 ${log.transport}</span>
+                ${log.proofUrl ? `
+                  <button onclick="openProofViewer('${log.proofUrl}', '${o.orderId}')" class="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded border border-emerald-300 shadow-2xs">
+                    <i class="fa-solid fa-image"></i> View Proof
+                  </button>
+                ` : ''}
               </div>
             </div>
             <div class="text-right">
