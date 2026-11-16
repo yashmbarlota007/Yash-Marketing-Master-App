@@ -186,6 +186,22 @@
             <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] pointer-events-none"></i>
           </div>
         </div>
+
+        <!-- Quick Priority Filter Pills for To Deliver -->
+        <div class="flex items-center gap-2 pt-1 flex-wrap border-t border-slate-100">
+          <button id="delFilterBtnToday" type="button" onclick="setDeliverySubFilter('today')" class="px-3 py-1.5 rounded-xl text-xs font-black bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5">
+            <span>🔥 Today & Recent</span>
+            <span id="delCountToday" class="bg-white/20 px-1.5 py-0.2 rounded-md text-[10px]">0</span>
+          </button>
+          <button id="delFilterBtnReady" type="button" onclick="setDeliverySubFilter('ready')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition flex items-center gap-1.5">
+            <span>🚚 Out for Delivery</span>
+            <span id="delCountReady" class="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded-md text-[10px]">0</span>
+          </button>
+          <button id="delFilterBtnAll" type="button" onclick="setDeliverySubFilter('all')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition flex items-center gap-1.5">
+            <span>📋 All Orders</span>
+            <span id="delCountAll" class="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded-md text-[10px]">0</span>
+          </button>
+        </div>
       </div>
 
       <div id="ordersContainer" class="space-y-3">
@@ -746,6 +762,20 @@
     window.isOrderFinalCallPending = isOrderFinalCallPending;
 
     function processOrdersData() {
+      // Robust date parser for exact epoch milliseconds
+      function getOrderEpoch(o) {
+        if (!o || !o.date) return 0;
+        if (o.date instanceof Date) return o.date.getTime();
+        if (typeof o.date === 'number') return o.date;
+        const s = String(o.date).trim();
+        if (/^\d{11,14}$/.test(s)) return parseInt(s, 10);
+        const t = new Date(s).getTime();
+        return isNaN(t) ? 0 : t;
+      }
+
+      // Always sort allOrders Newest First so today's orders are 100% on top!
+      allOrders.sort((a, b) => getOrderEpoch(b) - getOrderEpoch(a));
+
       localStorage.setItem('ym_cached_orders', JSON.stringify(allOrders));
 
       const toDeliverOrders = allOrders.filter(o => !o.isFullyCompleted && (Number(o.completedStages) || 0) < 8 && !isOrderFinalCallPending(o));
@@ -803,15 +833,63 @@
       });
     }
 
+    let deliverySubFilter = 'all';
+
+    function setDeliverySubFilter(mode) {
+      deliverySubFilter = mode;
+      const btnToday = document.getElementById('delFilterBtnToday');
+      const btnReady = document.getElementById('delFilterBtnReady');
+      const btnAll = document.getElementById('delFilterBtnAll');
+
+      [btnToday, btnReady, btnAll].forEach(b => {
+        if (b) b.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition flex items-center gap-1.5';
+      });
+
+      if (mode === 'today' && btnToday) btnToday.className = 'px-3 py-1.5 rounded-xl text-xs font-black bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5';
+      else if (mode === 'ready' && btnReady) btnReady.className = 'px-3 py-1.5 rounded-xl text-xs font-black bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5';
+      else if (mode === 'all' && btnAll) btnAll.className = 'px-3 py-1.5 rounded-xl text-xs font-black bg-blue-600 text-white shadow-xs transition flex items-center gap-1.5';
+
+      filterOrders();
+    }
+    window.setDeliverySubFilter = setDeliverySubFilter;
+
     function filterOrders() {
       const query = (document.getElementById('orderSearchInput')?.value || '').toLowerCase();
       const courierFilter = document.getElementById('courierFilterSelect')?.value || 'all';
       const staffFilter = document.getElementById('staffFilterSelect')?.value || 'all';
 
-      let filtered = allOrders.filter(o => {
+      const baseOrders = allOrders.filter(o => {
         if (isOrderFinalCallPending(o)) return false;
         const stageNum = Number(o.completedStages) || 0;
         if (o.isFullyCompleted || stageNum >= 8) return false;
+        return true;
+      });
+
+      // Compute subfilter counts
+      const todayCount = baseOrders.filter(o => {
+        const dt = formatOrderDateTime(o.date);
+        return dt.relativeLabel === 'TODAY' || dt.relativeLabel === 'YESTERDAY' || (o.date && String(o.date).includes('2026-11-16'));
+      }).length;
+
+      const readyCount = baseOrders.filter(o => (Number(o.completedStages) || 0) >= 5).length;
+
+      const elCountToday = document.getElementById('delCountToday');
+      if (elCountToday) elCountToday.innerText = todayCount;
+      const elCountReady = document.getElementById('delCountReady');
+      if (elCountReady) elCountReady.innerText = readyCount;
+      const elCountAll = document.getElementById('delCountAll');
+      if (elCountAll) elCountAll.innerText = baseOrders.length;
+
+      let filtered = baseOrders.filter(o => {
+        const stageNum = Number(o.completedStages) || 0;
+        const dt = formatOrderDateTime(o.date);
+
+        if (deliverySubFilter === 'today') {
+          const isRecent = dt.relativeLabel === 'TODAY' || dt.relativeLabel === 'YESTERDAY' || (o.date && String(o.date).includes('2026-11-16'));
+          if (!isRecent) return false;
+        } else if (deliverySubFilter === 'ready') {
+          if (stageNum < 5) return false;
+        }
 
         const log = parseLogisticsInfo(o);
         if (courierFilter === 'Dealer Self-Pickup') {
@@ -904,9 +982,7 @@
                 
                 <!-- Order Received Date & Time -->
                 <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                  <span class="text-[9px] uppercase px-1.5 py-0.5 rounded border ${dt.badgeClass}">
-                    ${dt.relativeLabel}
-                  </span>
+                  ${dt.relativeLabel === 'TODAY' ? '<span class="bg-red-50 text-red-700 border border-red-300 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse">🔥 TODAY</span>' : '<span class="text-[9px] uppercase px-1.5 py-0.5 rounded border ' + dt.badgeClass + '">' + dt.relativeLabel + '</span>'}
                   <span class="text-[10px] text-slate-700 font-bold flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-mono">
                     <i class="fa-regular fa-clock text-blue-600 text-[10px]"></i>
                     Received: ${dt.fullText}
