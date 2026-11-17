@@ -1215,6 +1215,7 @@
         itemsContainer.innerHTML = '<div class="text-[10px] text-slate-500 font-medium">Standard Mobile Accessories Order</div>';
       }
 
+      currentHandoverMode = log.isSelfPickup ? 'dealer' : 'staff';
       renderModalStages(currentActiveOrder);
 
       document.getElementById('orderModal').classList.remove('hidden');
@@ -1225,6 +1226,7 @@
       document.getElementById('orderModal').classList.add('hidden');
       document.getElementById('orderModal').classList.remove('flex');
       queuedFilesByStage = { 8: [], 9: [] };
+      currentHandoverMode = 'staff';
     }
 
     function renderModalStages(order) {
@@ -1242,10 +1244,14 @@
       let stage8Time = "Completed";
       let stage8Staff = log.runner;
 
+      let stage8ProofUrls = [];
       if (order.stageUrls && order.stageUrls[7]) {
         let cellData8 = String(order.stageUrls[7]);
-        let u8 = cellData8.match(/https?:\/\/[^\s|,]+/i);
-        if (u8) stage8ProofUrl = u8[0];
+        let allUrls8 = cellData8.match(/https?:\/\/[^\s|,]+/gi);
+        if (allUrls8 && allUrls8.length > 0) {
+          stage8ProofUrls = allUrls8;
+          stage8ProofUrl = allUrls8[0];
+        }
         let t8 = cellData8.match(/TIME:\s*(\d+)/i);
         if (t8) {
           let d = new Date(parseInt(t8[1]));
@@ -1291,7 +1297,22 @@
               <span><i class="fa-solid fa-user-check text-purple-600 mr-1"></i> ${stage8Staff}</span>
             </div>
 
-            ${stage8ProofUrl ? `
+            ${stage8ProofUrls.length > 0 ? `
+              <div class="rounded-xl overflow-hidden border border-emerald-200 bg-slate-50 p-2.5 space-y-2">
+                <div class="text-[10px] uppercase font-black text-emerald-800 flex items-center justify-between">
+                  <span>📷 Attached Proof Photos (${stage8ProofUrls.length})</span>
+                  <span class="text-[9px] text-slate-500 font-semibold">Click photo to view full size</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  ${stage8ProofUrls.map((u, i) => `
+                    <div class="relative group cursor-pointer" onclick="openProofViewer('${u}', '${order.orderId}')">
+                      <img src="${u}" class="w-16 h-16 object-cover rounded-lg border border-slate-300 shadow-2xs hover:opacity-90">
+                      <span class="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] font-black text-center rounded-b-lg">Photo ${i+1}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : (stage8ProofUrl ? `
               <div class="rounded-xl overflow-hidden border border-emerald-200 bg-slate-50 p-2 flex items-center gap-3">
                 <img src="${stage8ProofUrl}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 cursor-pointer shadow-2xs shrink-0" onclick="openProofViewer('${stage8ProofUrl}', '${order.orderId}')">
                 <div class="min-w-0">
@@ -1301,9 +1322,9 @@
                   </button>
                 </div>
               </div>
-            ` : ''}
+            ` : '')}
 
-            <button onclick="shareToGroup(8, '${stage8ProofUrl || ''}')" class="w-full mt-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-2xs">
+            <button onclick="shareToGroup(8, '${stage8ProofUrls.length > 0 ? stage8ProofUrls.join(',') : (stage8ProofUrl || '')}')" class="w-full mt-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-2xs">
               <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i>
               <span>📤 Share Delivery Proof to WhatsApp Group</span>
             </button>
@@ -1316,60 +1337,160 @@
               <div class="flex items-center gap-2">
                 <span class="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-black">8</span>
                 <span class="text-sm font-black text-slate-900">8. Delivered</span>
+                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">SELECTABLE</span>
               </div>
-              <span class="bg-emerald-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                ⚡ ACTIVE STEP
-              </span>
+              <button type="button" onclick="closeOrderModal()" class="bg-emerald-800 hover:bg-emerald-900 text-white text-[11px] font-black px-2.5 py-1 rounded-lg flex items-center gap-1 transition">
+                ✕ Close Form
+              </button>
             </div>
 
-            <p class="text-xs text-slate-600 font-medium">Delivery complete karne ke liye handover mode aur photo proof upload karein.</p>
+            <p class="text-xs text-slate-600 font-medium">Dealer stock lene aaya hai ya delivery complete karni hai toh direct yahan click karke photo upload karein.</p>
 
-            <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2">
-              <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Delivery Handover Mode:</label>
+            <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2.5">
+              <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block">DELIVERY / HANDOVER TYPE:</label>
               <div class="grid grid-cols-2 gap-2">
-                <button type="button" id="omHandoverStaff" onclick="setModalHandover('staff')" class="py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 font-bold text-xs flex items-center justify-center gap-1 shadow-2xs">
-                  🚚 Staff / Courier
+                <button type="button" id="omHandoverStaff" onclick="setModalHandover('staff')" class="py-2.5 px-3 rounded-xl border-2 ${currentHandoverMode === 'dealer' ? 'border-slate-200 bg-white text-slate-700 font-bold' : 'border-blue-600 bg-blue-50 text-blue-700 font-black shadow-2xs'} text-xs flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-truck"></i> Office Se Bheja
                 </button>
-                <button type="button" id="omHandoverDealer" onclick="setModalHandover('dealer')" class="py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1">
-                  🏢 Dealer Khud Aaya
+                <button type="button" id="omHandoverDealer" onclick="setModalHandover('dealer')" class="py-2.5 px-3 rounded-xl border-2 ${currentHandoverMode === 'dealer' ? 'border-amber-500 bg-amber-50 text-amber-900 font-black shadow-2xs' : 'border-slate-200 bg-white text-slate-700 font-bold'} text-xs flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-building"></i> Dealer Khud Aaya
                 </button>
               </div>
 
-              <div id="omDealerCollectorBox" class="hidden bg-amber-50 border border-amber-300 p-2.5 rounded-lg space-y-1.5">
-                <label class="text-[10px] font-black text-amber-900 uppercase tracking-wider block">Kaun aaya hai stock lene? (Dealer/Person Name) *</label>
-                <input type="text" id="omCollectorNameInput" placeholder="e.g. Rahul Patil - Owner / Driver" class="w-full bg-white border border-amber-300 rounded-lg p-2 text-xs font-bold text-slate-900 outline-none shadow-2xs">
-                <p class="text-[9px] text-amber-800 font-bold flex items-center gap-1">
-                  <span>📸</span> Live Camera se Dealer ka photo lein taki pakka proof rahe kisne stock receive kiya.
-                </p>
+              <!-- DEALER KHUD AAYA SECTION -->
+              <div id="omDealerHandoverSection" class="${currentHandoverMode === 'dealer' ? '' : 'hidden'} space-y-3 pt-1">
+                <!-- Collector Name Box -->
+                <div class="bg-amber-50/70 border border-amber-300 rounded-xl p-3 space-y-1.5">
+                  <div class="flex items-center gap-1.5 text-amber-900 font-black text-xs">
+                    <span>🏢</span> Office Counter Handover (Dealer Self-Pickup)
+                  </div>
+                  <label class="text-[10px] font-black text-amber-800 uppercase tracking-wider block">
+                    Kaun aaya hai stock lene? (Dealer / Relative / Driver Name) *
+                  </label>
+                  <input type="text" id="omCollectorNameInput" placeholder="e.g. Rahul Patil (Owner) / Sachin (Driver)" class="w-full bg-white border border-amber-300 rounded-lg p-2.5 text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-amber-400 shadow-2xs">
+                </div>
+
+                <!-- Dedicated Dealer Photo Proof Section -->
+                <div class="space-y-2">
+                  <p class="text-[11px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>📷</span> DEALER PHOTO PROOF (STOCK HANDOVER PHOTO)
+                  </p>
+
+                  <!-- Info Banner -->
+                  <div class="bg-amber-100/70 border border-amber-300 rounded-xl p-2.5 flex items-start gap-2.5 text-amber-950">
+                    <span class="text-base text-amber-700 shrink-0">📸</span>
+                    <span class="text-[11px] font-semibold leading-snug">Dealer/Person ko stock dete waqt unka live photo khinchein taki pakka proof rahe kisne stock receive kiya.</span>
+                  </div>
+
+                  <!-- Big Dashed Button -->
+                  <label class="w-full border-2 border-dashed border-emerald-500 bg-emerald-50/70 hover:bg-emerald-100/70 active:scale-[0.99] rounded-xl p-3 text-center cursor-pointer transition flex items-center justify-center gap-2 group shadow-2xs">
+                    <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs group-hover:scale-105 transition">
+                      <i class="fa-solid fa-camera"></i>
+                    </span>
+                    <span class="text-xs font-black text-emerald-900">Take Photo of Dealer Receiving Stock (Live Camera)</span>
+                    <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleModalFileSelection(this, 8, 'dealer')">
+                  </label>
+
+                  <!-- Two Quick Action Buttons: Live Camera & Gallery -->
+                  <div class="grid grid-cols-2 gap-2">
+                    <label class="bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-emerald-500 text-slate-800 text-center py-2.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-2xs flex items-center justify-center gap-1.5">
+                      <i class="fa-solid fa-camera text-emerald-600"></i> Live Camera
+                      <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleModalFileSelection(this, 8, 'dealer')">
+                    </label>
+                    <label class="bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-2.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-2xs flex items-center justify-center gap-1.5">
+                      <i class="fa-solid fa-images text-blue-600"></i> Gallery
+                      <input type="file" accept="image/*" multiple class="hidden" onchange="handleModalFileSelection(this, 8, 'dealer')">
+                    </label>
+                  </div>
+
+                  <!-- Preview Box for Dealer Photos -->
+                  <div id="modalDealerPreviewBox_8" class="flex flex-wrap gap-2 hidden bg-amber-50/60 p-2 rounded-xl border border-amber-200"></div>
+
+                  <!-- Optional Stock / Parcel Photo Uploader -->
+                  <div class="pt-1">
+                    <details class="group bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+                      <summary class="px-3 py-2 text-[10px] font-black text-slate-600 uppercase tracking-wider cursor-pointer hover:bg-slate-100 flex items-center justify-between list-none">
+                        <span class="flex items-center gap-1.5">📦 Parcel / Stock Photo (Optional Additional Proof)</span>
+                        <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                      </summary>
+                      <div class="p-2.5 pt-0 space-y-2">
+                        <div class="grid grid-cols-2 gap-2 mt-1">
+                          <label class="bg-white hover:bg-slate-50 border border-slate-200 hover:border-emerald-500 text-slate-700 text-center py-2 rounded-lg cursor-pointer text-[11px] font-bold transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-camera text-emerald-600"></i> Camera
+                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleModalFileSelection(this, 8, 'parcel')">
+                          </label>
+                          <label class="bg-white hover:bg-slate-50 border border-slate-200 hover:border-blue-500 text-slate-700 text-center py-2 rounded-lg cursor-pointer text-[11px] font-bold transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-images text-blue-600"></i> Gallery
+                            <input type="file" accept="image/*" multiple class="hidden" onchange="handleModalFileSelection(this, 8, 'parcel')">
+                          </label>
+                        </div>
+                        <div id="modalParcelPreviewBox_8" class="flex flex-wrap gap-2 hidden bg-white p-2 rounded-lg border border-slate-200"></div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+
+                <!-- Remarks / Handed Over To -->
+                <div>
+                  <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">
+                    REMARKS / HANDED OVER TO
+                  </label>
+                  <input type="text" id="omStage8Notes" placeholder="e.g. Received by owner Rahul / Security / Counter" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-semibold outline-none focus:border-amber-400">
+                </div>
+
+                <!-- Collect Payment Checkbox -->
+                <div class="bg-amber-50/70 border border-amber-300 rounded-xl p-3 flex items-center justify-between shadow-2xs cursor-pointer select-none" onclick="const cb = document.getElementById('omCollectPaymentNow'); if(cb) { cb.checked = !cb.checked; }">
+                  <div>
+                    <span class="text-xs font-black text-amber-950 block">Collect Payment Now?</span>
+                    <span class="text-[10px] text-amber-800 font-medium">Directly open payment tab with photo upload</span>
+                  </div>
+                  <input type="checkbox" id="omCollectPaymentNow" checked onclick="event.stopPropagation()" class="w-5 h-5 accent-amber-600 rounded cursor-pointer">
+                </div>
+              </div>
+
+              <!-- OFFICE SE BHEJA (STAFF / COURIER) SECTION -->
+              <div id="omStaffHandoverSection" class="${currentHandoverMode === 'dealer' ? 'hidden' : ''} space-y-3 pt-1">
+                <div class="bg-blue-50/60 border border-blue-200 rounded-xl p-2.5 flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black">
+                      <i class="fa-solid fa-truck-fast"></i>
+                    </span>
+                    <div>
+                      <div class="text-[9px] font-black text-blue-900 uppercase">Assigned Courier / Runner</div>
+                      <div class="text-xs font-black text-slate-900">${log.transport} • ${log.runner}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                    <span class="text-emerald-600 text-sm">📸</span> Upload Delivery Proof Photo (Required)
+                  </p>
+                  <div class="flex gap-2 w-full">
+                    <label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-emerald-500 text-slate-800 text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">
+                      <i class="fa-solid fa-camera text-emerald-600"></i> Live Camera
+                      <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleModalFileSelection(this, 8, 'parcel')">
+                    </label>
+                    <label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">
+                      <i class="fa-solid fa-images text-blue-600"></i> Multi Gallery
+                      <input type="file" accept="image/*" multiple class="hidden" onchange="handleModalFileSelection(this, 8, 'parcel')">
+                    </label>
+                  </div>
+
+                  <div id="modalPreviewBox_8" class="flex flex-wrap gap-2 mt-2 hidden bg-slate-50 p-2 rounded-xl border border-slate-200"></div>
+                </div>
+
+                <div>
+                  <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Remarks / Handover Notes (Optional):</label>
+                  <input type="text" id="omStage8NotesStaff" placeholder="e.g. Delivered safely at counter / handed to driver" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 outline-none">
+                </div>
               </div>
             </div>
 
-            <div>
-              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                <span class="text-emerald-600 text-sm">📸</span> Upload Delivery Proof Photo (Required)
-              </p>
-              <div class="flex gap-2 w-full">
-                <label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-emerald-500 text-slate-800 text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">
-                  <i class="fa-solid fa-camera text-emerald-600"></i> Live Camera
-                  <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleModalFileSelection(this, 8)">
-                </label>
-                <label class="flex-1 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-blue-500 text-slate-800 text-center py-3 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">
-                  <i class="fa-solid fa-images text-blue-600"></i> Multi Gallery
-                  <input type="file" accept="image/*" multiple class="hidden" onchange="handleModalFileSelection(this, 8)">
-                </label>
-              </div>
-
-              <div id="modalPreviewBox_8" class="flex flex-wrap gap-2 mt-2 hidden bg-slate-50 p-2 rounded-xl border border-slate-200"></div>
-              
-              <div class="flex items-center justify-between mt-2 bg-emerald-50 rounded-xl px-3 py-1.5 border border-emerald-200 hidden" id="modalFileStatus_8">
-                <p id="modalFileStatusText_8" class="text-[10px] font-black text-emerald-800 py-1"></p>
-                <button type="button" onclick="clearModalQueuedFiles(8)" class="text-[10px] font-bold text-rose-600 px-2 py-0.5 bg-rose-50 rounded-lg border border-rose-200">Clear</button>
-              </div>
-            </div>
-
-            <div>
-              <label class="text-[10px] font-black text-slate-500 uppercase tracking-wider block mb-1">Remarks / Handover Notes (Optional):</label>
-              <input type="text" id="omStage8Notes" placeholder="e.g. Delivered safely at counter / handed to driver" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 outline-none">
+            <!-- Upload File Status Box -->
+            <div class="flex items-center justify-between bg-emerald-50 rounded-xl px-3 py-2 border border-emerald-200 hidden" id="modalFileStatus_8">
+              <p id="modalFileStatusText_8" class="text-[11px] font-black text-emerald-800 py-0.5"></p>
+              <button type="button" onclick="clearModalQueuedFiles(8)" class="text-[10px] font-bold text-rose-600 px-2.5 py-1 bg-rose-50 rounded-lg border border-rose-200 hover:bg-rose-100 transition">Clear Files</button>
             </div>
 
             <button id="omSubmitBtn_8" onclick="executeModalStage(8)" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black py-3.5 rounded-xl shadow-md transition-all text-xs flex items-center justify-center gap-2">
@@ -1493,18 +1614,21 @@
       currentHandoverMode = mode;
       const btnStaff = document.getElementById('omHandoverStaff');
       const btnDealer = document.getElementById('omHandoverDealer');
-      const dealerBox = document.getElementById('omDealerCollectorBox');
+      const dealerSec = document.getElementById('omDealerHandoverSection');
+      const staffSec = document.getElementById('omStaffHandoverSection');
 
       if (!btnStaff || !btnDealer) return;
 
       if (mode === 'dealer') {
-        btnStaff.className = "py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1";
-        btnDealer.className = "py-2.5 px-3 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900 font-black text-xs flex items-center justify-center gap-1 shadow-2xs";
-        if (dealerBox) dealerBox.classList.remove('hidden');
+        btnStaff.className = "py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5";
+        btnDealer.className = "py-2.5 px-3 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900 font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs";
+        if (dealerSec) dealerSec.classList.remove('hidden');
+        if (staffSec) staffSec.classList.add('hidden');
       } else {
-        btnStaff.className = "py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 font-black text-xs flex items-center justify-center gap-1 shadow-2xs";
-        btnDealer.className = "py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1";
-        if (dealerBox) dealerBox.classList.add('hidden');
+        btnStaff.className = "py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs";
+        btnDealer.className = "py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5";
+        if (dealerSec) dealerSec.classList.add('hidden');
+        if (staffSec) staffSec.classList.remove('hidden');
       }
     }
 
@@ -1542,7 +1666,7 @@
       }
     }
 
-    async function handleModalFileSelection(input, stageNum) {
+    async function handleModalFileSelection(input, stageNum, type = 'general') {
       const files = Array.from(input.files || []);
       if (files.length === 0) return;
 
@@ -1553,10 +1677,12 @@
           if (f.type.startsWith('image/')) {
             const dataUrl = await compressImageToJPEG(f, 1000, 0.75);
             queuedFilesByStage[stageNum].push({
-              name: f.name || 'proof.jpg',
+              name: (type === 'dealer' ? 'dealer_' : 'proof_') + (f.name || 'image.jpg'),
               mimeType: 'image/jpeg',
               base64: dataUrl.split(',')[1],
-              dataUrl: dataUrl
+              dataUrl: dataUrl,
+              isDealer: type === 'dealer',
+              tag: type === 'dealer' ? 'Dealer Photo Proof' : 'Delivery Proof'
             });
           } else {
             const reader = new FileReader();
@@ -1564,7 +1690,9 @@
               queuedFilesByStage[stageNum].push({
                 name: f.name || 'audio.mp3',
                 mimeType: f.type || 'audio/mp3',
-                base64: e.target.result.split(',')[1]
+                base64: e.target.result.split(',')[1],
+                isDealer: false,
+                tag: 'Audio Note'
               });
               renderModalFileStatus(stageNum);
             };
@@ -1574,6 +1702,7 @@
           console.warn("File read notice:", err);
         }
       }
+      try { input.value = ''; } catch(e) {}
       renderModalFileStatus(stageNum);
     }
 
@@ -1582,13 +1711,63 @@
       const statusBox = document.getElementById('modalFileStatus_' + stageNum);
       const statusText = document.getElementById('modalFileStatusText_' + stageNum);
       const previewBox = document.getElementById('modalPreviewBox_' + stageNum);
+      const dealerPreviewBox = document.getElementById('modalDealerPreviewBox_8');
+      const parcelPreviewBox = document.getElementById('modalParcelPreviewBox_8');
 
       if (statusBox && statusText) {
         if (q.length > 0) {
           statusBox.classList.remove('hidden');
-          statusText.innerText = '✓ ' + q.length + ' file(s) ready for cloud upload';
+          const dealerCount = q.filter(f => f.isDealer).length;
+          const otherCount = q.length - dealerCount;
+          let textParts = [];
+          if (dealerCount > 0) textParts.push(dealerCount + ' Dealer Photo');
+          if (otherCount > 0) textParts.push(otherCount + ' Delivery Photo');
+          statusText.innerText = '✓ ' + (textParts.join(' + ') || q.length + ' file(s)') + ' ready for cloud upload';
         } else {
           statusBox.classList.add('hidden');
+        }
+      }
+
+      if (stageNum === 8) {
+        const dealerFiles = q.filter(f => f.isDealer && f.dataUrl);
+        const parcelFiles = q.filter(f => !f.isDealer && f.dataUrl);
+
+        if (dealerPreviewBox) {
+          if (dealerFiles.length > 0) {
+            dealerPreviewBox.classList.remove('hidden');
+            dealerPreviewBox.innerHTML = dealerFiles.map((f) => {
+              const actualIdx = q.indexOf(f);
+              return `
+                <div class="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-amber-400 ring-2 ring-amber-200/60 shadow-xs bg-amber-50 shrink-0">
+                  <img src="${f.dataUrl}" class="w-full h-full object-cover">
+                  <span class="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] font-black py-0.5 text-center">📷 Dealer</span>
+                  <button type="button" onclick="removeModalQueuedFile(8, ${actualIdx})" class="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center shadow-xs">✕</button>
+                </div>
+              `;
+            }).join('');
+          } else {
+            dealerPreviewBox.classList.add('hidden');
+            dealerPreviewBox.innerHTML = '';
+          }
+        }
+
+        if (parcelPreviewBox) {
+          if (parcelFiles.length > 0) {
+            parcelPreviewBox.classList.remove('hidden');
+            parcelPreviewBox.innerHTML = parcelFiles.map((f) => {
+              const actualIdx = q.indexOf(f);
+              return `
+                <div class="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-blue-400 shadow-xs bg-blue-50 shrink-0">
+                  <img src="${f.dataUrl}" class="w-full h-full object-cover">
+                  <span class="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] font-black py-0.5 text-center">📦 Stock</span>
+                  <button type="button" onclick="removeModalQueuedFile(8, ${actualIdx})" class="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center shadow-xs">✕</button>
+                </div>
+              `;
+            }).join('');
+          } else {
+            parcelPreviewBox.classList.add('hidden');
+            parcelPreviewBox.innerHTML = '';
+          }
         }
       }
 
@@ -1596,8 +1775,9 @@
         if (q.length > 0) {
           previewBox.classList.remove('hidden');
           previewBox.innerHTML = q.filter(f => f.dataUrl).map((f, idx) => `
-            <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-300 shadow-2xs">
+            <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-300 shadow-2xs shrink-0">
               <img src="${f.dataUrl}" class="w-full h-full object-cover">
+              ${f.isDealer ? '<span class="absolute bottom-0 inset-x-0 bg-amber-600 text-white text-[8px] font-black py-0.2 text-center">Dealer</span>' : ''}
               <button type="button" onclick="removeModalQueuedFile(${stageNum}, ${idx})" class="absolute top-0.5 right-0.5 bg-rose-600 text-white w-4 h-4 rounded-full text-[9px] flex items-center justify-center">✕</button>
             </div>
           `).join('');
@@ -1643,13 +1823,22 @@
       };
 
       if (stageNum === 8) {
-        const notes = (document.getElementById('omStage8Notes')?.value || '').trim();
         const files = queuedFilesByStage[8] || [];
+        const isDealerMode = currentHandoverMode === 'dealer';
+        const collectPay = isDealerMode && Boolean(document.getElementById('omCollectPaymentNow')?.checked);
 
-        if (currentHandoverMode === 'dealer') {
+        if (isDealerMode) {
           const collector = (document.getElementById('omCollectorNameInput')?.value || '').trim();
+          const notes = (document.getElementById('omStage8Notes')?.value || '').trim();
           if (!collector) {
             alert("Kripya stock lene wale vyakti ka naam likhein (e.g. Rahul Patil - Owner / Driver)!");
+            const inp = document.getElementById('omCollectorNameInput');
+            if (inp) { inp.focus(); inp.classList.add('ring-2', 'ring-rose-500'); }
+            if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+            return;
+          }
+          if (files.length === 0) {
+            alert("Dealer ka photo proof ya delivery photo upload karna zaroori hai!");
             if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
             return;
           }
@@ -1657,20 +1846,21 @@
           payload.comment = '🏢 Dealer Self-Pickup (' + collector + ') | Office Counter Handover | Notes: ' + (notes || 'Handed over in person');
           payload.actionText = payload.comment;
         } else {
+          const notes = (document.getElementById('omStage8NotesStaff')?.value || '').trim();
           const log = parseLogisticsInfo(currentActiveOrder);
           payload.staffName = log.runner || currentStaff;
           payload.comment = 'Delivered by: ' + log.runner + ' | Courier: ' + log.transport + ' | Notes: ' + (notes || 'Handed Over');
           payload.actionText = payload.comment;
-        }
 
-        if (files.length === 0) {
-          alert("Delivery Proof Photo (Live Camera ya Gallery) upload karna zaroori hai!");
-          if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
-          return;
+          if (files.length === 0) {
+            alert("Delivery Proof Photo (Live Camera ya Gallery) upload karna zaroori hai!");
+            if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+            return;
+          }
         }
 
         payload.files = files.map((f, idx) => ({
-          name: 'delivered_' + currentActiveOrder.orderId + '_' + (idx + 1) + '.jpg',
+          name: (f.isDealer ? 'dealer_pickup_' : 'delivered_') + currentActiveOrder.orderId + '_' + (idx + 1) + '.jpg',
           mimeType: f.mimeType || 'image/jpeg',
           base64: f.base64
         }));
@@ -1716,6 +1906,13 @@
 
           renderModalStages(currentActiveOrder);
           processOrdersData();
+
+          if (stageNum === 8 && isDealerMode && collectPay) {
+            showToast('Handover Recorded! Opening Payment Collection...', 'success');
+            setTimeout(() => {
+              openPaymentForActiveOrder();
+            }, 800);
+          }
 
         } else {
           throw new Error(res.message || "Failed to submit to backend");
