@@ -1247,10 +1247,19 @@
 
       const isFcPending = isOrderFinalCallPending(order);
       const stageNum = Number(order.completedStages) || 0;
-      const isStage6Done = stageNum >= 6 || Boolean(order.stageUrls && order.stageUrls[5] && order.stageUrls[5].trim());
-      const isStage7Done = stageNum >= 7 || Boolean(order.stageUrls && order.stageUrls[6] && order.stageUrls[6].trim());
-      const isStage8Done = stageNum >= 8 || Boolean(order.stageUrls && order.stageUrls[7] && order.stageUrls[7].trim());
-      const isStage9Done = !isFcPending && (stageNum >= 9 || order.isFullyCompleted);
+      
+      // Sequential Stage Gating:
+      // Step 6: Completed if stageNum >= 6 OR if Runner has been allocated
+      const isStage6Done = stageNum >= 6 || Boolean(order.stageUrls && order.stageUrls[5] && String(order.stageUrls[5]).includes('Runner:'));
+      
+      // Step 7: Completed ONLY if Step 6 is done AND stageNum >= 7 (Never auto-completed when stageNum is 6!)
+      const isStage7Done = isStage6Done && stageNum >= 7;
+      
+      // Step 8: Completed ONLY if Step 7 is done AND stageNum >= 8 (Never unlocked when Step 7 is pending!)
+      const isStage8Done = isStage7Done && stageNum >= 8;
+      
+      // Step 9: Final Call rating
+      const isStage9Done = !isFcPending && isStage8Done && (stageNum >= 9 || order.isFullyCompleted);
 
       const log = parseLogisticsInfo(order);
 
@@ -2252,6 +2261,13 @@
           let cellPrefix = (res.fileUrls && res.fileUrls.length > 0) ? res.fileUrls.join(',') + ' ' : '';
           let stageContent = payload.actionText || (stageNum === 9 ? '[Completed - Verified by Call] || Rating: ' + payload.rating : 'COMPLETED');
           currentActiveOrder.stageUrls[stageNum - 1] = (cellPrefix + stageContent + ' || STAFF: ' + payload.staffName + ' || TIME: ' + Date.now()).trim();
+
+          // CRITICAL: When stage 6 (Logistics Allocation) is submitted,
+          // ensure stage 7 remains strictly PENDING and is never marked completed automatically!
+          if (stageNum === 6) {
+            currentActiveOrder.completedStages = 6;
+            currentActiveOrder.stageUrls[6] = ""; // Clear stage 7 so it stays strictly ACTIVE
+          }
 
           queuedFilesByStage[stageNum] = [];
           showToast('Step ' + stageNum + ' Completed Successfully!', 'success');
