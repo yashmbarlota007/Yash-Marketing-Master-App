@@ -85,7 +85,7 @@
         <!-- Step 8: To Deliver Tab -->
         <button id="tabBtnDelivery" onclick="switchTab('delivery')" class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all bg-blue-600 text-white shadow-sm shadow-blue-500/20">
           <i class="fa-solid fa-truck-fast"></i>
-          <span>8. To Deliver</span>
+          <span>Steps 6-8: To Deliver</span>
           <span id="badgePendingCount" class="bg-blue-800 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-1">0</span>
         </button>
 
@@ -119,7 +119,7 @@
     <section class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
       <div class="clean-card p-3 rounded-2xl border-t-4 border-t-amber-500">
         <div class="text-[10px] uppercase font-black text-amber-700 tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-truck-fast text-xs text-amber-600"></i> 8. To Deliver
+          <i class="fa-solid fa-truck-fast text-xs text-amber-600"></i> Steps 6-8: Delivery
         </div>
         <div id="statToDeliver" class="text-xl font-black text-slate-900 mt-1">--</div>
         <div class="text-[9px] text-slate-500 font-medium">Pending handover</div>
@@ -504,7 +504,7 @@
     let deliveredOrders = [];
     let collectedPayments = JSON.parse(localStorage.getItem('ym_collected_payments') || '[]');
     let currentActiveOrder = null;
-    let queuedFilesByStage = { 8: [], 9: [] };
+    let queuedFilesByStage = { 6: [], 7: [], 8: [], 9: [] };
     let currentHandoverMode = 'staff';
     let currentRatingValue = 5;
     let selectedPaymentPhotoBase64 = null;
@@ -760,6 +760,15 @@
       return false;
     }
     window.isOrderFinalCallPending = isOrderFinalCallPending;
+    window.onModalRunnerChange = onModalRunnerChange;
+    window.sendModalStage7WhatsApp = sendModalStage7WhatsApp;
+    window.executeModalStage = executeModalStage;
+    window.handleModalFileSelection = handleModalFileSelection;
+    window.clearModalQueuedFiles = clearModalQueuedFiles;
+    window.removeModalQueuedFile = removeModalQueuedFile;
+    window.setModalHandover = setModalHandover;
+    window.openOrderModal = openOrderModal;
+    window.closeOrderModal = closeOrderModal;
 
     function processOrdersData() {
       // Robust date parser for exact epoch milliseconds
@@ -992,9 +1001,12 @@
               </div>
               <div class="text-right shrink-0 flex flex-col items-end gap-1">
                 ${payBadge}
-                <span class="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">
-                  🚚 Out for Delivery
-                </span>
+                ${stageNum < 6 
+                  ? '<span class="bg-amber-50 text-amber-800 border border-amber-300 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">📦 6. Allocate Logistics</span>'
+                  : (stageNum === 6 
+                      ? '<span class="bg-indigo-50 text-indigo-800 border border-indigo-300 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">💬 7. WhatsApp Alert</span>'
+                      : '<span class="bg-emerald-50 text-emerald-800 border border-emerald-300 text-[9px] font-black px-2 py-0.5 rounded-md uppercase">🚚 8. To Deliver</span>')
+                }
               </div>
             </div>
 
@@ -1003,14 +1015,14 @@
                 <i class="fa-solid fa-truck text-blue-600 text-xs"></i>
                 <div class="min-w-0">
                   <div class="text-[9px] uppercase tracking-wider text-slate-400 font-black leading-none">Courier:</div>
-                  <div class="text-xs font-black truncate mt-0.5 text-slate-800">${log.transport}</div>
+                  <div class="text-xs font-black truncate mt-0.5 text-slate-800">${log.transport || '<span class="text-amber-600 font-bold italic">Assign in Step 6</span>'}</div>
                 </div>
               </div>
               <div class="flex items-center gap-2 p-2 rounded-xl bg-purple-50/70 border border-purple-200 text-purple-900">
                 <i class="fa-solid fa-user-check text-purple-600 text-xs"></i>
                 <div class="min-w-0">
                   <div class="text-[9px] uppercase tracking-wider text-purple-600 font-black leading-none">Runner / Staff:</div>
-                  <div class="text-xs font-black truncate mt-0.5">${log.runner}</div>
+                  <div class="text-xs font-black truncate mt-0.5">${log.runner || '<span class="text-amber-600 font-bold italic">Assign in Step 6</span>'}</div>
                 </div>
               </div>
             </div>
@@ -1029,7 +1041,7 @@
               ` : `<button disabled class="opacity-40 bg-slate-100 text-slate-400 text-xs py-2 rounded-xl">No WA</button>`}
 
               <button onclick="openOrderModal('${order.orderId}')" class="flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-black py-2 rounded-xl shadow-xs transition">
-                <span>⚡</span> Step 8 & 9
+                <span>⚡</span> Step 6 to 9
               </button>
             </div>
           </div>
@@ -1225,7 +1237,7 @@
     function closeOrderModal() {
       document.getElementById('orderModal').classList.add('hidden');
       document.getElementById('orderModal').classList.remove('flex');
-      queuedFilesByStage = { 8: [], 9: [] };
+      queuedFilesByStage = { 6: [], 7: [], 8: [], 9: [] };
       currentHandoverMode = 'staff';
     }
 
@@ -1235,10 +1247,40 @@
 
       const isFcPending = isOrderFinalCallPending(order);
       const stageNum = Number(order.completedStages) || 0;
+      const isStage6Done = stageNum >= 6 || Boolean(order.stageUrls && order.stageUrls[5] && order.stageUrls[5].trim());
+      const isStage7Done = stageNum >= 7 || Boolean(order.stageUrls && order.stageUrls[6] && order.stageUrls[6].trim());
       const isStage8Done = stageNum >= 8 || Boolean(order.stageUrls && order.stageUrls[7] && order.stageUrls[7].trim());
       const isStage9Done = !isFcPending && (stageNum >= 9 || order.isFullyCompleted);
 
       const log = parseLogisticsInfo(order);
+
+      let stage6Runner = log.runner;
+      let stage6Transport = log.transport;
+      let stage6Time = "Completed";
+      let stage6ProofUrl = null;
+      if (order.stageUrls && order.stageUrls[5]) {
+        let cellData6 = String(order.stageUrls[5]);
+        let t6 = cellData6.match(/TIME:\s*(\d+)/i);
+        if (t6) {
+          let d = new Date(parseInt(t6[1]));
+          stage6Time = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        }
+        let u6 = cellData6.match(/https?:\/\/[^\s|,]+/i);
+        if (u6) stage6ProofUrl = u6[0];
+      }
+
+      let stage7Time = "Completed";
+      let stage7Comment = "Out-for-delivery WhatsApp Alert Sent";
+      if (order.stageUrls && order.stageUrls[6]) {
+        let cellData7 = String(order.stageUrls[6]);
+        let t7 = cellData7.match(/TIME:\s*(\d+)/i);
+        if (t7) {
+          let d = new Date(parseInt(t7[1]));
+          stage7Time = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        }
+        let cleanComm = cellData7.replace(/\|\|\s*STAFF:.*/, '').trim();
+        if (cleanComm) stage7Comment = cleanComm;
+      }
 
       let stage8ProofUrl = log.proofUrl;
       let stage8Time = "Completed";
@@ -1278,7 +1320,231 @@
 
       let html = '';
 
+      // ==========================================
+      // STAGE 6 BLOCK (Logistics Allocation)
+      // ==========================================
+      if (isStage6Done) {
+        html += `
+          <div class="bg-white border-2 border-emerald-300 rounded-2xl p-4 shadow-2xs space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black">6</span>
+                <span class="text-sm font-black text-slate-900">6. Logistics Allocation</span>
+              </div>
+              <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                ✔ DONE
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              <div>
+                <span class="text-[9px] uppercase font-black text-slate-400 block">Assigned Runner</span>
+                <span class="font-bold text-slate-800 flex items-center gap-1 mt-0.5 truncate">
+                  <i class="fa-solid fa-user-check text-purple-600 text-[10px]"></i> ${stage6Runner}
+                </span>
+              </div>
+              <div>
+                <span class="text-[9px] uppercase font-black text-slate-400 block">Courier / Transport</span>
+                <span class="font-bold text-slate-800 flex items-center gap-1 mt-0.5 truncate">
+                  <i class="fa-solid fa-truck text-blue-600 text-[10px]"></i> ${stage6Transport}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 text-[11px] text-slate-500 font-semibold flex-wrap">
+              <span><i class="fa-regular fa-clock text-emerald-600 mr-1"></i> ${stage6Time}</span>
+            </div>
+
+            ${stage6ProofUrl ? `
+              <div class="rounded-xl overflow-hidden border border-emerald-200 bg-slate-50 p-2 flex items-center gap-3">
+                <img src="${stage6ProofUrl}" class="w-14 h-14 object-cover rounded-lg border border-slate-200 cursor-pointer shadow-2xs shrink-0" onclick="openProofViewer('${stage6ProofUrl}', '${order.orderId}')">
+                <div class="min-w-0">
+                  <div class="text-[10px] uppercase font-black text-emerald-800">LR / Logistics Proof Attached</div>
+                  <button onclick="openProofViewer('${stage6ProofUrl}', '${order.orderId}')" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-0.5">
+                    <span>🔍</span> View Full Proof
+                  </button>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="bg-white border-2 border-blue-500 rounded-2xl p-4 shadow-sm space-y-3 relative">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-black">6</span>
+                <span class="text-sm font-black text-slate-900">6. Logistics Allocation</span>
+                <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">ACTIVE</span>
+              </div>
+              <button type="button" onclick="closeOrderModal()" class="bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-black px-2.5 py-1 rounded-lg flex items-center gap-1 transition">
+                ✕ Close
+              </button>
+            </div>
+
+            <p class="text-xs text-slate-600 font-medium">Delivery Boy / Runner assign karein aur Transport partner select karein.</p>
+
+            <div class="space-y-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <label class="text-[10px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+                  1. Kaun leke ja raha hai order? (Delivery Person / Runner) *
+                </label>
+                <select id="omRunnerSelect" onchange="onModalRunnerChange(this)" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 shadow-2xs">
+                  <option value="" disabled selected>-- Select Delivery Person --</option>
+                  <option value="Dealer Khud Aaya (Self Pickup)">🏢 Dealer Khud Aaya (Self Pickup)</option>
+                  <option value="Dealer Staff / Driver">👤 Dealer Staff / Driver / Relative</option>
+                  <option value="Vishal Gunjal">Vishal Gunjal</option>
+                  <option value="Preetam Bogawat">Preetam Bogawat</option>
+                  <option value="Raghav Korekar">Raghav Korekar</option>
+                  <option value="Yash Barlota">Yash Barlota</option>
+                  <option value="Rickshaw wala">Rickshaw wala</option>
+                  <option value="Others">Others (Type Below)</option>
+                </select>
+                <input type="text" id="omRunnerOther" placeholder="Enter person's name..." class="hidden w-full mt-2 bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 outline-none">
+                
+                <div id="omDealerPickupBox6" class="hidden mt-2 bg-amber-50 border border-amber-300 p-2.5 rounded-xl space-y-1">
+                  <label class="text-[10px] font-black text-amber-900 uppercase tracking-wider block">Kaun aaya hai stock lene? (Person Name):</label>
+                  <input type="text" id="omDealerPersonName6" placeholder="e.g. Rahul Patil - Owner / Brother" class="w-full bg-white border border-amber-300 rounded-lg p-2 text-xs font-bold text-slate-800 outline-none">
+                </div>
+              </div>
+
+              <div>
+                <label class="text-[10px] font-black text-slate-600 uppercase tracking-wider block mb-1">
+                  2. Courier / Transport Partner *
+                </label>
+                <select id="omTransportSelect" onchange="if(this.value==='Others'){document.getElementById('omTransportOther').classList.remove('hidden')}else{document.getElementById('omTransportOther').classList.add('hidden')}" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 shadow-2xs">
+                  <option value="" disabled selected>-- Select Transport Partner --</option>
+                  <option value="Hand Delivery (Counter Handover)">Hand Delivery (Counter Handover)</option>
+                  <option value="Aadhunik Courier">Aadhunik Courier</option>
+                  <option value="Ambika Courier">Ambika Courier</option>
+                  <option value="Local">Local</option>
+                  <option value="Delhivery">Delhivery</option>
+                  <option value="ACPL Courier">ACPL Courier</option>
+                  <option value="Blue Dart">Blue Dart</option>
+                  <option value="Tej Couriers">Tej Couriers</option>
+                  <option value="SV Logistics">SV Logistics</option>
+                  <option value="Shree Anjani">Shree Anjani</option>
+                  <option value="Others">Others (Type Below)</option>
+                </select>
+                <input type="text" id="omTransportOther" placeholder="Enter transport name..." class="hidden w-full mt-2 bg-white border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-900 outline-none">
+              </div>
+
+              <div>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                  <span class="text-blue-600 text-sm">📸</span> LR / Docket / Handover Photo (Optional)
+                </p>
+                <div class="flex gap-2 w-full">
+                  <label class="flex-1 bg-white hover:bg-slate-50 border border-slate-300 hover:border-blue-500 text-slate-800 text-center py-2.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-camera text-blue-600"></i> Camera
+                    <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleModalFileSelection(this, 6)">
+                  </label>
+                  <label class="flex-1 bg-white hover:bg-slate-50 border border-slate-300 hover:border-blue-500 text-slate-800 text-center py-2.5 rounded-xl cursor-pointer text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-images text-indigo-600"></i> Gallery
+                    <input type="file" accept="image/*" multiple class="hidden" onchange="handleModalFileSelection(this, 6)">
+                  </label>
+                </div>
+                <div id="modalPreviewBox_6" class="flex flex-wrap gap-2 mt-2 hidden bg-white p-2 rounded-xl border border-slate-200"></div>
+                <div class="flex items-center justify-between mt-2 bg-blue-50 rounded-xl px-3 py-1.5 border border-blue-200 hidden" id="modalFileStatus_6">
+                  <p id="modalFileStatusText_6" class="text-[10px] font-black text-blue-800 py-0.5"></p>
+                  <button type="button" onclick="clearModalQueuedFiles(6)" class="text-[10px] font-bold text-rose-600 px-2 py-0.5 bg-rose-50 rounded-lg border border-rose-200">Clear</button>
+                </div>
+              </div>
+            </div>
+
+            <button id="omSubmitBtn_6" onclick="executeModalStage(6)" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black py-3.5 rounded-xl shadow-md transition-all text-xs flex items-center justify-center gap-2">
+              <i class="fa-solid fa-truck"></i> Allocate Logistics & Proceed (Step 6)
+            </button>
+          </div>
+        `;
+      }
+
+      // ==========================================
+      // STAGE 7 BLOCK (Out-for-delivery WhatsApp Comms)
+      // ==========================================
+      if (isStage7Done) {
+        html += `
+          <div class="bg-white border-2 border-emerald-300 rounded-2xl p-4 shadow-2xs space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-black">7</span>
+                <span class="text-sm font-black text-slate-900">7. Delivery Comms (Out-for-delivery)</span>
+              </div>
+              <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                ✔ DONE
+              </span>
+            </div>
+            
+            <p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200 font-medium">
+              ${stage7Comment}
+            </p>
+
+            <div class="flex items-center gap-3 text-[11px] text-slate-500 font-semibold flex-wrap">
+              <span><i class="fa-regular fa-clock text-emerald-600 mr-1"></i> ${stage7Time}</span>
+            </div>
+          </div>
+        `;
+      } else if (isStage6Done) {
+        html += `
+          <div class="bg-white border-2 border-indigo-500 rounded-2xl p-4 shadow-sm space-y-3 relative">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs font-black">7</span>
+                <span class="text-sm font-black text-slate-900">7. Delivery Comms (Out-for-delivery)</span>
+                <span class="bg-indigo-100 text-indigo-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">ACTIVE</span>
+              </div>
+              <button type="button" onclick="closeOrderModal()" class="bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-black px-2.5 py-1 rounded-lg flex items-center gap-1 transition">
+                ✕ Close
+              </button>
+            </div>
+
+            <p class="text-xs text-slate-600 font-medium">Dealer ko WhatsApp par delivery dispatch details aur verification alert bhejein.</p>
+
+            <div class="space-y-3 bg-indigo-50/50 p-3 rounded-xl border border-indigo-200">
+              <div>
+                <p class="text-[10px] font-black text-indigo-900 uppercase tracking-wider mb-2">Step 1: WhatsApp Alert to Dealer</p>
+                <button type="button" onclick="sendModalStage7WhatsApp('${order.orderId}')" class="w-full bg-[#25D366] hover:bg-[#128C7E] active:scale-95 text-white font-black py-3 rounded-xl shadow-xs transition flex items-center justify-center gap-2 text-xs">
+                  <i class="fa-brands fa-whatsapp text-base"></i> Send WhatsApp Out-for-Delivery Alert
+                </button>
+              </div>
+
+              <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer select-none">
+                <input type="checkbox" id="omNoResponse7" class="w-4 h-4 rounded text-rose-600 accent-rose-600 cursor-pointer">
+                <span class="text-xs font-bold text-slate-700">Dealer didn't respond / WhatsApp only alert sent</span>
+              </label>
+
+              <div>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                  <i class="fa-solid fa-microphone text-indigo-600"></i> Call Recording / Audio Note (Optional)
+                </p>
+                <input type="file" accept="audio/*,image/*" onchange="handleModalFileSelection(this, 7)" class="w-full text-xs text-slate-700 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-bold file:bg-indigo-100 file:text-indigo-800 bg-white p-1.5 rounded-xl border border-slate-200 cursor-pointer">
+                <div id="modalPreviewBox_7" class="flex flex-wrap gap-2 mt-2 hidden bg-white p-2 rounded-xl border border-slate-200"></div>
+                <div class="flex items-center justify-between mt-2 bg-indigo-50 rounded-xl px-3 py-1.5 border border-indigo-200 hidden" id="modalFileStatus_7">
+                  <p id="modalFileStatusText_7" class="text-[10px] font-black text-indigo-800 py-0.5"></p>
+                  <button type="button" onclick="clearModalQueuedFiles(7)" class="text-[10px] font-bold text-rose-600 px-2 py-0.5 bg-rose-50 rounded-lg border border-rose-200">Clear</button>
+                </div>
+              </div>
+            </div>
+
+            <button id="omSubmitBtn_7" onclick="executeModalStage(7)" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black py-3.5 rounded-xl shadow-md transition-all text-xs flex items-center justify-center gap-2">
+              <span>✔</span> Confirm & Proceed to Step 8 (Delivered)
+            </button>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="bg-slate-100/60 border border-slate-200 rounded-xl p-4 flex justify-between items-center opacity-60">
+            <span class="text-slate-500 text-xs font-bold">7. Delivery Comms (Out-for-delivery)</span>
+            <span class="text-slate-500 text-[10px] font-mono font-bold tracking-wider bg-slate-200 px-2 py-1 rounded">
+              🔒 LOCKED (Step 6 ke baad unlock hoga)
+            </span>
+          </div>
+        `;
+      }
+
+      // ==========================================
       // STAGE 8 BLOCK
+      // ==========================================
+
       if (isStage8Done) {
         html += `
           <div class="bg-white border-2 border-emerald-300 rounded-2xl p-4 shadow-2xs space-y-2.5">
@@ -1330,7 +1596,7 @@
             </button>
           </div>
         `;
-      } else {
+      } else if (isStage7Done) {
         html += `
           <div class="bg-white border-2 border-emerald-500 rounded-2xl p-4 shadow-sm space-y-3 relative">
             <div class="flex items-center justify-between">
@@ -1498,6 +1764,15 @@
             </button>
           </div>
         `;
+      } else {
+        html += `
+          <div class="bg-slate-100/60 border border-slate-200 rounded-xl p-4 flex justify-between items-center opacity-60">
+            <span class="text-slate-500 text-xs font-bold">8. Delivered</span>
+            <span class="text-slate-500 text-[10px] font-mono font-bold tracking-wider bg-slate-200 px-2 py-1 rounded">
+              🔒 LOCKED (Step 7 ke baad unlock hoga)
+            </span>
+          </div>
+        `;
       }
 
       // STAGE 9 BLOCK
@@ -1608,6 +1883,37 @@
       }
 
       container.innerHTML = html;
+    }
+
+    function onModalRunnerChange(select) {
+      const val = select.value || '';
+      const isOthers = val === 'Others';
+      const isDealer = val.includes('Dealer');
+
+      const otherInput = document.getElementById('omRunnerOther');
+      if (otherInput) {
+        if (isOthers) otherInput.classList.remove('hidden');
+        else otherInput.classList.add('hidden');
+      }
+
+      const dealerBox = document.getElementById('omDealerPickupBox6');
+      if (dealerBox) {
+        if (isDealer) dealerBox.classList.remove('hidden');
+        else dealerBox.classList.add('hidden');
+      }
+
+      const transportSelect = document.getElementById('omTransportSelect');
+      if (transportSelect && isDealer) {
+        transportSelect.value = 'Hand Delivery (Counter Handover)';
+      }
+    }
+
+    function sendModalStage7WhatsApp(orderId) {
+      const order = allOrders.find(o => o.orderId === orderId) || currentActiveOrder;
+      if (!order) return;
+      const log = parseLogisticsInfo(order);
+      const itemsCount = (order.items || []).reduce((acc, it) => acc + (Number(it.qty) || 1), 0);
+      openWhatsAppWithLogistics(order.orderId, order.shopName, order.phone, order.totalValue, order.paymentMode || 'COD', log.transport, log.runner, itemsCount, log.isSelfPickup);
     }
 
     function setModalHandover(mode) {
@@ -1822,7 +2128,55 @@
         isWhatsAppOnly: false
       };
 
-      if (stageNum === 8) {
+      if (stageNum === 6) {
+        let runnerVal = document.getElementById('omRunnerSelect')?.value;
+        let transportVal = document.getElementById('omTransportSelect')?.value;
+        let runner = runnerVal === "Others" ? (document.getElementById('omRunnerOther')?.value || '').trim() : runnerVal;
+        let transport = transportVal === "Others" ? (document.getElementById('omTransportOther')?.value || '').trim() : transportVal;
+        let dealerPerson = (document.getElementById('omDealerPersonName6')?.value || '').trim();
+        if (dealerPerson && (runnerVal.includes('Dealer') || (runner && runner.toLowerCase().includes('dealer')))) {
+          runner = runner + ' (' + dealerPerson + ')';
+        }
+
+        if (!runner || !transport) {
+          alert("Kripya Delivery Person aur Courier / Transport dono select karein!");
+          if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+          return;
+        }
+
+        payload.actionText = 'Runner: ' + runner + ' | Transport: ' + transport;
+        payload.comment = 'Logistics Allocated | Runner: ' + runner + ' | Transport: ' + transport;
+        payload.staffName = runner;
+
+        const files = queuedFilesByStage[6] || [];
+        if (files.length > 0) {
+          payload.files = files.map((f, idx) => ({
+            name: 'logistics_' + currentActiveOrder.orderId + '_' + (idx + 1) + '.jpg',
+            mimeType: f.mimeType || 'image/jpeg',
+            base64: f.base64
+          }));
+        }
+
+      } else if (stageNum === 7) {
+        const isNoResponse = Boolean(document.getElementById('omNoResponse7')?.checked);
+        const log = parseLogisticsInfo(currentActiveOrder);
+        payload.isNoResponse = isNoResponse;
+        payload.actionText = isNoResponse ? 'Dealer No Response / Ignored' : 'Out-for-delivery message sent via WhatsApp';
+        payload.comment = 'Out for Delivery | Runner: ' + log.runner + ' | Courier: ' + log.transport + (isNoResponse ? ' (No Response)' : '');
+        payload.staffName = log.runner || currentStaff;
+
+        const files = queuedFilesByStage[7] || [];
+        if (files.length > 0) {
+          payload.files = files.map((f, idx) => ({
+            name: 'out_for_delivery_' + currentActiveOrder.orderId + '_' + (idx + 1) + (f.mimeType && f.mimeType.includes('audio') ? '.mp3' : '.jpg'),
+            mimeType: f.mimeType || 'image/jpeg',
+            base64: f.base64
+          }));
+        } else {
+          payload.isWhatsAppOnly = true;
+        }
+
+      } else if (stageNum === 8) {
         const files = queuedFilesByStage[8] || [];
         const isDealerMode = currentHandoverMode === 'dealer';
         const collectPay = isDealerMode && Boolean(document.getElementById('omCollectPaymentNow')?.checked);
@@ -1895,11 +2249,9 @@
           }
 
           if (!currentActiveOrder.stageUrls) currentActiveOrder.stageUrls = Array(9).fill("");
-          if (res.fileUrls && res.fileUrls.length > 0) {
-            currentActiveOrder.stageUrls[stageNum - 1] = res.fileUrls.join(',') + (stageNum === 9 ? ' || Rating: ' + payload.rating : '') + ' || STAFF: ' + payload.staffName + ' || TIME: ' + Date.now();
-          } else {
-            currentActiveOrder.stageUrls[stageNum - 1] = (stageNum === 9 ? '[Completed - Verified by Call] || Rating: ' + payload.rating : 'COMPLETED') + ' || STAFF: ' + payload.staffName + ' || TIME: ' + Date.now();
-          }
+          let cellPrefix = (res.fileUrls && res.fileUrls.length > 0) ? res.fileUrls.join(',') + ' ' : '';
+          let stageContent = payload.actionText || (stageNum === 9 ? '[Completed - Verified by Call] || Rating: ' + payload.rating : 'COMPLETED');
+          currentActiveOrder.stageUrls[stageNum - 1] = (cellPrefix + stageContent + ' || STAFF: ' + payload.staffName + ' || TIME: ' + Date.now()).trim();
 
           queuedFilesByStage[stageNum] = [];
           showToast('Step ' + stageNum + ' Completed Successfully!', 'success');
