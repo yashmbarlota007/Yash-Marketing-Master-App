@@ -772,7 +772,7 @@
         let frame = document.createElement("iframe");
         frame.id = "frame_app_" + index;
         frame.className = "app-frame " + (isActiveApp ? "active" : "");
-        frame.setAttribute("allow", "camera *; geolocation *; microphone *; clipboard-read; clipboard-write; autoplay *");
+        frame.setAttribute("allow", "camera *; geolocation *; microphone *; clipboard-read; clipboard-write; autoplay *; fullscreen *; encrypted-media *");
         
         // LAZY LOADING LOGIC
         frame.dataset.src = secureUrl; 
