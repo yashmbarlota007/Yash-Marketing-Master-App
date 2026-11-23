@@ -955,7 +955,7 @@
       }
     }
 
-    function applyDynamicCard(cardEl, videoId, title, subtitle, videoLink, thumbUrl) {
+    function applyDynamicCard(cardEl, videoId, title, subtitle, videoLink, thumbUrl, isYoutube) {
       if (!cardEl || !videoLink) return;
       cardEl.className = 'media-box position-relative overflow-hidden text-center';
       cardEl.style.cursor = 'pointer';
@@ -984,58 +984,169 @@
       
       var bgMarkup = '';
       if (thumbUrl) {
-        bgMarkup = '<div style="position: absolute; top:0; left:0; width:100%; height:100%; background: url(\'' + thumbUrl + '\') center/cover no-repeat; opacity: 0.45; z-index: 1;"></div>';
+        bgMarkup = '<div style="position: absolute; top:0; left:0; width:100%; height:100%; background: url(\'' + thumbUrl + '\') center/cover no-repeat; opacity: 0.55; z-index: 1;"></div>';
       }
-      
+
+      var playIconHtml = isYoutube
+        ? '<div class="mb-2" style="width: 48px; height: 48px; background: rgba(255, 0, 0, 0.28); border: 2px solid #ff0000; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px rgba(255,0,0,0.5);"><i class="fab fa-youtube text-danger fa-lg"></i></div>'
+        : '<div class="mb-2" style="width: 46px; height: 46px; background: rgba(13, 202, 240, 0.25); border: 2px solid #0dcaf0; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 14px rgba(13,202,240,0.45);"><i class="fas fa-play text-info fa-lg" style="margin-left: 3px;"></i></div>';
+
+      var badgeHtml = isYoutube
+        ? '<span class="badge bg-danger text-white" style="font-size: 0.72rem; padding: 4px 10px;"><i class="fab fa-youtube me-1"></i> Watch on YouTube</span>'
+        : '<span class="badge bg-info text-dark" style="font-size: 0.72rem; padding: 4px 10px;"><i class="fas fa-circle-play me-1"></i> Watch Video</span>';
+
       cardEl.innerHTML = 
         bgMarkup +
         '<div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(180deg, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.92) 100%); z-index: 2;"></div>' +
         '<div style="position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; padding: 16px 12px;">' +
-          '<div class="mb-2" style="width: 46px; height: 46px; background: rgba(13, 202, 240, 0.25); border: 2px solid #0dcaf0; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 14px rgba(13,202,240,0.45);">' +
-            '<i class="fas fa-play text-info fa-lg" style="margin-left: 3px;"></i>' +
-          '</div>' +
+          playIconHtml +
           '<h6 class="fw-bold text-white small mb-1">' + (title || videoId) + '</h6>' +
           (subtitle ? '<p class="small text-white-50 mb-2" style="font-size: 0.8rem; line-height: 1.25;">' + subtitle + '</p>' : '') +
-          '<span class="badge bg-info text-dark" style="font-size: 0.72rem; padding: 4px 10px;"><i class="fas fa-circle-play me-1"></i> Watch Video</span>' +
+          badgeHtml +
         '</div>';
+    }
+
+    function processSheetRows(rows) {
+      if (!rows || rows.length < 1) return;
+      
+      // Determine column indices
+      var headers = rows[0].map(function(h) { return String(h || '').trim().toLowerCase(); });
+      var nameIdx = -1, urlIdx = -1, secIdx = -1;
+      for (var i = 0; i < headers.length; i++) {
+        var h = headers[i];
+        if (h.indexOf('name') !== -1 || h.indexOf('title') !== -1) nameIdx = i;
+        if (h.indexOf('url') !== -1 || h.indexOf('link') !== -1 || h.indexOf('youtube') !== -1) urlIdx = i;
+        if (h.indexOf('section') !== -1) secIdx = i;
+      }
+      
+      var startRow = 1;
+      // If row 0 did not look like headers, default indices and start from row 0
+      if (urlIdx === -1) {
+        nameIdx = 0; urlIdx = 1; secIdx = 2;
+        startRow = 0;
+      }
+
+      var dealerCount = 0;
+      var backendCount = 0;
+
+      for (var r = startRow; r < rows.length; r++) {
+        var row = rows[r];
+        if (!row) continue;
+        var rawName = String(row[nameIdx] || '').trim();
+        var rawUrl = String(row[urlIdx] || '').trim();
+        var rawSec = String(row[secIdx] || '').trim().toLowerCase();
+
+        if (!rawUrl) continue;
+
+        var targetCardId = null;
+        var defaultTitle = '';
+        var defaultSubtitle = '';
+
+        if (rawSec.indexOf('backend') !== -1 || rawSec.indexOf('order') !== -1 || rawSec.indexOf('operational') !== -1) {
+          backendCount++;
+          var lowerName = rawName.toLowerCase();
+          if (lowerName.indexOf('pack') !== -1 || lowerName.indexOf('qc') !== -1 || backendCount === 1) {
+            targetCardId = 'card_backend_video_1';
+            defaultTitle = 'Live Order Packing & QC Process';
+            defaultSubtitle = 'Dekhiye kaise har item scan aur check hokar pack hota hai.';
+          } else if (lowerName.indexOf('replacement') !== -1 || backendCount === 2) {
+            targetCardId = 'card_backend_video_2';
+            defaultTitle = 'Dedicated Replacement Processing';
+            defaultSubtitle = 'Replacement claims ko fast verify aur dispatch karne ka live system.';
+          } else {
+            targetCardId = 'card_backend_video_3';
+            defaultTitle = 'Wadiya Park Head Office & Warehouse';
+            defaultSubtitle = 'Humare office, stock inward aur dispatch team ka live tour.';
+          }
+        } else {
+          dealerCount++;
+          var lowerName = rawName.toLowerCase();
+          if (lowerName.indexOf('95%') !== -1 || lowerName.indexOf('same day') !== -1) {
+            targetCardId = 'card_dealer_review_2';
+            defaultTitle = 'Dealer Review #2';
+            defaultSubtitle = '"95% Same day dispatch aur best packaging."';
+          } else if (lowerName.indexOf('fast replacement') !== -1 || lowerName.indexOf('replacement') !== -1) {
+            targetCardId = 'card_dealer_review_3';
+            defaultTitle = 'Dealer Review #3';
+            defaultSubtitle = '"Replacement system sabse fast hai."';
+          } else if (lowerName.indexOf('collection') !== -1) {
+            targetCardId = 'card_dealer_review_4';
+            defaultTitle = 'Dealer Review #4';
+            defaultSubtitle = '"Daily collection se business asaan ho gaya."';
+          } else if (lowerName.indexOf('10 saal') !== -1 || lowerName.indexOf('original') !== -1) {
+            targetCardId = 'card_dealer_review_5';
+            defaultTitle = 'Dealer Review #5';
+            defaultSubtitle = '"Pichle 10 saal se 100% original brands mil rahe hain."';
+          } else if (lowerName.indexOf('#1') !== -1 || lowerName.indexOf('discount') !== -1) {
+            targetCardId = 'card_dealer_review_1';
+            defaultTitle = 'Dealer Review #1';
+            defaultSubtitle = '"Ordering App & 5% discount se profit badha!"';
+          } else {
+            var num = Math.min(dealerCount, 5);
+            targetCardId = 'card_dealer_review_' + num;
+            defaultTitle = 'Dealer Review #' + num;
+            defaultSubtitle = rawName;
+          }
+        }
+
+        var cardEl = document.getElementById(targetCardId);
+        if (!cardEl) continue;
+
+        var parsed = parseVideoUrl(rawUrl);
+        var thumb = parsed ? parsed.thumbUrl : '';
+        applyDynamicCard(cardEl, targetCardId, rawName || defaultTitle, defaultSubtitle, rawUrl, thumb, parsed && parsed.isYoutube);
+      }
     }
 
     function loadDynamicVideosFromSheet() {
       var sheetId = '1uJDrDXeMEhsruHvKnaRPNTOwiui8o46x3CeXIsngVUk';
-      var gvizUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json&sheet=Videos';
       
-      fetch(gvizUrl)
-        .then(function(res) {
-          if (!res.ok) throw new Error('Sheet fetch HTTP ' + res.status);
-          return res.text();
-        })
-        .then(function(txt) {
-          var jsonStr = txt.replace(/^[^{]*{/, '{').replace(/}\s*[^}]*$/, '}');
-          var data = JSON.parse(jsonStr);
-          if (!data || !data.table || !data.table.rows) return;
-          
-          data.table.rows.forEach(function(row) {
-            if (!row || !row.c) return;
-            var videoId = row.c[0] ? String(row.c[0].v || '').trim() : '';
-            var title = row.c[1] ? String(row.c[1].v || '').trim() : '';
-            var subtitle = row.c[2] ? String(row.c[2].v || '').trim() : '';
-            var videoLink = row.c[3] ? String(row.c[3].v || '').trim() : '';
-            var customThumb = row.c[4] ? String(row.c[4].v || '').trim() : '';
-            var status = row.c[5] ? String(row.c[5].v || '').trim().toLowerCase() : 'active';
-            
-            if (!videoId || !videoLink || status === 'inactive') return;
-            
-            var cardEl = document.getElementById('card_' + videoId);
-            if (!cardEl) return;
-            
-            var parsed = parseVideoUrl(videoLink);
-            var finalThumb = customThumb || (parsed ? parsed.thumbUrl : '');
-            applyDynamicCard(cardEl, videoId, title, subtitle, videoLink, finalThumb);
+      // Try tab Video first, fallback to gid 1611283769 or tab Videos
+      var gvizUrls = [
+        'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json&sheet=Video',
+        'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json&gid=1611283769',
+        'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json&sheet=Videos'
+      ];
+
+      function tryFetch(idx) {
+        if (idx >= gvizUrls.length) return;
+        fetch(gvizUrls[idx])
+          .then(function(res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.text();
+          })
+          .then(function(txt) {
+            var jsonStr = txt.replace(/^[^{]*{/, '{').replace(/}\s*[^}]*$/, '}');
+            var data = JSON.parse(jsonStr);
+            if (!data || !data.table) throw new Error('No table data');
+
+            var allRows = [];
+            var colHeaders = (data.table.cols || []).map(function(c) { return String((c && c.label) || '').trim(); });
+            var hasColHeaders = colHeaders.some(function(h) { return h.length > 0; });
+            if (hasColHeaders) {
+              allRows.push(colHeaders);
+            }
+            if (data.table.rows && data.table.rows.length > 0) {
+              data.table.rows.forEach(function(r) {
+                if (!r || !r.c) return;
+                var rowVals = r.c.map(function(cell) { return cell && cell.v !== undefined ? String(cell.v).trim() : ''; });
+                allRows.push(rowVals);
+              });
+            }
+
+            if (allRows.length > 0) {
+              processSheetRows(allRows);
+            } else {
+              tryFetch(idx + 1);
+            }
+          })
+          .catch(function(err) {
+            console.log('Dynamic video sync note (' + idx + '):', err.message);
+            tryFetch(idx + 1);
           });
-        })
-        .catch(function(err) {
-          console.log('Google Sheets dynamic videos note:', err.message);
-        });
+      }
+
+      tryFetch(0);
     }
 
     function openPhotoModal(imgSrc, title) {
