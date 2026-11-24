@@ -521,15 +521,15 @@
     checkPhotosRequired(); 
   }
 
-  // --- BULLETPROOF ULTRA-FAST COMPRESSION WITH FAILSAFE TIMEOUT & FALLBACK ---
+  // --- BULLETPROOF ULTRA-FAST FULL-HD (1920px) COMPRESSION (CRYSTAL CLEAR QUALITY) ---
   function compressImage(file, label) {
     label = label || "Photo";
     return new Promise((resolve) => {
-      // 6-second safety timeout: If compression hangs on any photo, fallback to direct base64 immediately!
+      // 8-second safety timeout: If compression hangs on any photo, fallback to direct base64 immediately!
       const timer = setTimeout(() => {
         console.warn(`[Timeout] ${label} compression timed out. Falling back to direct read.`);
         directReadBase64(file).then(resolve);
-      }, 6000);
+      }, 8000);
 
       const finish = (result) => {
         clearTimeout(timer);
@@ -541,7 +541,8 @@
         createImageBitmap(file)
           .then((bitmap) => {
             try {
-              const maxDim = 800;
+              // 1920px Full HD ensures invoices, LR numbers, and model barcodes stay razor-sharp!
+              const maxDim = 1920;
               let w = bitmap.width;
               let h = bitmap.height;
               if (w > maxDim || h > maxDim) {
@@ -557,9 +558,12 @@
               canvas.width = w;
               canvas.height = h;
               const ctx = canvas.getContext('2d');
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
               ctx.drawImage(bitmap, 0, 0, w, h);
               if (typeof bitmap.close === 'function') bitmap.close();
-              const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+              // 0.85 quality produces crisp, un-blurred text without heavy compression artifacts
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
               const b64 = dataUrl.split(',')[1];
               if (b64 && b64.length > 50) {
                 return finish({ name: file.name, mimeType: 'image/jpeg', data: b64 });
@@ -591,9 +595,9 @@
             img.onerror = () => directReadBase64(file).then(resolve);
             img.onload = () => {
               try {
-                const maxDim = 800;
-                let w = img.width || 800;
-                let h = img.height || 600;
+                const maxDim = 1920;
+                let w = img.width || 1920;
+                let h = img.height || 1080;
                 if (w > maxDim || h > maxDim) {
                   if (w > h) {
                     h = Math.round((h * maxDim) / w);
@@ -607,8 +611,10 @@
                 canvas.width = w;
                 canvas.height = h;
                 const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(img, 0, 0, w, h);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
                 const b64 = dataUrl.split(',')[1];
                 if (b64 && b64.length > 50) {
                   resolve({ name: file.name, mimeType: 'image/jpeg', data: b64 });
@@ -653,7 +659,6 @@
       }
     });
   }
-
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
   async function submitData() {
@@ -854,7 +859,7 @@
           
           inv.items.forEach(item => {
             let prodPicLink = (item.prodPhoto && item.prodPhoto !== '-') 
-              ? `<a href="${item.prodPhoto}" target="_blank" style="text-decoration:none; background:#e3f2fd; color:#1565c0; padding:3px 6px; border-radius:4px; font-size:11px; border:1px solid #90caf9; margin-left: 8px; font-weight:bold; display:inline-block; vertical-align:middle;">📸 Photo</a>` 
+              ? `<a href="${item.prodPhoto}" target="_blank" onclick="openPhotoModal(event, '${item.prodPhoto}', '${item.model} Photo')" style="text-decoration:none; background:#e3f2fd; color:#1565c0; padding:3px 6px; border-radius:4px; font-size:11px; border:1px solid #90caf9; margin-left: 8px; font-weight:bold; display:inline-block; vertical-align:middle;">🔍 Photo</a>` 
               : '';
 
             itemsHtml += `
@@ -883,7 +888,7 @@
             let urls = inv.invoicePhotos.split(" \n "); 
             photoHtml += '<b>📸 Invoice Photo:</b><br>';
             urls.forEach((url, i) => {
-               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-inv">🖼️ Inv Photo ${i+1}</a>`;
+               photoHtml += `<a href="${url.trim()}" target="_blank" onclick="openPhotoModal(event, '${url.trim()}', 'Invoice Photo ${i+1}')" class="photo-btn photo-btn-inv">🔍 Inv Photo ${i+1}</a>`;
             });
             photoHtml += '<br><br>';
             hasPhotos = true;
@@ -893,7 +898,7 @@
             let urls = inv.boxPhotos.split(" \n "); 
             photoHtml += '<b>📦 Box Photo:</b><br>';
             urls.forEach((url, i) => {
-               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-box">🖼️ Box Photo ${i+1}</a>`;
+               photoHtml += `<a href="${url.trim()}" target="_blank" onclick="openPhotoModal(event, '${url.trim()}', 'Box Photo ${i+1}')" class="photo-btn photo-btn-box">🔍 Box Photo ${i+1}</a>`;
             });
             photoHtml += '<br><br>';
             hasPhotos = true;
@@ -903,7 +908,7 @@
             let urls = inv.pavtiPhotos.split(" \n "); 
             photoHtml += '<b>🧾 Pavti Photo:</b><br>';
             urls.forEach((url, i) => {
-               photoHtml += `<a href="${url.trim()}" target="_blank" class="photo-btn photo-btn-pavti">🖼️ Pavti Photo ${i+1}</a>`;
+               photoHtml += `<a href="${url.trim()}" target="_blank" onclick="openPhotoModal(event, '${url.trim()}', 'Pavti Photo ${i+1}')" class="photo-btn photo-btn-pavti">🔍 Pavti Photo ${i+1}</a>`;
             });
             photoHtml += '<br>';
             hasPhotos = true;
@@ -1024,6 +1029,55 @@ window.addEventListener('beforeunload', function (e) {
   e.preventDefault();
   e.returnValue = '';
 });
+</script>
+<!-- PHOTO VIEWER MODAL (CRISP FULL-HD PREVIEW) -->
+<div id="photoModal" style="display:none; position:fixed; z-index:99999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.94); flex-direction:column; justify-content:center; align-items:center; padding:10px; box-sizing:border-box;" onclick="if(event.target===this)closePhotoModal()">
+  <div style="width:100%; max-width:960px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:0 5px;">
+    <span id="photoModalTitle" style="color:white; font-weight:bold; font-size:15px; text-shadow:0 1px 2px rgba(0,0,0,0.8);">📸 Photo Preview</span>
+    <div style="display:flex; gap:10px;">
+      <a id="photoModalDriveBtn" href="#" target="_blank" style="background:#1976d2; color:white; padding:7px 14px; border-radius:6px; font-size:13px; text-decoration:none; font-weight:bold; display:inline-flex; align-items:center; gap:4px;">Open in Drive ↗</a>
+      <button type="button" onclick="closePhotoModal()" style="background:#d32f2f; color:white; border:none; padding:7px 16px; border-radius:6px; font-size:15px; font-weight:bold; cursor:pointer;">✕ Close</button>
+    </div>
+  </div>
+  <div style="width:100%; max-width:960px; height:82vh; display:flex; justify-content:center; align-items:center; overflow:auto; background:#121212; border-radius:8px; border:1px solid #444; position:relative;">
+    <div id="photoModalLoading" style="position:absolute; color:#ff9800; font-weight:bold; font-size:15px;">Loading HD Image... ⏳</div>
+    <img id="photoModalImg" src="" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:4px; display:none;" alt="Full Resolution Photo" onload="document.getElementById('photoModalLoading').style.display='none'; this.style.display='block';" onerror="document.getElementById('photoModalLoading').innerText='Could not load inline preview. Please click Open in Drive above.';">
+  </div>
+</div>
+
+<script>
+function openPhotoModal(event, url, title) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  let modal = document.getElementById('photoModal');
+  let img = document.getElementById('photoModalImg');
+  let loading = document.getElementById('photoModalLoading');
+  let titleEl = document.getElementById('photoModalTitle');
+  let driveBtn = document.getElementById('photoModalDriveBtn');
+
+  titleEl.innerText = title || "Photo Preview";
+  driveBtn.href = url;
+  loading.style.display = 'block';
+  loading.innerText = 'Loading HD Image... ⏳';
+  img.style.display = 'none';
+
+  let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    img.src = 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w2000';
+  } else {
+    img.src = url;
+  }
+  modal.style.display = 'flex';
+}
+
+function closePhotoModal() {
+  let modal = document.getElementById('photoModal');
+  let img = document.getElementById('photoModalImg');
+  if (img) img.src = '';
+  if (modal) modal.style.display = 'none';
+}
 </script>
 </body>
 </html>
