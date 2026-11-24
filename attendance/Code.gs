@@ -1,3 +1,252 @@
+
+// ====================================================================================
+// MANDATORY DOCUMENTS VAULT ENGINE & COMPLIANCE SYSTEM
+// ====================================================================================
+
+function getOrCreateDocumentsVaultSheet(ss) {
+  let sheetName = "Documents Vault";
+  let sheet = ss.getSheetByName(sheetName) || ss.getSheetByName("Documents_Vault");
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    let headers = ["Staff Name", "Employee ID", "Profile Photo", "Aadhar Card", "Pan Card", "Status", "Last Updated"];
+    sheet.appendRow(headers);
+    
+    // Style headers
+    let headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setBackground("#1e293b");
+    headerRange.setFontColor("#ffffff");
+    headerRange.setFontWeight("bold");
+    headerRange.setHorizontalAlignment("center");
+    headerRange.setVerticalAlignment("middle");
+    sheet.setRowHeight(1, 35);
+    sheet.setFrozenRows(1);
+    
+    sheet.setColumnWidth(1, 170); // Staff Name
+    sheet.setColumnWidth(2, 110); // Employee ID
+    sheet.setColumnWidth(3, 230); // Profile Photo
+    sheet.setColumnWidth(4, 230); // Aadhar Card
+    sheet.setColumnWidth(5, 230); // Pan Card
+    sheet.setColumnWidth(6, 200); // Status
+    sheet.setColumnWidth(7, 160); // Last Updated
+    
+    syncAllStaffToDocumentsVault(ss, sheet);
+  }
+  return sheet;
+}
+
+function syncAllStaffToDocumentsVault(ss, vaultSheet) {
+  try {
+    if (!vaultSheet) {
+      vaultSheet = ss.getSheetByName("Documents Vault") || ss.getSheetByName("Documents_Vault");
+      if (!vaultSheet) {
+        vaultSheet = getOrCreateDocumentsVaultSheet(ss);
+        return;
+      }
+    }
+    
+    const staffSheet = ss.getSheetByName("Staff Master") || ss.getSheetByName("Staff_Master");
+    if (!staffSheet) return;
+    
+    const staffData = staffSheet.getDataRange().getValues();
+    const sHeaders = staffData[0];
+    let idCol = sHeaders.findIndex(h => h.toString().trim().toUpperCase() === "EMPLOYEE ID"); if (idCol === -1) idCol = 0;
+    let nameCol = sHeaders.findIndex(h => h.toString().trim().toUpperCase() === "NAME"); if (nameCol === -1) nameCol = 1;
+    
+    let vaultData = vaultSheet.getDataRange().getValues();
+    let existingIds = {};
+    for (let r = 1; r < vaultData.length; r++) {
+      let vId = vaultData[r][1] ? vaultData[r][1].toString().trim().toUpperCase() : "";
+      if (vId) existingIds[vId] = r + 1;
+    }
+    
+    let docMap = {};
+    const docSheet = ss.getSheetByName("Employee_Documents") || ss.getSheetByName("Employee Documents");
+    if (docSheet && docSheet.getLastRow() > 1) {
+      let dData = docSheet.getDataRange().getValues();
+      for (let i = 1; i < dData.length; i++) {
+        let eId = dData[i][1] ? dData[i][1].toString().trim().toUpperCase() : "";
+        let dType = dData[i][2] ? dData[i][2].toString().trim().toUpperCase() : "";
+        let url = dData[i][3] ? dData[i][3].toString().trim() : "";
+        if (eId && url) {
+          if (!docMap[eId]) docMap[eId] = { profile: "", aadhar: "", pan: "" };
+          if (dType.includes("PROFILE")) docMap[eId].profile = url;
+          else if (dType.includes("AADHAR") || dType.includes("ADHAAR")) docMap[eId].aadhar = url;
+          else if (dType.includes("PAN")) docMap[eId].pan = url;
+        }
+      }
+    }
+    
+    let nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd/MM/yyyy hh:mm a");
+    
+    for (let s = 1; s < staffData.length; s++) {
+      let empId = staffData[s][idCol] ? staffData[s][idCol].toString().trim().toUpperCase() : "";
+      let empName = staffData[s][nameCol] ? staffData[s][nameCol].toString().trim() : "Unknown Staff";
+      if (!empId) continue;
+      
+      let docs = docMap[empId] || { profile: "", aadhar: "", pan: "" };
+      let missing = [];
+      if (!docs.profile) missing.push("Profile Photo");
+      if (!docs.aadhar) missing.push("Aadhar Card");
+      if (!docs.pan) missing.push("Pan Card");
+      let status = missing.length === 0 ? "✅ Complete" : "⚠️ Incomplete (Missing: " + missing.join(", ") + ")";
+      
+      if (!existingIds[empId]) {
+        vaultSheet.appendRow([empName, empId, docs.profile, docs.aadhar, docs.pan, status, nowStr]);
+        existingIds[empId] = vaultSheet.getLastRow();
+      } else {
+        let rNum = existingIds[empId];
+        if (docs.profile && !vaultData[rNum - 1][2]) vaultSheet.getRange(rNum, 3).setValue(docs.profile);
+        if (docs.aadhar && !vaultData[rNum - 1][3]) vaultSheet.getRange(rNum, 4).setValue(docs.aadhar);
+        if (docs.pan && !vaultData[rNum - 1][4]) vaultSheet.getRange(rNum, 5).setValue(docs.pan);
+        
+        let pVal = vaultSheet.getRange(rNum, 3).getValue();
+        let aVal = vaultSheet.getRange(rNum, 4).getValue();
+        let panVal = vaultSheet.getRange(rNum, 5).getValue();
+        let curMissing = [];
+        if (!pVal) curMissing.push("Profile Photo");
+        if (!aVal) curMissing.push("Aadhar Card");
+        if (!panVal) curMissing.push("Pan Card");
+        vaultSheet.getRange(rNum, 6).setValue(curMissing.length === 0 ? "✅ Complete" : "⚠️ Incomplete (Missing: " + curMissing.join(", ") + ")");
+      }
+    }
+  } catch(e) {
+    Logger.log("Error in syncAllStaffToDocumentsVault: " + e.toString());
+  }
+}
+
+function updateDocumentsVaultSheet(ss, empId, docType, fileUrl) {
+  try {
+    let vaultSheet = getOrCreateDocumentsVaultSheet(ss);
+    if (!vaultSheet) return;
+    
+    let cleanEmpId = empId ? empId.toString().trim().toUpperCase() : "";
+    let staffName = "Staff";
+    let staffSheet = ss.getSheetByName("Staff Master") || ss.getSheetByName("Staff_Master");
+    if (staffSheet) {
+      let sData = staffSheet.getDataRange().getValues();
+      let sHeaders = sData[0];
+      let idCol = sHeaders.findIndex(h => h.toString().trim().toUpperCase() === "EMPLOYEE ID"); if (idCol === -1) idCol = 0;
+      let nameCol = sHeaders.findIndex(h => h.toString().trim().toUpperCase() === "NAME"); if (nameCol === -1) nameCol = 1;
+      for (let r = 1; r < sData.length; r++) {
+        if (sData[r][idCol] && sData[r][idCol].toString().trim().toUpperCase() === cleanEmpId) {
+          staffName = sData[r][nameCol] ? sData[r][nameCol].toString().trim() : "Staff";
+          break;
+        }
+      }
+    }
+    
+    let vaultData = vaultSheet.getDataRange().getValues();
+    let rowIndex = -1;
+    for (let r = 1; r < vaultData.length; r++) {
+      if (vaultData[r][1] && vaultData[r][1].toString().trim().toUpperCase() === cleanEmpId) {
+        rowIndex = r + 1;
+        break;
+      }
+    }
+    
+    let nowStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd/MM/yyyy hh:mm a");
+    let dTypeUpper = docType.toString().trim().toUpperCase();
+    
+    if (rowIndex === -1) {
+      let profileUrl = dTypeUpper.includes("PROFILE") ? fileUrl : "";
+      let aadharUrl = (dTypeUpper.includes("AADHAR") || dTypeUpper.includes("ADHAAR")) ? fileUrl : "";
+      let panUrl = dTypeUpper.includes("PAN") ? fileUrl : "";
+      
+      let missing = [];
+      if (!profileUrl) missing.push("Profile Photo");
+      if (!aadharUrl) missing.push("Aadhar Card");
+      if (!panUrl) missing.push("Pan Card");
+      let status = missing.length === 0 ? "✅ Complete" : "⚠️ Incomplete (Missing: " + missing.join(", ") + ")";
+      
+      vaultSheet.appendRow([staffName, empId, profileUrl, aadharUrl, panUrl, status, nowStr]);
+    } else {
+      let colToUpdate = 0;
+      if (dTypeUpper.includes("PROFILE")) {
+        colToUpdate = 3;
+      } else if (dTypeUpper.includes("AADHAR") || dTypeUpper.includes("ADHAAR")) {
+        colToUpdate = 4;
+      } else if (dTypeUpper.includes("PAN")) {
+        colToUpdate = 5;
+      }
+      
+      if (colToUpdate > 0) {
+        vaultSheet.getRange(rowIndex, colToUpdate).setValue(fileUrl);
+      }
+      vaultSheet.getRange(rowIndex, 7).setValue(nowStr);
+      
+      let curProfile = vaultSheet.getRange(rowIndex, 3).getValue();
+      let curAadhar = vaultSheet.getRange(rowIndex, 4).getValue();
+      let curPan = vaultSheet.getRange(rowIndex, 5).getValue();
+      let missing = [];
+      if (!curProfile) missing.push("Profile Photo");
+      if (!curAadhar) missing.push("Aadhar Card");
+      if (!curPan) missing.push("Pan Card");
+      
+      let newStatus = missing.length === 0 ? "✅ Complete" : "⚠️ Incomplete (Missing: " + missing.join(", ") + ")";
+      vaultSheet.getRange(rowIndex, 6).setValue(newStatus);
+    }
+  } catch(e) {
+    Logger.log("Error updating Documents Vault: " + e.toString());
+  }
+}
+
+function checkEmployeeMandatoryDocuments(ss, empId) {
+  let profilePicUrl = "";
+  let aadharCardUrl = "";
+  let panCardUrl = "";
+  let cleanEmpId = empId ? empId.toString().trim().toUpperCase() : "";
+
+  // 1. Check in Documents Vault sheet first
+  const vaultSheet = ss.getSheetByName("Documents Vault") || ss.getSheetByName("Documents_Vault");
+  if (vaultSheet && vaultSheet.getLastRow() > 1) {
+    let vData = vaultSheet.getDataRange().getValues();
+    for (let r = 1; r < vData.length; r++) {
+      let rId = vData[r][1] ? vData[r][1].toString().trim().toUpperCase() : "";
+      if (rId === cleanEmpId) {
+        profilePicUrl = vData[r][2] ? vData[r][2].toString().trim() : "";
+        aadharCardUrl = vData[r][3] ? vData[r][3].toString().trim() : "";
+        panCardUrl = vData[r][4] ? vData[r][4].toString().trim() : "";
+        break;
+      }
+    }
+  }
+
+  // 2. Check in Employee_Documents as fallback
+  const docSheet = ss.getSheetByName("Employee_Documents") || ss.getSheetByName("Employee Documents");
+  if (docSheet && docSheet.getLastRow() > 1) {
+    let dData = docSheet.getDataRange().getValues();
+    for (let i = dData.length - 1; i > 0; i--) {
+      let dEmp = dData[i][1] ? dData[i][1].toString().trim().toUpperCase() : "";
+      let dType = dData[i][2] ? dData[i][2].toString().trim().toUpperCase() : "";
+      let dUrl = dData[i][3] ? dData[i][3].toString().trim() : "";
+      if (dEmp === cleanEmpId && dUrl) {
+        if (!profilePicUrl && dType.includes("PROFILE")) profilePicUrl = dUrl;
+        if (!aadharCardUrl && (dType.includes("AADHAR") || dType.includes("ADHAAR"))) aadharCardUrl = dUrl;
+        if (!panCardUrl && dType.includes("PAN")) panCardUrl = dUrl;
+      }
+    }
+  }
+
+  let hasProfile = !!(profilePicUrl && profilePicUrl.toString().trim().length > 5);
+  let hasAadhar = !!(aadharCardUrl && aadharCardUrl.toString().trim().length > 5);
+  let hasPan = !!(panCardUrl && panCardUrl.toString().trim().length > 5);
+  let missing = [];
+  if (!hasProfile) missing.push("Profile Photo");
+  if (!hasAadhar) missing.push("Aadhar Card");
+  if (!hasPan) missing.push("Pan Card");
+
+  return {
+    isComplete: missing.length === 0,
+    hasProfilePhoto: hasProfile,
+    profilePicUrl: profilePicUrl,
+    hasAadharCard: hasAadhar,
+    aadharCardUrl: aadharCardUrl,
+    hasPanCard: hasPan,
+    panCardUrl: panCardUrl,
+    missingList: missing
+  };
+}
+
 var ATTENDANCE_DRIVE_FOLDER_ID = "1gd7gOsZeSfK4wNpq9NY723NXDEVvp-Rs";
 
 function getAttendancePhotoFolder() {
@@ -101,6 +350,9 @@ function doGet(e) {
     }
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
+      // Ensure Documents Vault is synced and pre-populated
+      var vSheet = getOrCreateDocumentsVaultSheet(ss);
+      result.vault = { name: vSheet.getName(), totalRows: vSheet.getLastRow() };
       var sheet = ss.getSheetByName("Attendance_Logs") || ss.getSheetByName("Attendance Logs");
       if (sheet) {
         var lastRow = sheet.getLastRow();
@@ -358,19 +610,16 @@ function authenticateUser(empId, pass, targetMonthStr) {
 
     let isPenaltyActive = (filterYear > 2026) || (filterYear === 2026 && filterMonth >= 6);
 
-    // Profile & Docs Check
-    let profilePicUrl = "";
+    // Profile & Mandatory Docs Compliance Check
+    let docCompliance = checkEmployeeMandatoryDocuments(ss, empId);
+    let profilePicUrl = docCompliance.profilePicUrl;
+    
     let uploadedDocsList = [];
     const docSheet = ss.getSheetByName("Employee_Documents") || ss.getSheetByName("Employee Documents");
     if (docSheet && docSheet.getLastRow() > 0) {
       const docData = docSheet.getDataRange().getValues();
-      for (let i = docData.length - 1; i > 0; i--) { 
-        if (docData[i][1].toString().trim().toUpperCase() === empId.toString().trim().toUpperCase() && docData[i][2] === "Profile Picture") {
-          profilePicUrl = docData[i][3]; break;
-        }
-      }
       for (let i = 1; i < docData.length; i++) { 
-        if (docData[i][1].toString().trim().toUpperCase() === empId.toString().trim().toUpperCase() && docData[i][2] !== "Profile Picture") {
+        if (docData[i][1] && docData[i][1].toString().trim().toUpperCase() === empId.toString().trim().toUpperCase() && !docData[i][2].toString().toUpperCase().includes("PROFILE")) {
           uploadedDocsList.push({ type: docData[i][2], url: docData[i][3], date: new Date(docData[i][0]).toLocaleDateString() });
         }
       }
@@ -519,6 +768,7 @@ function authenticateUser(empId, pass, targetMonthStr) {
 
     return {
       success: true, name: user.name, role: user.role, profilePic: profilePicUrl, salary: user.monthlySalary,
+      docCompliance: docCompliance,
       perHour: parseFloat(user.perHour).toFixed(2), shiftHours: user.shiftHours, gender: user.gender,
       
       paidDays: userMetrics.paidDays.toFixed(1), 
@@ -562,6 +812,14 @@ function processPunch(empId, type, location, imgBase64) {
 
     const sheet = ss.getSheetByName("Attendance_Logs") || ss.getSheetByName("Attendance Logs");
     if (!sheet) return "Database Error: Logs transaction sheet tab is missing.";
+
+    // MANDATORY DOCUMENT COMPLIANCE CHECK FOR PUNCH IN
+    if (type === "Punch In" || type === "Half Day") {
+      let docComplianceCheck = checkEmployeeMandatoryDocuments(ss, empId);
+      if (!docComplianceCheck.isComplete) {
+        return "🚫 Punch In Blocked! Punch In karne se pehle Profile Photo, Aadhar Card, aur Pan Card upload karna compulsory hai. Missing: " + docComplianceCheck.missingList.join(", ") + ". Pehle Documents Vault me jakar upload karein.";
+      }
+    }
     
     // --- ROBUST SELFIE UPLOAD TO GOOGLE DRIVE ---
     let imageUrl = "";
@@ -656,23 +914,36 @@ function executeAdminActionOnLeave(leaveUid, decisionAction) {
   } catch(e) { return "Admin Cell Override Failure: " + e.message; }
 }
 
-// 6. CLOUD DRIVE DIGITAL FILE ARCHIVE VAULT
+// 6. CLOUD DRIVE DIGITAL FILE ARCHIVE VAULT & DOCUMENTS VAULT SYNC
 function saveDocument(empId, docType, base64Data, fileName) {
   try {
     let parentFolderLookups = DriveApp.getFoldersByName("Yash Marketing Staff Documents");
     let activeDirectoryFolder = parentFolderLookups.hasNext() ? parentFolderLookups.next() : DriveApp.createFolder("Yash Marketing Staff Documents");
     
     let extractedPayloadChunks = base64Data.split(','), targetMimeTypeStr = extractedPayloadChunks[0].split(';')[0].replace('data:', ''), byteDecodedArrays = Utilities.base64Decode(extractedPayloadChunks[1]);
-    let consolidatedFileName = empId + "_" + docType + "_" + fileName;
+    let cleanDocType = docType.toString().replace(/[^a-zA-Z0-9]/g, "_");
+    let cleanFileName = fileName.toString().replace(/[^a-zA-Z0-9._-]/g, "_");
+    let consolidatedFileName = empId + "_" + cleanDocType + "_" + cleanFileName;
     
     let generatedDriveFile = activeDirectoryFolder.createFile(Utilities.newBlob(byteDecodedArrays, targetMimeTypeStr, consolidatedFileName));
+    try {
+      generatedDriveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch(shErr) {}
     let uniqueAssetDriveUrl = generatedDriveFile.getUrl();
     
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const targetLockerSheetTab = ss.getSheetByName("Employee_Documents") || ss.getSheetByName("Employee Documents");
-    if (!targetLockerSheetTab) return "Mapping Error: Vault logger tab row setup missing.";
+    
+    // 1. Audit logger tab (Employee_Documents)
+    let targetLockerSheetTab = ss.getSheetByName("Employee_Documents") || ss.getSheetByName("Employee Documents");
+    if (!targetLockerSheetTab) {
+      targetLockerSheetTab = ss.insertSheet("Employee_Documents");
+      targetLockerSheetTab.appendRow(["Timestamp", "Employee ID", "Document Type", "Drive URL"]);
+    }
     targetLockerSheetTab.appendRow([new Date(), empId, docType, uniqueAssetDriveUrl]);
     
-    return "Document cataloged into system vault.";
+    // 2. Structured master table (Documents Vault)
+    updateDocumentsVaultSheet(ss, empId, docType, uniqueAssetDriveUrl);
+    
+    return "✅ Document successfully saved to Documents Vault!";
   } catch (err) { return "Locker Streaming Critical Fault: " + err.message; }
 }
