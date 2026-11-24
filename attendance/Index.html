@@ -164,7 +164,7 @@
     <div class="profile-header">
       <div id="liveClockTracker" class="live-clock-badge">00:00:00</div>
       <div class="profile-avatar-wrapper" onclick="document.getElementById('avatarFileInput').click();">
-        <img id="userAvatar" class="profile-img" src="" alt="Profile Avatar">
+        <img id="userAvatar" class="profile-img" src="https://i.ibb.co/TthbYc2/default-avatar.png" alt="Profile Photo" onerror="this.onerror=null; this.src='https://i.ibb.co/TthbYc2/default-avatar.png';">
       </div>
       <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="uploadAvatarImage()">
       <h3 id="profileNameDisplay" class="profile-name">Employee Name</h3>
@@ -368,6 +368,24 @@
     function closeWarningModal() { document.getElementById('missedPunchWarningModal').style.display = 'none'; }
     function closeLedgerModal() { document.getElementById('dailyLedgerModal').style.display = 'none'; }
 
+    function formatDriveImageUrl(url) {
+      if (!url || typeof url !== 'string' || url.trim().length === 0) {
+        return "https://i.ibb.co/TthbYc2/default-avatar.png";
+      }
+      url = url.trim();
+      if (url.indexOf("drive.google.com/file/d/") > -1) {
+        let parts = url.split("/file/d/");
+        if (parts.length > 1) {
+          let fileId = parts[1].split("/")[0].split("?")[0];
+          return "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w500";
+        }
+      } else if (url.indexOf("drive.google.com") > -1 && url.indexOf("id=") > -1) {
+        let fileId = url.split("id=")[1].split("&")[0];
+        return "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w500";
+      }
+      return url;
+    }
+
     function viewSelfiePhoto(url, title) {
       document.getElementById('selfieViewerTitle').innerText = title || "Punch Selfie";
       const imgEl = document.getElementById('selfieViewerImg');
@@ -489,7 +507,7 @@
             localStorage.setItem('ym_cached_id', id); localStorage.setItem('ym_cached_pass', pass);
           }
           
-          document.getElementById('userAvatar').src = response.profilePic || "https://i.ibb.co/TthbYc2/default-avatar.png";
+          document.getElementById('userAvatar').src = formatDriveImageUrl(response.profilePic);
           document.getElementById('profileNameDisplay').innerText = response.name;
           document.getElementById('profileIdDisplay').innerText = "Employee ID: " + id + " | " + currentUserRole + " (" + response.gender + ")";
           
@@ -660,9 +678,19 @@
     function uploadAvatarImage() {
       const fileInput = document.getElementById('avatarFileInput'); if(fileInput.files.length === 0) return;
       const file = fileInput.files[0]; const reader = new FileReader();
-      alert("Streaming secure avatar picture payload in background...");
+      const statusEl = document.getElementById('mandatoryModalStatus');
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = `<span style="color:var(--accent); font-weight:600;">⏳ Uploading Profile Photo to Documents Vault... Please wait.</span>`;
+      }
       reader.onload = function(evt) {
-        google.script.run.withSuccessHandler(function() { executeAuthentication(false); }).saveDocument(currentEmpId, "Profile Picture", evt.target.result, file.name);
+        // INSTANT LIVE OPTIMISTIC PREVIEW
+        document.getElementById('userAvatar').src = evt.target.result;
+        
+        google.script.run.withSuccessHandler(function(response) {
+          if (statusEl) statusEl.innerHTML = `<span style="color:var(--success); font-weight:700;">✅ Profile Photo updated in Documents Vault!</span>`;
+          executeAuthentication(true);
+        }).saveDocument(currentEmpId, "Profile Picture", evt.target.result, file.name);
       };
       reader.readAsDataURL(file);
     }
@@ -929,6 +957,9 @@
       
       const reader = new FileReader();
       reader.onload = function(evt) {
+        if (docType.includes("Profile")) {
+          document.getElementById('userAvatar').src = evt.target.result;
+        }
         google.script.run.withSuccessHandler(function(response) {
           if (statusEl) {
             statusEl.innerHTML = `<span style="color:var(--success); font-weight:700;">✅ ${docType} saved to Documents Vault!</span>`;
