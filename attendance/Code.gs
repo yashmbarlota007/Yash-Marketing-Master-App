@@ -943,6 +943,30 @@ function saveDocument(empId, docType, base64Data, fileName) {
     
     // 2. Structured master table (Documents Vault)
     updateDocumentsVaultSheet(ss, empId, docType, uniqueAssetDriveUrl);
+
+    // 3. If Profile Picture, also sync to Staff Master photo column if present
+    if (docType.toString().toUpperCase().includes("PROFILE")) {
+      try {
+        let staffSheet = ss.getSheetByName("Staff Master") || ss.getSheetByName("Staff_Master");
+        if (staffSheet) {
+          let sData = staffSheet.getDataRange().getValues();
+          let sHeaders = sData[0];
+          let idCol = sHeaders.findIndex(h => h.toString().trim().toUpperCase() === "EMPLOYEE ID"); if (idCol === -1) idCol = 0;
+          let photoCol = sHeaders.findIndex(h => {
+            let s = h.toString().trim().toUpperCase();
+            return s.includes("PHOTO") || s.includes("PICTURE") || s.includes("AVATAR") || s.includes("IMAGE");
+          });
+          if (photoCol !== -1) {
+            for (let r = 1; r < sData.length; r++) {
+              if (sData[r][idCol] && sData[r][idCol].toString().trim().toUpperCase() === empId.toString().trim().toUpperCase()) {
+                staffSheet.getRange(r + 1, photoCol + 1).setValue(uniqueAssetDriveUrl);
+                break;
+              }
+            }
+          }
+        }
+      } catch(smErr) {}
+    }
     
     return "✅ Document successfully saved to Documents Vault!";
   } catch (err) { return "Locker Streaming Critical Fault: " + err.message; }
