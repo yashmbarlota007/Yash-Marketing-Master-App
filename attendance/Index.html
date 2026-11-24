@@ -171,6 +171,17 @@
       <p id="profileIdDisplay" class="profile-role">ID: --</p>
     </div>
     
+    <div id="mandatoryDocsNoticeBox" style="display:none; background:#fffbeb; border:2px solid #f59e0b; border-radius:12px; padding:16px; margin-bottom:20px; text-align:left; box-shadow:0 4px 12px rgba(245,158,11,0.15);">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="font-size:22px;">⚠️</span>
+        <div>
+          <h4 style="margin:0; font-size:14px; font-weight:800; color:#92400e;">Punch In Locked - Documents Required</h4>
+          <p style="margin:2px 0 0 0; font-size:12px; color:#b45309;">Punch In karne se pehle ye 3 documents upload karna compulsory hai:</p>
+        </div>
+      </div>
+      <div id="dashboardDocsStatusList" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;"></div>
+    </div>
+
     <div id="ownerPrivilegeBox" style="display:none; margin-bottom: 20px; position:relative;">
       <button class="btn btn-orange" style="margin:0; box-shadow: 0 4px 12px rgba(245,158,11,0.2);" onclick="showScreen('adminControlView')">
         🛠️ Open Admin Command Center
@@ -209,7 +220,7 @@
       <div class="calendar-grid" id="calDynamicGrid"></div>
     </div>
 
-    <button class="btn btn-green" onclick="showScreen('punchView')">Punch In / Out Log</button>
+    <button id="btnPunchActionMain" class="btn btn-green" onclick="handlePunchViewEntry()">Punch In / Out Log</button>
     <button class="btn btn-orange" onclick="showScreen('holidayView')">Apply for Holiday</button>
     <button class="btn" style="background-color: var(--primary);" onclick="showScreen('docView')">Documents Vault</button>
     <button class="btn btn-outline" onclick="executeLogout()">Secure Logout</button>
@@ -495,9 +506,11 @@
           // SET LOGS GLOBALLY
           window.currentUserDailyLogs = response.dailyDetailedLogs;
           currentGlobalPayrollData = response.allStaffPayrollGrid || [];
+          window.currentUserDocCompliance = response.docCompliance || null;
 
           compileVisualCalendar(response.attendanceMap); 
           compileCloudDocumentsVaultList(response.uploadedDocs);
+          renderMandatoryDocsComplianceUI(response.docCompliance);
 
           if (response.userLeaveHistoryData && response.userLeaveHistoryData.length > 0) {
             document.getElementById('myLeaveStatusCard').style.display = 'block';
@@ -778,6 +791,196 @@
         setTimeout(() => { cancelPunch(); executeAuthentication(true); }, 2000);
       }).processPunch(currentEmpId, type, `${capturedLatitude}, ${capturedLongitude}`, finalBase64Image);
     }
+
+    // ====================================================================================
+    // MANDATORY DOCUMENTS VAULT LOGIC & PUNCH IN ENFORCEMENT
+    // ====================================================================================
+    window.currentUserDocCompliance = null;
+    let pendingUploadDocType = "";
+
+    function renderMandatoryDocsComplianceUI(comp) {
+      if (!comp) return;
+      const noticeBox = document.getElementById('mandatoryDocsNoticeBox');
+      const listContainer = document.getElementById('dashboardDocsStatusList');
+      const mainBtn = document.getElementById('btnPunchActionMain');
+      
+      if (comp.isComplete) {
+        if (noticeBox) noticeBox.style.display = 'none';
+        if (mainBtn) {
+          mainBtn.innerHTML = "Punch In / Out Log";
+          mainBtn.style.background = "";
+        }
+        return;
+      }
+      
+      // If incomplete, show alert banner
+      if (noticeBox) noticeBox.style.display = 'block';
+      if (mainBtn) {
+        mainBtn.innerHTML = "🔒 Punch In / Out Log (Documents Required)";
+        mainBtn.style.background = "#d97706";
+      }
+
+      if (listContainer) {
+        listContainer.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fde68a;">
+            <span style="font-size:12px; font-weight:600; color:#1e293b;">📸 1. Profile Photo</span>
+            ${comp.hasProfilePhoto ? 
+              `<span style="color:#15803d; font-weight:700; font-size:11px;">✅ Uploaded</span>` : 
+              `<button onclick="document.getElementById('avatarFileInput').click()" class="btn btn-orange" style="margin:0; padding:4px 10px; font-size:11px; width:auto;">Upload Photo</button>`}
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fde68a;">
+            <span style="font-size:12px; font-weight:600; color:#1e293b;">🪪 2. Aadhar Card</span>
+            ${comp.hasAadharCard ? 
+              `<span style="color:#15803d; font-weight:700; font-size:11px;">✅ Uploaded</span>` : 
+              `<button onclick="triggerQuickDocUpload('Aadhar Card')" class="btn btn-orange" style="margin:0; padding:4px 10px; font-size:11px; width:auto;">Upload Aadhar</button>`}
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:8px 12px; border-radius:8px; border:1px solid #fde68a;">
+            <span style="font-size:12px; font-weight:600; color:#1e293b;">💳 3. Pan Card</span>
+            ${comp.hasPanCard ? 
+              `<span style="color:#15803d; font-weight:700; font-size:11px;">✅ Uploaded</span>` : 
+              `<button onclick="triggerQuickDocUpload('Pan Card')" class="btn btn-orange" style="margin:0; padding:4px 10px; font-size:11px; width:auto;">Upload Pan Card</button>`}
+          </div>
+        `;
+      }
+    }
+
+    function handlePunchViewEntry() {
+      if (window.currentUserDocCompliance && !window.currentUserDocCompliance.isComplete) {
+        openMandatoryDocsModal();
+        return;
+      }
+      showScreen('punchView');
+    }
+
+    function openMandatoryDocsModal() {
+      const comp = window.currentUserDocCompliance;
+      const checklist = document.getElementById('mandatoryModalChecklist');
+      const proceedBtn = document.getElementById('btnMandatoryProceedPunch');
+      const statusEl = document.getElementById('mandatoryModalStatus');
+      if (statusEl) statusEl.style.display = 'none';
+
+      if (!comp || comp.isComplete) {
+        if (proceedBtn) proceedBtn.style.display = 'block';
+        if (checklist) checklist.innerHTML = `<p style="color:#15803d; font-weight:700; margin:0;">✅ Sabhi 3 mandatory documents complete hain!</p>`;
+      } else {
+        if (proceedBtn) proceedBtn.style.display = 'none';
+        if (checklist) {
+          checklist.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px 14px; border-radius:10px; border:1px solid #e2e8f0;">
+              <div>
+                <strong style="font-size:13px; color:#1e293b;">📸 1. Profile Photo</strong>
+                <p style="margin:2px 0 0 0; font-size:11px; color:#64748b;">Aapka face profile snapshot</p>
+              </div>
+              ${comp.hasProfilePhoto ? 
+                `<span style="color:#15803d; font-weight:700; font-size:12px;">✅ Uploaded</span>` : 
+                `<button onclick="document.getElementById('avatarFileInput').click()" class="btn btn-orange" style="margin:0; padding:6px 12px; font-size:11px; width:auto;">Upload Now</button>`}
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px 14px; border-radius:10px; border:1px solid #e2e8f0;">
+              <div>
+                <strong style="font-size:13px; color:#1e293b;">🪪 2. Aadhar Card</strong>
+                <p style="margin:2px 0 0 0; font-size:11px; color:#64748b;">Front / Full Aadhar copy</p>
+              </div>
+              ${comp.hasAadharCard ? 
+                `<span style="color:#15803d; font-weight:700; font-size:12px;">✅ Uploaded</span>` : 
+                `<button onclick="triggerQuickDocUpload('Aadhar Card')" class="btn btn-orange" style="margin:0; padding:6px 12px; font-size:11px; width:auto;">Upload Now</button>`}
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px 14px; border-radius:10px; border:1px solid #e2e8f0;">
+              <div>
+                <strong style="font-size:13px; color:#1e293b;">💳 3. Pan Card</strong>
+                <p style="margin:2px 0 0 0; font-size:11px; color:#64748b;">PAN Card copy</p>
+              </div>
+              ${comp.hasPanCard ? 
+                `<span style="color:#15803d; font-weight:700; font-size:12px;">✅ Uploaded</span>` : 
+                `<button onclick="triggerQuickDocUpload('Pan Card')" class="btn btn-orange" style="margin:0; padding:6px 12px; font-size:11px; width:auto;">Upload Now</button>`}
+            </div>
+          `;
+        }
+      }
+      document.getElementById('mandatoryDocsModal').style.display = 'flex';
+    }
+
+    function closeMandatoryDocsModal() {
+      document.getElementById('mandatoryDocsModal').style.display = 'none';
+    }
+
+    function allowPunchOutOverride() {
+      closeMandatoryDocsModal();
+      document.getElementById('attendanceLogType').value = 'Punch Out';
+      showScreen('punchView');
+    }
+
+    function triggerQuickDocUpload(docType) {
+      pendingUploadDocType = docType;
+      const fileInput = document.getElementById('quickDocFileInput');
+      fileInput.value = "";
+      fileInput.click();
+    }
+
+    function handleQuickDocFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const docType = pendingUploadDocType || "Document";
+      
+      const statusEl = document.getElementById('mandatoryModalStatus');
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = `<span style="color:var(--accent); font-weight:600;">⏳ Streaming ${docType} to Documents Vault... Please wait.</span>`;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        google.script.run.withSuccessHandler(function(response) {
+          if (statusEl) {
+            statusEl.innerHTML = `<span style="color:var(--success); font-weight:700;">✅ ${docType} saved to Documents Vault!</span>`;
+          }
+          // Silently refresh authentication to update document compliance
+          executeAuthentication(true);
+          setTimeout(() => { openMandatoryDocsModal(); }, 1500);
+        }).saveDocument(currentEmpId, docType, evt.target.result, file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+
   </script>
+
+  <!-- Mandatory Documents Compliance Modal -->
+  <div id="mandatoryDocsModal" class="warning-modal-overlay" style="display:none; z-index:99998;">
+    <div class="warning-modal-box" style="max-width:460px; width:92%; padding:22px; text-align:left; border:3px solid #f59e0b; border-radius:16px; background:#fff; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:24px;">🚫</span>
+          <h3 style="margin:0; font-size:17px; font-weight:800; color:#92400e;">Punch In Locked</h3>
+        </div>
+        <button onclick="closeMandatoryDocsModal()" style="background:none; border:none; font-size:26px; font-weight:bold; cursor:pointer; color:var(--text-light); line-height:1;">&times;</button>
+      </div>
+      
+      <p style="font-size:13px; color:#475569; margin:0 0 14px 0; line-height:1.5;">
+        Office policy ke anusaar <b>Punch In</b> karne se pehle aapka <b>Profile Photo</b>, <b>Aadhar Card</b>, aur <b>Pan Card</b> Google Sheet me upload hona compulsory hai.
+      </p>
+
+      <div id="mandatoryModalChecklist" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+        <!-- Checklist items rendered dynamically -->
+      </div>
+
+      <div id="mandatoryModalStatus" style="display:none; padding:10px; border-radius:8px; background:#f8fafc; font-size:12px; margin-bottom:14px; text-align:center;"></div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button id="btnMandatoryProceedPunch" class="btn btn-green" style="display:none; margin:0; padding:12px;" onclick="closeMandatoryDocsModal(); showScreen('punchView');">
+          ✅ Sabhi Documents Uploaded! Punch In Karein
+        </button>
+        <button class="btn btn-outline" style="margin:0; padding:10px; font-size:12px;" onclick="closeMandatoryDocsModal();">
+          Wapas Dashboard Par Jayein
+        </button>
+        <div style="text-align:center; margin-top:4px;">
+          <a href="javascript:void(0)" onclick="allowPunchOutOverride()" style="font-size:11px; color:#64748b; text-decoration:underline;">
+            Agar sirf Shift End (Punch Out) karna hai, yahan click karein
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="quickDocFileInput" accept="image/*,application/pdf" style="display:none;" onchange="handleQuickDocFileSelected(event)">
+
 </body>
 </html>
