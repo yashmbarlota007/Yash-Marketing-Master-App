@@ -220,7 +220,8 @@
       <div class="calendar-grid" id="calDynamicGrid"></div>
     </div>
 
-    <button id="btnPunchActionMain" class="btn btn-green" onclick="handlePunchViewEntry()">Punch In / Out Log</button>
+        <button id="btnPunchActionMain" class="btn btn-green" onclick="handlePunchViewEntry()">Punch In / Out Log</button>
+    <button id="btnOpenEODModalMain" class="btn" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); margin-top: 10px; font-weight:700; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);" onclick="openEODReportModal()">📋 Send EOD Report</button>
     <button class="btn btn-orange" onclick="showScreen('holidayView')">Apply for Holiday</button>
     <button class="btn" style="background-color: var(--primary);" onclick="showScreen('docView')">Documents Vault</button>
     <button class="btn btn-outline" onclick="executeLogout()">Secure Logout</button>
@@ -816,7 +817,15 @@
       document.getElementById('submitPunchBtn').style.display = 'none';
       google.script.run.withSuccessHandler(function(response) {
         document.getElementById('punchConsole').style.color = "var(--success)"; document.getElementById('punchConsole').innerText = response;
-        setTimeout(() => { cancelPunch(); executeAuthentication(true); }, 2000);
+        if (type === "Punch Out") {
+          setTimeout(() => {
+            cancelPunch();
+            executeAuthentication(true);
+            showEODPromptNotification();
+          }, 1500);
+        } else {
+          setTimeout(() => { cancelPunch(); executeAuthentication(true); }, 2000);
+        }
       }).processPunch(currentEmpId, type, `${capturedLatitude}, ${capturedLongitude}`, finalBase64Image);
     }
 
@@ -972,7 +981,279 @@
       reader.readAsDataURL(file);
     }
 
-  </script>
+  
+
+    // ====================================================================================
+    // END OF DAY (EOD) CLIENT ENGINE
+    // ====================================================================================
+    function showEODPromptNotification() {
+      const p = document.getElementById('eodPromptModal');
+      if (p) p.style.display = 'flex';
+    }
+
+    function closeEODPrompt() {
+      const p = document.getElementById('eodPromptModal');
+      if (p) p.style.display = 'none';
+    }
+
+    function openEODReportModal() {
+      const modal = document.getElementById('eodReportModal');
+      if (!modal) return;
+      
+      const nameEl = document.getElementById('eodStaffNameBadge');
+      const idEl = document.getElementById('eodStaffIdBadge');
+      const dateEl = document.getElementById('eodDateBadge');
+      
+      const staffName = (document.getElementById('profileNameDisplay') && document.getElementById('profileNameDisplay').innerText) || window.currentEmpName || "Staff Member";
+      if (nameEl) nameEl.innerText = staffName;
+      if (idEl) idEl.innerText = "Employee ID: " + (currentEmpId || "YM");
+      
+      const d = new Date();
+      const dateFormatted = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      if (dateEl) dateEl.innerText = dateFormatted;
+      
+      // Auto-detect role
+      const roleSelect = document.getElementById('eodRoleSelect');
+      let detectedRole = "General";
+      const upperRole = (currentUserRole || "").toUpperCase();
+      if (upperRole.includes("SALE") || upperRole.includes("FIELD") || upperRole.includes("MARKET")) {
+        detectedRole = "Sales";
+      } else if (upperRole.includes("ACCOUNT") || upperRole.includes("BILL") || upperRole.includes("FINANCE")) {
+        detectedRole = "Accounts";
+      } else if (upperRole.includes("STORE") || upperRole.includes("WAREHOUSE") || upperRole.includes("DISPATCH") || upperRole.includes("PACK")) {
+        detectedRole = "Store";
+      } else if (upperRole.includes("MIS") || upperRole.includes("TECH") || upperRole.includes("OPERAT")) {
+        detectedRole = "MIS";
+      }
+      
+      if (roleSelect) {
+        roleSelect.value = detectedRole;
+        handleEODRoleChange(detectedRole);
+      }
+      
+      const statusEl = document.getElementById('eodModalStatus');
+      if (statusEl) {
+        statusEl.style.display = 'none';
+        statusEl.innerHTML = '';
+      }
+      
+      modal.style.display = 'flex';
+    }
+
+    function closeEODReportModal() {
+      const modal = document.getElementById('eodReportModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function handleEODRoleChange(selectedRole) {
+      const forms = ['eodFormSales', 'eodFormAccounts', 'eodFormStore', 'eodFormMIS', 'eodFormGeneral'];
+      forms.forEach(fId => {
+        const el = document.getElementById(fId);
+        if (el) el.style.display = 'none';
+      });
+      
+      const targetId = 'eodForm' + (selectedRole || 'General');
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) targetEl.style.display = 'block';
+    }
+
+    function executeSubmitEODReport() {
+      const roleSelect = document.getElementById('eodRoleSelect');
+      const selectedRole = roleSelect ? roleSelect.value : "General";
+      const staffName = (document.getElementById('profileNameDisplay') && document.getElementById('profileNameDisplay').innerText) || window.currentEmpName || "Staff";
+      
+      let tasks = "";
+      let metrics = "";
+      let tomorrow = "";
+      let remarks = "";
+      
+      if (selectedRole === "Sales") {
+        const visits = document.getElementById('eodSalesVisits').value.trim();
+        const orders = document.getElementById('eodSalesOrders').value.trim();
+        const collection = document.getElementById('eodSalesCollection').value.trim();
+        metrics = "Visits: " + (visits || "0") + " | Orders: " + (orders || "None") + " | Collection: ₹" + (collection || "0");
+        tasks = document.getElementById('eodSalesTasks').value.trim();
+        tomorrow = document.getElementById('eodSalesTomorrow').value.trim();
+        remarks = document.getElementById('eodSalesRemarks').value.trim();
+      } else if (selectedRole === "Accounts") {
+        const bills = document.getElementById('eodAccountsBills').value.trim();
+        const payments = document.getElementById('eodAccountsPayments').value.trim();
+        const followups = document.getElementById('eodAccountsFollowups').value.trim();
+        metrics = "Bills: " + (bills || "0") + " | Payments: " + (payments || "0") + " | Follow-ups: " + (followups || "None");
+        tasks = document.getElementById('eodAccountsTasks').value.trim();
+        tomorrow = document.getElementById('eodAccountsTomorrow').value.trim();
+        remarks = document.getElementById('eodAccountsRemarks').value.trim();
+      } else if (selectedRole === "Store") {
+        const inward = document.getElementById('eodStoreInward').value.trim();
+        const dispatch = document.getElementById('eodStoreDispatch').value.trim();
+        const check = document.getElementById('eodStoreCheck').value.trim();
+        metrics = "Inward: " + (inward || "None") + " | Dispatch: " + (dispatch || "None") + " | Audit: " + (check || "Ok");
+        tasks = document.getElementById('eodStoreTasks').value.trim();
+        tomorrow = document.getElementById('eodStoreTomorrow').value.trim();
+        remarks = document.getElementById('eodStoreRemarks').value.trim();
+      } else if (selectedRole === "MIS") {
+        const sheets = document.getElementById('eodMisSheets').value.trim();
+        const fms = document.getElementById('eodMisFms').value.trim();
+        const issues = document.getElementById('eodMisIssues').value.trim();
+        metrics = "Sheets: " + (sheets || "Updated") + " | FMS: " + (fms || "Ok") + " | Issues: " + (issues || "None");
+        tasks = document.getElementById('eodMisTasks').value.trim();
+        tomorrow = document.getElementById('eodMisTomorrow').value.trim();
+        remarks = document.getElementById('eodMisRemarks').value.trim();
+      } else {
+        metrics = document.getElementById('eodGenMetrics').value.trim();
+        tasks = document.getElementById('eodGenTasks').value.trim();
+        tomorrow = document.getElementById('eodGenTomorrow').value.trim();
+        remarks = document.getElementById('eodGenRemarks').value.trim();
+      }
+      
+      if (!tasks && !metrics) {
+        alert("Kripya aaj ke completed tasks ya key metrics me se kam se kam ek field fill karein.");
+        return;
+      }
+      
+      const statusEl = document.getElementById('eodModalStatus');
+      const submitBtn = document.getElementById('btnSubmitEOD');
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.background = '#eff6ff';
+        statusEl.style.color = '#1e40af';
+        statusEl.innerHTML = '⏳ Submitting EOD Report to Google Sheets... Please wait.';
+      }
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+      }
+      
+      const payload = {
+        staffName: staffName,
+        role: selectedRole,
+        tasksCompleted: tasks,
+        metrics: metrics,
+        tomorrowPlan: tomorrow,
+        remarks: remarks,
+        submittedVia: 'Attendance App'
+      };
+      
+      google.script.run.withSuccessHandler(function(res) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+        }
+        if (res && res.success) {
+          if (statusEl) {
+            statusEl.style.background = '#ecfdf5';
+            statusEl.style.color = '#065f46';
+            statusEl.innerHTML = "✅ <b>EOD Report Successfully Submitted!</b><br><span style='font-size:11px;'>Saved to Google Sheets at " + res.timestamp + "</span>";
+          }
+          setTimeout(() => {
+            closeEODReportModal();
+          }, 3000);
+        } else {
+          if (statusEl) {
+            statusEl.style.background = '#fef2f2';
+            statusEl.style.color = '#991b1b';
+            statusEl.innerHTML = "❌ Error: " + ((res && res.error) || 'Could not save report.');
+          }
+        }
+      }).withFailureHandler(function(err) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+        }
+        if (statusEl) {
+          statusEl.style.background = '#fef2f2';
+          statusEl.style.color = '#991b1b';
+          statusEl.innerHTML = "❌ Connection Error: " + (err.message || err);
+        }
+      }).submitEODReport(currentEmpId, payload);
+    }
+
+    function shareEODOnWhatsApp() {
+      const roleSelect = document.getElementById('eodRoleSelect');
+      const selectedRole = roleSelect ? roleSelect.value : "General";
+      const staffName = (document.getElementById('profileNameDisplay') && document.getElementById('profileNameDisplay').innerText) || window.currentEmpName || "Staff Member";
+      const d = new Date();
+      const dateFormatted = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      let tasks = "";
+      let metrics = "";
+      let tomorrow = "";
+      let remarks = "";
+
+      if (selectedRole === "Sales") {
+        const visits = document.getElementById('eodSalesVisits').value.trim();
+        const orders = document.getElementById('eodSalesOrders').value.trim();
+        const collection = document.getElementById('eodSalesCollection').value.trim();
+        metrics = "• Dealers Visited: " + (visits || "0") + "\n• Orders Taken: " + (orders || "None") + "\n• Collection: ₹" + (collection || "0");
+        tasks = document.getElementById('eodSalesTasks').value.trim();
+        tomorrow = document.getElementById('eodSalesTomorrow').value.trim();
+        remarks = document.getElementById('eodSalesRemarks').value.trim();
+      } else if (selectedRole === "Accounts") {
+        const bills = document.getElementById('eodAccountsBills').value.trim();
+        const payments = document.getElementById('eodAccountsPayments').value.trim();
+        const followups = document.getElementById('eodAccountsFollowups').value.trim();
+        metrics = "• Bills Generated: " + (bills || "0") + "\n• Payment Entries: " + (payments || "0") + "\n• Follow-ups Done: " + (followups || "None");
+        tasks = document.getElementById('eodAccountsTasks').value.trim();
+        tomorrow = document.getElementById('eodAccountsTomorrow').value.trim();
+        remarks = document.getElementById('eodAccountsRemarks').value.trim();
+      } else if (selectedRole === "Store") {
+        const inward = document.getElementById('eodStoreInward').value.trim();
+        const dispatch = document.getElementById('eodStoreDispatch').value.trim();
+        const check = document.getElementById('eodStoreCheck').value.trim();
+        metrics = "• Inward Received: " + (inward || "None") + "\n• Dispatches Shipped: " + (dispatch || "None") + "\n• Stock Audit: " + (check || "Ok");
+        tasks = document.getElementById('eodStoreTasks').value.trim();
+        tomorrow = document.getElementById('eodStoreTomorrow').value.trim();
+        remarks = document.getElementById('eodStoreRemarks').value.trim();
+      } else if (selectedRole === "MIS") {
+        const sheets = document.getElementById('eodMisSheets').value.trim();
+        const fms = document.getElementById('eodMisFms').value.trim();
+        const issues = document.getElementById('eodMisIssues').value.trim();
+        metrics = "• Sheets Updated: " + (sheets || "Updated") + "\n• FMS Status: " + (fms || "Ok") + "\n• Issues Resolved: " + (issues || "None");
+        tasks = document.getElementById('eodMisTasks').value.trim();
+        tomorrow = document.getElementById('eodMisTomorrow').value.trim();
+        remarks = document.getElementById('eodMisRemarks').value.trim();
+      } else {
+        metrics = document.getElementById('eodGenMetrics').value.trim();
+        tasks = document.getElementById('eodGenTasks').value.trim();
+        tomorrow = document.getElementById('eodGenTomorrow').value.trim();
+        remarks = document.getElementById('eodGenRemarks').value.trim();
+      }
+
+      let text = "📋 *DAILY EOD REPORT - YASH MARKETING*\n";
+      text += "━━━━━━━━━━━━━━━━━━━━━━\n";
+      text += "👤 *Staff:* " + staffName + " (" + (currentEmpId || "YM") + ")\n";
+      text += "💼 *Role:* " + selectedRole + "\n";
+      text += "📅 *Date:* " + dateFormatted + "\n\n";
+
+      if (tasks) {
+        text += "✅ *Tasks Completed Today:*\n" + tasks + "\n\n";
+      }
+      if (metrics) {
+        text += "📊 *Key Numbers / Metrics:*\n" + metrics + "\n\n";
+      }
+      if (tomorrow) {
+        text += "🎯 *Tomorrow\'s Plan:*\n" + tomorrow + "\n\n";
+      }
+      if (remarks) {
+        text += "⚠️ *Remarks / Feedback:*\n" + remarks + "\n\n";
+      }
+      text += "━━━━━━━━━━━━━━━━━━━━━━\n";
+      text += "_Sent via Yash Marketing Attendance App_";
+
+      const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
+      window.open(waUrl, "_blank");
+    }
+
+    // Export all handlers to window
+    window.showEODPromptNotification = showEODPromptNotification;
+    window.closeEODPrompt = closeEODPrompt;
+    window.openEODReportModal = openEODReportModal;
+    window.closeEODReportModal = closeEODReportModal;
+    window.handleEODRoleChange = handleEODRoleChange;
+    window.executeSubmitEODReport = executeSubmitEODReport;
+    window.shareEODOnWhatsApp = shareEODOnWhatsApp;
+
+</script>
 
   <!-- Mandatory Documents Compliance Modal -->
   <div id="mandatoryDocsModal" class="warning-modal-overlay" style="display:none; z-index:99998;">
@@ -1012,6 +1293,224 @@
   </div>
 
   <input type="file" id="quickDocFileInput" accept="image/*,application/pdf" style="display:none;" onchange="handleQuickDocFileSelected(event)">
+
+
+  <!-- EOD Check Out Notification Prompt Modal -->
+  <div id="eodPromptModal" class="warning-modal-overlay" style="display:none; z-index:99995;">
+    <div class="warning-modal-box" style="max-width:400px; width:90%; padding:26px 20px; text-align:center; border:3px solid #6366f1; border-radius:18px; background:#fff; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+      <div style="width:60px; height:60px; margin:0 auto 14px; border-radius:50%; background:#e0e7ff; display:flex; align-items:center; justify-content:center; font-size:30px;">
+        📋
+      </div>
+      <h3 style="margin:0 0 8px 0; font-size:19px; font-weight:800; color:#1e1b4b;">Shift Completed! Send EOD Report</h3>
+      <p style="font-size:13px; color:#475569; margin:0 0 20px 0; line-height:1.5;">
+        Aapka <b>Punch Out (Shift End)</b> successfully record ho chuka hai.<br>
+        Abhi apna <b>End of Day (EOD) Report</b> bhej dijiye taaki daily work verify ho sake.
+      </p>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="btn" style="background:#4f46e5; margin:0; padding:13px; font-size:14px; font-weight:700;" onclick="closeEODPrompt(); openEODReportModal();">
+          📝 Fill & Send EOD Report Now
+        </button>
+        <button class="btn btn-outline" style="margin:0; padding:10px; font-size:13px;" onclick="closeEODPrompt();">
+          ⏱️ Later / Skip for Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full Role-Adaptive EOD Report Modal -->
+  <div id="eodReportModal" class="warning-modal-overlay" style="display:none; z-index:99996; overflow-y:auto; padding:20px 10px;">
+    <div class="warning-modal-box" style="max-width:480px; width:95%; max-height:90vh; overflow-y:auto; padding:22px; text-align:left; border:3px solid #4f46e5; border-radius:18px; background:#fff; margin:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+      <!-- Modal Header -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:22px;">📋</span>
+            <h3 style="margin:0; font-size:18px; font-weight:800; color:#1e1b4b;">End of Day (EOD) Report</h3>
+          </div>
+          <p style="font-size:12px; color:#64748b; margin:4px 0 0 0;">Yash Marketing • Daily Work Submission</p>
+        </div>
+        <button onclick="closeEODReportModal()" style="background:none; border:none; font-size:26px; font-weight:bold; cursor:pointer; color:#94a3b8; line-height:1;">&times;</button>
+      </div>
+
+      <!-- Staff Badge & Date Bar -->
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div>
+          <div id="eodStaffNameBadge" style="font-size:13px; font-weight:700; color:#0f172a;">Staff Member</div>
+          <div id="eodStaffIdBadge" style="font-size:11px; color:#64748b;">ID: YM000</div>
+        </div>
+        <div style="text-align:right;">
+          <span id="eodDateBadge" style="background:#e0e7ff; color:#3730a3; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:700;">Today</span>
+        </div>
+      </div>
+
+      <!-- Role Selection Dropdown -->
+      <label style="font-size:12px; font-weight:700; color:#334155; text-transform:uppercase; letter-spacing:0.5px;">Aapka Role / Department Chunein:</label>
+      <select id="eodRoleSelect" onchange="handleEODRoleChange(this.value)" style="margin:6px 0 14px 0; font-weight:600; border-color:#cbd5e1;">
+        <option value="Sales">Sales & Marketing (डीलर्स, ऑर्डर्स, कलेक्शन)</option>
+        <option value="Accounts">Accounts & Billing (बिलिंग, पेमेंट्स, रिकॉन्सिलिएशन)</option>
+        <option value="Store">Store & Warehouse (स्टॉक इनवर्ड, पैकिंग, डिस्पैच)</option>
+        <option value="MIS">MIS & Operations (शीट्स, रिपोर्ट्स, सिस्टम ऑपरेशन्स)</option>
+        <option value="General">General / Office Staff (सामान्य कार्यालय कार्य)</option>
+      </select>
+
+      <!-- Role-Specific Form Fields -->
+      <!-- 1. SALES FORM -->
+      <div id="eodFormSales" class="eod-role-form" style="display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Dealers Visited:</label>
+            <input type="number" id="eodSalesVisits" placeholder="Kitne mile (e.g. 7)" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Orders Taken (₹):</label>
+            <input type="text" id="eodSalesOrders" placeholder="e.g. 4 (₹95,000)" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Payment Collection (₹):</label>
+          <input type="number" id="eodSalesCollection" placeholder="Total payment collected (e.g. 50000)" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tasks Completed / Area Covered today:*</label>
+          <textarea id="eodSalesTasks" rows="2" placeholder="Kaunse route/market gaye, key discussions..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Route / Target Plan:</label>
+          <textarea id="eodSalesTomorrow" rows="2" placeholder="Kal ka plan, kaunse dealers target hai..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Market Feedback / Blockers (Optional):</label>
+          <textarea id="eodSalesRemarks" rows="2" placeholder="Rate difference, competitor, out of stock complaints..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <!-- 2. ACCOUNTS FORM -->
+      <div id="eodFormAccounts" class="eod-role-form" style="display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Bills / Invoices Made:</label>
+            <input type="number" id="eodAccountsBills" placeholder="e.g. 15" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Payment Entries:</label>
+            <input type="number" id="eodAccountsPayments" placeholder="e.g. 8" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Payment Follow-ups / Calls Made:</label>
+          <input type="text" id="eodAccountsFollowups" placeholder="Kitne dealers se follow-up kiya (e.g. 12 dealers)" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Accounting Tasks Completed Today:*</label>
+          <textarea id="eodAccountsTasks" rows="2" placeholder="Tally entry, bank reconciliation, ledger check, GST..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Priority Work:</label>
+          <textarea id="eodAccountsTomorrow" rows="2" placeholder="Pending bills, bank work, statement reconciliation..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Remarks / Pending Approvals (Optional):</label>
+          <textarea id="eodAccountsRemarks" rows="2" placeholder="Any pending note or query..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <!-- 3. STORE FORM -->
+      <div id="eodFormStore" class="eod-role-form" style="display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Inward Received:</label>
+            <input type="text" id="eodStoreInward" placeholder="e.g. 50 boxes / 2 vehicles" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Outward Dispatches:</label>
+            <input type="text" id="eodStoreDispatch" placeholder="e.g. 42 parcels" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Stock Audit / Damages Check:</label>
+          <input type="text" id="eodStoreCheck" placeholder="e.g. Verified battery cartons / All intact" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Store Work Completed Today:*</label>
+          <textarea id="eodStoreTasks" rows="2" placeholder="Packing, loading, stock placement, unboxing..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Dispatch / Inward Plan:</label>
+          <textarea id="eodStoreTomorrow" rows="2" placeholder="Urgent orders to pack, upcoming truck inward..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Packaging Material Needed / Remarks:</label>
+          <textarea id="eodStoreRemarks" rows="2" placeholder="Tapes, cartons shortage, warehouse status..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <!-- 4. MIS & OPERATIONS FORM -->
+      <div id="eodFormMIS" class="eod-role-form" style="display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Sheets / Dashboards Updated:</label>
+            <input type="text" id="eodMisSheets" placeholder="e.g. Sales, Stock, Attendance" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">FMS Compliance:</label>
+            <input type="text" id="eodMisFms" placeholder="e.g. 100% On-Track" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tech / System Issues Resolved:</label>
+          <input type="text" id="eodMisIssues" placeholder="e.g. App sync ok, fixed 1 calculation" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Operations Tasks Completed Today:*</label>
+          <textarea id="eodMisTasks" rows="2" placeholder="Daily MIS compilation, workflow audits, data backup..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Key Deliverables:</label>
+          <textarea id="eodMisTomorrow" rows="2" placeholder="Reports to generate, team reviews, automation..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Remarks / Escalations (Optional):</label>
+          <textarea id="eodMisRemarks" rows="2" placeholder="Any blockers or management notice..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <!-- 5. GENERAL / OFFICE FORM -->
+      <div id="eodFormGeneral" class="eod-role-form" style="display:none;">
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tasks Completed Today:*</label>
+          <textarea id="eodGenTasks" rows="3" placeholder="Aaj din bhar me kya kya kaam kiya, vistar se likhein..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Key Metrics / Quantities Handled:</label>
+          <input type="text" id="eodGenMetrics" placeholder="e.g. 20 phone calls, 5 files cleared" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Priorities / Plan:</label>
+          <textarea id="eodGenTomorrow" rows="2" placeholder="Kal kya pending kaam pura karna hai..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Remarks / Issues (Optional):</label>
+          <textarea id="eodGenRemarks" rows="2" placeholder="Koi observations ya remarks..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <!-- Status / Notification inside modal -->
+      <div id="eodModalStatus" style="display:none; padding:10px; border-radius:10px; font-size:13px; margin-bottom:14px; text-align:center;"></div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button id="btnSubmitEOD" class="btn btn-green" style="margin:0; padding:13px; font-size:14px; font-weight:700;" onclick="executeSubmitEODReport()">
+          📤 Submit EOD Report to Office
+        </button>
+        <button id="btnShareWhatsAppEOD" class="btn" style="background:#25d366; color:#fff; margin:0; padding:12px; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="shareEODOnWhatsApp()">
+          <span style="font-size:18px;">📲</span> Share on WhatsApp
+        </button>
+        <button class="btn btn-outline" style="margin:0; padding:10px; font-size:13px;" onclick="closeEODReportModal()">
+          Cancel / Close
+        </button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>
