@@ -20,7 +20,7 @@ function doGet(e) {
   }
   
   return template.evaluate()
-    .setTitle('Yash Marketing - Stock Inward')
+    .setTitle('Yash Marketing - Box Inward')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -136,10 +136,10 @@ function processFormFast(jsonString) {
     var payload = JSON.parse(jsonString);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // Target Stock Inward sheet
-    var inwardSheet = getSheetSafely(ss, ["Stock Inward", "Stock_Inward", "Inward", "Inward Records"]);
+    // Target Box Inward sheet
+    var inwardSheet = getSheetSafely(ss, ["Box Inward", "Stock_Inward", "Inward", "Inward Records"]);
     if (!inwardSheet) {
-      inwardSheet = ss.insertSheet("Stock Inward");
+      inwardSheet = ss.insertSheet("Box Inward");
       // Add standard headers
       inwardSheet.appendRow([
         "Timestamp", "Inward Date", "Inward Time", "Invoice No", "Invoice Date", 
@@ -156,8 +156,8 @@ function processFormFast(jsonString) {
     try {
       folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
     } catch (e) {
-      var rootFolders = DriveApp.getFoldersByName("Yash Marketing Stock Inward Photos");
-      folder = rootFolders.hasNext() ? rootFolders.next() : DriveApp.createFolder("Yash Marketing Stock Inward Photos");
+      var rootFolders = DriveApp.getFoldersByName("Yash Marketing Box Inward Photos");
+      folder = rootFolders.hasNext() ? rootFolders.next() : DriveApp.createFolder("Yash Marketing Box Inward Photos");
     }
 
     // Upload Inward Group Photos
@@ -231,11 +231,11 @@ function processFormFast(jsonString) {
       inwardSheet.getRange(lastRow + 1, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
     }
 
-    return "✅ Stock Inward entry saved successfully! Invoice: " + payload.invoiceNo + " (" + payload.items.length + " items logged)";
+    return "✅ Box Inward entry saved successfully! Invoice: " + payload.invoiceNo + " (" + payload.items.length + " items logged)";
 
   } catch (error) {
     Logger.log("processFormFast Error: " + error.message);
-    return "❌ Error saving Stock Inward: " + error.message;
+    return "❌ Error saving Box Inward: " + error.message;
   }
 }
 
@@ -245,7 +245,7 @@ function processFormFast(jsonString) {
 function getInwardHistory() {
   try {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = getSheetSafely(ss, ["Stock Inward", "Stock_Inward", "Inward", "Inward Records"]);
+    var sheet = getSheetSafely(ss, ["Box Inward", "Stock_Inward", "Inward", "Inward Records"]);
     if (!sheet) return [];
 
     var data = sheet.getDataRange().getValues();
