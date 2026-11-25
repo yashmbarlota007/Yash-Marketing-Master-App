@@ -353,6 +353,8 @@ function doGet(e) {
       // Ensure Documents Vault is synced and pre-populated
       var vSheet = getOrCreateDocumentsVaultSheet(ss);
       result.vault = { name: vSheet.getName(), totalRows: vSheet.getLastRow() };
+      var eodSheet = getOrCreateEODSheet(ss);
+      result.eod = { name: eodSheet.getName(), totalRows: eodSheet.getLastRow() };
       var sheet = ss.getSheetByName("Attendance_Logs") || ss.getSheetByName("Attendance Logs");
       if (sheet) {
         var lastRow = sheet.getLastRow();
@@ -859,13 +861,13 @@ function processPunch(empId, type, location, imgBase64) {
     
         let timeStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "hh:mm a");
     if (type === "Short Break (Out)") {
-      return `? Short Break Punch Out recorded at ${timeStr}. Break duration working hours se cut hoga.`;
+      return `Short Break Punch Out recorded at ${timeStr}. Break duration working hours se cut hoga.`;
     } else if (type === "Short Break (In)") {
-      return `?? Short Break Punch In recorded at ${timeStr}. Welcome back! Working hours resumed.`;
+      return `Short Break Punch In recorded at ${timeStr}. Welcome back! Working hours resumed.`;
     } else if (type === "Punch In") {
-      return `? Shift Start (Punch In) successfully registered at ${timeStr}!`;
+      return `Shift Start (Punch In) successfully registered at ${timeStr}!`;
     } else if (type === "Punch Out") {
-      return `?? Shift End (Punch Out) successfully registered at ${timeStr}!`;
+      return `Shift End (Punch Out) successfully registered at ${timeStr}!`;
     } else {
       return `Success: Registered ${type} status log onto system arrays.`;
     }
@@ -970,4 +972,144 @@ function saveDocument(empId, docType, base64Data, fileName) {
     
     return "✅ Document successfully saved to Documents Vault!";
   } catch (err) { return "Locker Streaming Critical Fault: " + err.message; }
+}
+
+// ====================================================================================
+// END OF DAY (EOD) REPORT MANAGEMENT SYSTEM
+// ====================================================================================
+
+function getOrCreateEODSheet(ss) {
+  let sheetName = "EOD_Reports";
+  let sheet = ss.getSheetByName(sheetName) || ss.getSheetByName("EOD Reports");
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    let headers = [
+      "Timestamp",
+      "Date",
+      "Employee ID",
+      "Staff Name",
+      "Role / Department",
+      "Tasks Completed Today",
+      "Key Metrics / Numbers",
+      "Tomorrow's Priorities",
+      "Remarks / Blockers",
+      "Submitted Via"
+    ];
+    sheet.appendRow(headers);
+    
+    // Header Formatting
+    let headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setBackground("#1e293b");
+    headerRange.setFontColor("#ffffff");
+    headerRange.setFontWeight("bold");
+    headerRange.setHorizontalAlignment("center");
+    headerRange.setVerticalAlignment("middle");
+    sheet.setRowHeight(1, 35);
+    sheet.setFrozenRows(1);
+    
+    sheet.setColumnWidth(1, 160); // Timestamp
+    sheet.setColumnWidth(2, 110); // Date
+    sheet.setColumnWidth(3, 110); // Employee ID
+    sheet.setColumnWidth(4, 160); // Staff Name
+    sheet.setColumnWidth(5, 170); // Role
+    sheet.setColumnWidth(6, 320); // Tasks Completed
+    sheet.setColumnWidth(7, 260); // Key Metrics
+    sheet.setColumnWidth(8, 260); // Tomorrow's Priorities
+    sheet.setColumnWidth(9, 220); // Remarks
+    sheet.setColumnWidth(10, 140); // Submitted Via
+  }
+  return sheet;
+}
+
+function submitEODReport(empId, payload) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = getOrCreateEODSheet(ss);
+    
+    let empName = (payload && payload.staffName) ? payload.staffName.toString().trim() : "Unknown";
+    let role = (payload && payload.role) ? payload.role.toString().trim() : "Staff";
+    
+    const staffSheet = ss.getSheetByName("Staff Master") || ss.getSheetByName("Staff_Master");
+    if (staffSheet && (empName === "Unknown" || !payload || !payload.staffName)) {
+      const staffData = staffSheet.getDataRange().getValues();
+      let idCol = staffData[0].findIndex(h => h.toString().trim().toUpperCase() === "EMPLOYEE ID"); if (idCol === -1) idCol = 0;
+      let nameCol = staffData[0].findIndex(h => h.toString().trim().toUpperCase() === "NAME"); if (nameCol === -1) nameCol = 1;
+      let roleCol = staffData[0].findIndex(h => h.toString().trim().toUpperCase() === "ROLE"); if (roleCol === -1) roleCol = 5;
+      
+      for (let i = 1; i < staffData.length; i++) {
+        if (staffData[i][idCol].toString().trim().toUpperCase() === (empId || "").toString().trim().toUpperCase()) {
+          empName = staffData[i][nameCol].toString().trim();
+          if (!payload || !payload.role) role = staffData[i][roleCol] ? staffData[i][roleCol].toString().trim() : "Staff";
+          break;
+        }
+      }
+    }
+    
+    let now = new Date();
+    let timeZone = "Asia/Kolkata";
+    let dateStr = Utilities.formatDate(now, timeZone, "dd-MM-yyyy");
+    let timeStr = Utilities.formatDate(now, timeZone, "hh:mm a");
+    
+    let tasksCompleted = (payload && payload.tasksCompleted) ? payload.tasksCompleted.toString().trim() : "";
+    let metrics = (payload && payload.metrics) ? payload.metrics.toString().trim() : "";
+    let tomorrowPlan = (payload && payload.tomorrowPlan) ? payload.tomorrowPlan.toString().trim() : "";
+    let remarks = (payload && payload.remarks) ? payload.remarks.toString().trim() : "";
+    let submittedVia = (payload && payload.submittedVia) ? payload.submittedVia.toString().trim() : "Attendance App";
+    
+    sheet.appendRow([
+      now,
+      dateStr,
+      empId,
+      empName,
+      role,
+      tasksCompleted,
+      metrics,
+      tomorrowPlan,
+      remarks,
+      submittedVia
+    ]);
+    
+    return {
+      success: true,
+      message: "End of Day (EOD) Report successfully saved to Google Sheets!",
+      timestamp: dateStr + " " + timeStr,
+      staffName: empName,
+      role: role
+    };
+  } catch (err) {
+    console.error("submitEODReport error:", err);
+    return {
+      success: false,
+      error: "Error saving EOD Report: " + err.message
+    };
+  }
+}
+
+function getTodayEODStatus(empId) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName("EOD_Reports") || ss.getSheetByName("EOD Reports");
+    if (!sheet || sheet.getLastRow() <= 1) {
+      return { submittedToday: false };
+    }
+    let todayStr = Utilities.formatDate(new Date(), "Asia/Kolkata", "dd-MM-yyyy");
+    let data = sheet.getDataRange().getValues();
+    for (let i = data.length - 1; i >= 1; i--) {
+      let rDate = data[i][1] ? data[i][1].toString().trim() : "";
+      let rId = data[i][2] ? data[i][2].toString().trim().toUpperCase() : "";
+      if (rId === (empId || "").toString().trim().toUpperCase() && rDate === todayStr) {
+        return {
+          submittedToday: true,
+          time: Utilities.formatDate(new Date(data[i][0]), "Asia/Kolkata", "hh:mm a"),
+          tasks: data[i][5],
+          metrics: data[i][6],
+          tomorrow: data[i][7],
+          remarks: data[i][8]
+        };
+      }
+    }
+    return { submittedToday: false };
+  } catch (e) {
+    return { submittedToday: false, error: e.message };
+  }
 }
