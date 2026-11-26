@@ -336,6 +336,9 @@ function processDailyPunchLogs(punchesMap) {
 // ====================================================================================
 
 function doGet(e) {
+
+  
+
   if (e && e.parameter && e.parameter.diag === "status") {
     var result = { drive: null, logs: [], tokenScope: null };
 // Token check omitted
@@ -355,6 +358,7 @@ function doGet(e) {
       result.vault = { name: vSheet.getName(), totalRows: vSheet.getLastRow() };
       var eodSheet = getOrCreateEODSheet(ss);
       result.eod = { name: eodSheet.getName(), totalRows: eodSheet.getLastRow() };
+      if (e.parameter.testEmpId) { result.taskSummary = getStaffTaskSummaryForEOD(e.parameter.testEmpId); }
       var sheet = ss.getSheetByName("Attendance_Logs") || ss.getSheetByName("Attendance Logs");
       if (sheet) {
         var lastRow = sheet.getLastRow();
@@ -974,51 +978,251 @@ function saveDocument(empId, docType, base64Data, fileName) {
   } catch (err) { return "Locker Streaming Critical Fault: " + err.message; }
 }
 
+
 // ====================================================================================
-// END OF DAY (EOD) REPORT MANAGEMENT SYSTEM
+// MERGED ATTENDANCE & TASK APP EOD REPORT ENGINE
 // ====================================================================================
+
+var TASK_APP_SPREADSHEET_ID = "1HlacNP8gLkcGV4J1uRQT8bWN0V2FFgPnSs8NzbMj6CM";
 
 function getOrCreateEODSheet(ss) {
   let sheetName = "EOD_Reports";
   let sheet = ss.getSheetByName(sheetName) || ss.getSheetByName("EOD Reports");
+  let headers = [
+    "Timestamp",
+    "Date",
+    "Employee ID",
+    "Staff Name",
+    "Role / Department",
+    "Tasks Completed Today",
+    "Key Metrics / Numbers",
+    "Tomorrow's Priorities",
+    "Remarks / Blockers",
+    "Tasks Assigned (Task App)",
+    "Tasks Completed (Task App)",
+    "Pending Tasks (Task App)",
+    "Today Score (Task App)",
+    "Week Score (Task App)",
+    "Month Score (Task App)",
+    "Submitted Via"
+  ];
+  
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
-    let headers = [
-      "Timestamp",
-      "Date",
-      "Employee ID",
-      "Staff Name",
-      "Role / Department",
-      "Tasks Completed Today",
-      "Key Metrics / Numbers",
-      "Tomorrow's Priorities",
-      "Remarks / Blockers",
-      "Submitted Via"
-    ];
     sheet.appendRow(headers);
-    
-    // Header Formatting
-    let headerRange = sheet.getRange(1, 1, 1, headers.length);
-    headerRange.setBackground("#1e293b");
-    headerRange.setFontColor("#ffffff");
-    headerRange.setFontWeight("bold");
-    headerRange.setHorizontalAlignment("center");
-    headerRange.setVerticalAlignment("middle");
-    sheet.setRowHeight(1, 35);
-    sheet.setFrozenRows(1);
-    
-    sheet.setColumnWidth(1, 160); // Timestamp
-    sheet.setColumnWidth(2, 110); // Date
-    sheet.setColumnWidth(3, 110); // Employee ID
-    sheet.setColumnWidth(4, 160); // Staff Name
-    sheet.setColumnWidth(5, 170); // Role
-    sheet.setColumnWidth(6, 320); // Tasks Completed
-    sheet.setColumnWidth(7, 260); // Key Metrics
-    sheet.setColumnWidth(8, 260); // Tomorrow's Priorities
-    sheet.setColumnWidth(9, 220); // Remarks
-    sheet.setColumnWidth(10, 140); // Submitted Via
+  } else {
+    let existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    if (existingHeaders.length < headers.length) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    }
   }
+  
+  // Format Header
+  let headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground("#1e293b");
+  headerRange.setFontColor("#ffffff");
+  headerRange.setFontWeight("bold");
+  headerRange.setHorizontalAlignment("center");
+  headerRange.setVerticalAlignment("middle");
+  sheet.setRowHeight(1, 35);
+  sheet.setFrozenRows(1);
+  
+  sheet.setColumnWidth(1, 160); // Timestamp
+  sheet.setColumnWidth(2, 110); // Date
+  sheet.setColumnWidth(3, 110); // Employee ID
+  sheet.setColumnWidth(4, 160); // Staff Name
+  sheet.setColumnWidth(5, 170); // Role
+  sheet.setColumnWidth(6, 320); // Tasks Completed Today
+  sheet.setColumnWidth(7, 260); // Key Metrics
+  sheet.setColumnWidth(8, 260); // Tomorrow's Priorities
+  sheet.setColumnWidth(9, 220); // Remarks
+  sheet.setColumnWidth(10, 160); // Assigned (Task App)
+  sheet.setColumnWidth(11, 160); // Completed (Task App)
+  sheet.setColumnWidth(12, 300); // Pending (Task App)
+  sheet.setColumnWidth(13, 160); // Today Score
+  sheet.setColumnWidth(14, 160); // Week Score
+  sheet.setColumnWidth(15, 160); // Month Score
+  sheet.setColumnWidth(16, 140); // Submitted Via
+
   return sheet;
+}
+
+function getStaffTaskSummaryForEOD(empId) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let staffName = "Unknown";
+    let role = "Staff";
+    
+    // Resolve employee name from Staff Master
+    const staffSheet = ss.getSheetByName("Staff Master") || ss.getSheetByName("Staff_Master");
+    if (staffSheet) {
+      const staffData = staffSheet.getDataRange().getValues();
+      let idCol = staffData[0].findIndex(h => h.toString().trim().toUpperCase() === "EMPLOYEE ID"); if (idCol === -1) idCol = 0;
+      let nameCol = staffData[0].findIndex(h => h.toString().trim().toUpperCase() === "NAME"); if (nameCol === -1) nameCol = 1;
+      let roleCol = staffData[0].findIndex(h => h.toString().trim().toUpperCase() === "ROLE"); if (roleCol === -1) roleCol = 5;
+      
+      for (let i = 1; i < staffData.length; i++) {
+        if (staffData[i][idCol].toString().trim().toUpperCase() === (empId || "").toString().trim().toUpperCase()) {
+          staffName = staffData[i][nameCol].toString().trim();
+          role = staffData[i][roleCol] ? staffData[i][roleCol].toString().trim() : "Staff";
+          break;
+        }
+      }
+    }
+    
+    if (staffName === "Unknown" || !staffName) {
+      return { success: false, error: "Staff name not found for ID: " + empId };
+    }
+    
+    const tss = SpreadsheetApp.openById(TASK_APP_SPREADSHEET_ID);
+    if (!tss) return { success: false, error: "Could not open Task App spreadsheet." };
+    
+    const tz = "Asia/Kolkata";
+    const now = new Date();
+    const todayStr = Utilities.formatDate(now, tz, "yyyy-MM-dd");
+    
+    const dayOfWeek = now.getDay();
+    const diffToMon = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMon, 0, 0, 0, 0);
+    const currYear = now.getFullYear();
+    const currMonth = now.getMonth();
+    
+    const targetClean = staffName.trim().toUpperCase();
+    
+    // 1. Read Task_Submissions
+    const subSheet = tss.getSheetByName("Task_Submissions");
+    let rawPts = { daily: 0, weekly: 0, monthly: 0 };
+    let todayCompletedTasks = [];
+    
+    if (subSheet && subSheet.getLastRow() > 1) {
+      const subData = subSheet.getDataRange().getValues();
+      for (let j = 1; j < subData.length; j++) {
+        let rStaff = subData[j][1] ? subData[j][1].toString().trim().toUpperCase() : "";
+        if (targetClean !== "" && rStaff !== targetClean && !rStaff.includes(targetClean) && !targetClean.includes(rStaff)) continue;
+        
+        let pts = parseFloat(subData[j][10]) || 0;
+        let tDesc = subData[j][4] ? subData[j][4].toString().trim() : "";
+        let rawDate = subData[j][0];
+        let subDate = null;
+        if (rawDate instanceof Date) { subDate = rawDate; }
+        else if (rawDate) {
+          let dStr = String(rawDate).trim();
+          subDate = new Date(dStr);
+          if (isNaN(subDate.getTime())) subDate = new Date(dStr.replace(" ", "T"));
+        }
+        if (!subDate || isNaN(subDate.getTime())) continue;
+        
+        let subDateStr = Utilities.formatDate(subDate, tz, "yyyy-MM-dd");
+        if (subDateStr === todayStr) {
+          rawPts.daily += pts;
+          if (tDesc && todayCompletedTasks.indexOf(tDesc) === -1) {
+            todayCompletedTasks.push(tDesc);
+          }
+        }
+        if (subDate >= startOfWeek) rawPts.weekly += pts;
+        if (subDate.getFullYear() === currYear && subDate.getMonth() === currMonth) rawPts.monthly += pts;
+      }
+    }
+    
+    // 2. Find Staff's Personal Sheet
+    let pSheet = null;
+    let allSheets = tss.getSheets();
+    for (let s = 0; s < allSheets.length; s++) {
+      let sTitle = allSheets[s].getName().trim().toUpperCase();
+      if (sTitle === targetClean || sTitle.includes(targetClean) || targetClean.includes(sTitle)) {
+        pSheet = allSheets[s];
+        break;
+      }
+    }
+    
+    let assignedDailyTasks = [];
+    if (pSheet && pSheet.getLastRow() > 1) {
+      let pData = pSheet.getDataRange().getValues();
+      for (let r = 1; r < pData.length; r++) {
+        let freq = pData[r][0] ? pData[r][0].toString().trim().toLowerCase() : "";
+        let tName = pData[r][1] ? pData[r][1].toString().trim() : "";
+        let subItem = pData[r][2] ? pData[r][2].toString().trim() : "";
+        let fullDesc = tName + (subItem && subItem !== tName ? " - " + subItem : "");
+        if (freq.includes("daily") && tName) {
+          if (assignedDailyTasks.indexOf(fullDesc) === -1) {
+            assignedDailyTasks.push(fullDesc);
+          }
+        }
+      }
+    }
+    
+    // 3. Check Adhoc_Tasks
+    const adhocSheet = tss.getSheetByName("Adhoc_Tasks");
+    if (adhocSheet && adhocSheet.getLastRow() > 1) {
+      let adhocData = adhocSheet.getDataRange().getValues();
+      for (let a = 1; a < adhocData.length; a++) {
+        let aStaff = adhocData[a][1] ? adhocData[a][1].toString().trim().toUpperCase() : "";
+        let aDesc = adhocData[a][2] ? adhocData[a][2].toString().trim() : "";
+        if (aStaff && (aStaff === targetClean || aStaff.includes(targetClean) || targetClean.includes(aStaff))) {
+          if (aDesc && assignedDailyTasks.indexOf("[Adhoc] " + aDesc) === -1) {
+            assignedDailyTasks.push("[Adhoc] " + aDesc);
+          }
+        }
+      }
+    }
+    
+    // 4. Calculate Pending / Incomplete Tasks
+    let pendingTasks = [];
+    for (let a = 0; a < assignedDailyTasks.length; a++) {
+      let aTask = assignedDailyTasks[a];
+      let cleanATask = aTask.replace("[Adhoc] ", "").toLowerCase().trim();
+      let isDone = false;
+      for (let c = 0; c < todayCompletedTasks.length; c++) {
+        let cleanCTask = todayCompletedTasks[c].toLowerCase().trim();
+        if (cleanATask.includes(cleanCTask) || cleanCTask.includes(cleanATask)) {
+          isDone = true; break;
+        }
+      }
+      if (!isDone) pendingTasks.push(aTask);
+    }
+    
+    // 5. Scores Calculation
+    let dailyExpected = Math.max(1, assignedDailyTasks.length);
+    let dailyMax = Math.max(rawPts.daily, dailyExpected * 10, 10);
+    let dailyPct = Math.min(100, Math.round((rawPts.daily / dailyMax) * 100));
+    
+    let dayOfWeekNum = (dayOfWeek === 0 ? 7 : dayOfWeek);
+    let weeklyExpected = Math.max(1, (dailyExpected * dayOfWeekNum));
+    let weeklyMax = Math.max(rawPts.weekly, weeklyExpected * 10, 10);
+    let weeklyPct = Math.min(100, Math.round((rawPts.weekly / weeklyMax) * 100));
+    
+    let dayOfMonth = now.getDate();
+    let monthlyExpected = Math.max(1, (dailyExpected * dayOfMonth));
+    let monthlyMax = Math.max(rawPts.monthly, monthlyExpected * 10, 10);
+    let monthlyPct = Math.min(100, Math.round((rawPts.monthly / monthlyMax) * 100));
+    
+    return {
+      success: true,
+      staffName: staffName,
+      role: role,
+      assignedCount: assignedDailyTasks.length,
+      assignedTasks: assignedDailyTasks,
+      completedCount: todayCompletedTasks.length,
+      completedTasks: todayCompletedTasks,
+      pendingCount: pendingTasks.length,
+      pendingTasks: pendingTasks,
+      scores: {
+        todayScore: dailyPct + "% (" + rawPts.daily + "/" + dailyMax + " pts)",
+        todayPct: dailyPct,
+        todayPts: rawPts.daily,
+        weekScore: weeklyPct + "% (" + rawPts.weekly + " pts)",
+        weekPct: weeklyPct,
+        monthScore: monthlyPct + "% (" + rawPts.monthly + " pts)",
+        monthPct: monthlyPct
+      }
+    };
+  } catch (err) {
+    console.error("getStaffTaskSummaryForEOD error:", err);
+    return {
+      success: false,
+      error: "Error fetching task summary: " + err.message
+    };
+  }
 }
 
 function submitEODReport(empId, payload) {
@@ -1054,7 +1258,15 @@ function submitEODReport(empId, payload) {
     let metrics = (payload && payload.metrics) ? payload.metrics.toString().trim() : "";
     let tomorrowPlan = (payload && payload.tomorrowPlan) ? payload.tomorrowPlan.toString().trim() : "";
     let remarks = (payload && payload.remarks) ? payload.remarks.toString().trim() : "";
-    let submittedVia = (payload && payload.submittedVia) ? payload.submittedVia.toString().trim() : "Attendance App";
+    
+    let taskAppAssigned = (payload && payload.taskAppAssignedCount !== undefined) ? payload.taskAppAssignedCount : "";
+    let taskAppCompleted = (payload && payload.taskAppCompletedCount !== undefined) ? payload.taskAppCompletedCount : "";
+    let taskAppPending = (payload && payload.taskAppPendingList) ? payload.taskAppPendingList.toString().trim() : "";
+    let taskAppTodayScore = (payload && payload.taskAppTodayScore) ? payload.taskAppTodayScore.toString().trim() : "";
+    let taskAppWeekScore = (payload && payload.taskAppWeekScore) ? payload.taskAppWeekScore.toString().trim() : "";
+    let taskAppMonthScore = (payload && payload.taskAppMonthScore) ? payload.taskAppMonthScore.toString().trim() : "";
+    
+    let submittedVia = (payload && payload.submittedVia) ? payload.submittedVia.toString().trim() : "Attendance + Task App OS";
     
     sheet.appendRow([
       now,
@@ -1066,6 +1278,12 @@ function submitEODReport(empId, payload) {
       metrics,
       tomorrowPlan,
       remarks,
+      taskAppAssigned,
+      taskAppCompleted,
+      taskAppPending,
+      taskAppTodayScore,
+      taskAppWeekScore,
+      taskAppMonthScore,
       submittedVia
     ]);
     
