@@ -1089,10 +1089,11 @@ function getStaffTaskSummaryForEOD(empId) {
     
     const targetClean = staffName.trim().toUpperCase();
     
-    // 1. Read Task_Submissions (Today's completions & score points)
+    // 1. Read Task_Submissions (Today's completions & score points & completed adhoc map)
     const subSheet = tss.getSheetByName("Task_Submissions");
     let rawPts = { daily: 0, weekly: 0, monthly: 0 };
     let todayCompletedTasks = [];
+    let completedAdhocMap = {};
     
     if (subSheet && subSheet.getLastRow() > 1) {
       const subData = subSheet.getDataRange().getValues();
@@ -1103,6 +1104,17 @@ function getStaffTaskSummaryForEOD(empId) {
         let pts = parseFloat(subData[j][10]) || 0;
         let tDesc = subData[j][4] ? subData[j][4].toString().trim() : "";
         let subItem = subData[j][5] ? subData[j][5].toString().trim() : "";
+        let sStatus = subData[j][8] ? subData[j][8].toString().trim().toLowerCase() : "";
+        let isDone = sStatus.includes("upload") || sStatus.includes("complet") || sStatus.includes("skip");
+        
+        if (isDone) {
+          let sTaskKey = tDesc.toLowerCase().replace(/[^a-z0-9]/g, "");
+          let sSubKey = subItem.toLowerCase().replace(/[^a-z0-9]/g, "");
+          if (sTaskKey) completedAdhocMap[sTaskKey] = true;
+          if (sSubKey) completedAdhocMap[sSubKey] = true;
+          if (sTaskKey || sSubKey) completedAdhocMap[sTaskKey + sSubKey] = true;
+        }
+
         let rawDate = subData[j][0];
         let subDate = null;
         if (rawDate instanceof Date) { subDate = rawDate; }
@@ -1160,21 +1172,45 @@ function getStaffTaskSummaryForEOD(empId) {
       }
     }
     
-    // 3. Check Adhoc_Tasks assigned specifically for TODAY (or due today)
+    // 3. Process Adhoc_Tasks (Calculate One-Time Tasks Completed vs Pending & Today's Adhoc)
     const adhocSheet = tss.getSheetByName("Adhoc_Tasks");
+    let oneTimeTasks = [];
+    let oneTimeCompletedList = [];
+    let oneTimePendingList = [];
+    let seenAdhocKeys = {};
+
     if (adhocSheet && adhocSheet.getLastRow() > 1) {
       let adhocData = adhocSheet.getDataRange().getValues();
-      for (let a = 1; a < adhocData.length; a++) {
+      for (let a = adhocData.length - 1; a >= 1; a--) {
         let aDate = adhocData[a][0];
         let aStaff = adhocData[a][1] ? adhocData[a][1].toString().trim().toUpperCase() : "";
         let aDesc = adhocData[a][2] ? adhocData[a][2].toString().trim() : "";
         let aDeadline = adhocData[a][3] ? adhocData[a][3].toString().trim() : "";
+        let aStatus = adhocData[a][4] ? adhocData[a][4].toString().trim() : "Pending ⏳";
         let aFreq = adhocData[a][6] ? adhocData[a][6].toString().trim().toLowerCase() : "";
 
         if (!aDesc) continue;
         if (aStaff !== targetClean && !aStaff.includes(targetClean) && !targetClean.includes(aStaff) && aStaff !== "ALL" && aStaff !== "ALL STAFF") continue;
 
-        // Check if assign date is TODAY or deadline date is TODAY
+        let aKey = aDesc.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (seenAdhocKeys[aKey]) continue;
+        seenAdhocKeys[aKey] = true;
+
+        let aFLower = aFreq.replace(/[-_]/g, " ").trim();
+        let isOneTime = aFLower.includes("extra") || aFLower.includes("one time") || aFLower === "" || aFLower.includes("adhoc");
+
+        let isTaskCompleted = aStatus.toLowerCase().includes("upload") || aStatus.toLowerCase().includes("complet") || aStatus.toLowerCase().includes("skip") || !!completedAdhocMap[aKey];
+
+        if (isOneTime) {
+          oneTimeTasks.push(aDesc);
+          if (isTaskCompleted) {
+            oneTimeCompletedList.push(aDesc);
+          } else {
+            oneTimePendingList.push(aDesc);
+          }
+        }
+
+        // Check if assigned date is TODAY or deadline is TODAY
         let isTodayAdhoc = false;
         if (aDate) {
           let aDateObj = (aDate instanceof Date) ? aDate : new Date(aDate);
@@ -1191,7 +1227,6 @@ function getStaffTaskSummaryForEOD(empId) {
           }
         }
 
-        // Only include if assigned today, or explicitly scheduled for today
         if (isTodayAdhoc || aFreq.includes("daily")) {
           let taskLabel = "[Adhoc] " + aDesc;
           if (assignedDailyTasks.indexOf(taskLabel) === -1) {
@@ -1214,8 +1249,8 @@ function getStaffTaskSummaryForEOD(empId) {
       }
     }
     
-    // 5. Calculate Pending / Incomplete Tasks for TODAY
-    let pendingTasks = [];
+    // 5. Calculate Pending / Incomplete Daily Tasks for TODAY
+    let pendingDailyTasks = [];
     for (let a = 0; a < assignedDailyTasks.length; a++) {
       let aTask = assignedDailyTasks[a];
       let cleanATask = aTask.replace("[Adhoc] ", "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -1226,7 +1261,7 @@ function getStaffTaskSummaryForEOD(empId) {
           isDone = true; break;
         }
       }
-      if (!isDone) pendingTasks.push(aTask);
+      if (!isDone) pendingDailyTasks.push(aTask);
     }
     
     // 6. Scores Calculation (matching Task App getStaffScoresBreakdown exactly)
@@ -1248,12 +1283,20 @@ function getStaffTaskSummaryForEOD(empId) {
       success: true,
       staffName: staffName,
       role: role,
+      // Daily Tasks
       assignedCount: assignedDailyTasks.length,
       assignedTasks: assignedDailyTasks,
       completedCount: todayCompletedTasks.length,
       completedTasks: todayCompletedTasks,
-      pendingCount: pendingTasks.length,
-      pendingTasks: pendingTasks,
+      pendingCount: pendingDailyTasks.length,
+      pendingTasks: pendingDailyTasks,
+      // One-Time (Adhoc) Tasks
+      oneTimeTotal: oneTimeTasks.length,
+      oneTimeCompleted: oneTimeCompletedList.length,
+      oneTimePending: oneTimePendingList.length,
+      oneTimePendingList: oneTimePendingList,
+      oneTimeCompletedList: oneTimeCompletedList,
+      // Scores
       scores: {
         todayScore: dailyPct + "% (" + rawPts.daily + "/" + dailyMax + " pts)",
         todayPct: dailyPct,
@@ -1310,6 +1353,9 @@ function submitEODReport(empId, payload) {
     let taskAppAssigned = (payload && payload.taskAppAssignedCount !== undefined) ? payload.taskAppAssignedCount : "";
     let taskAppCompleted = (payload && payload.taskAppCompletedCount !== undefined) ? payload.taskAppCompletedCount : "";
     let taskAppPending = (payload && payload.taskAppPendingList) ? payload.taskAppPendingList.toString().trim() : "";
+    let oneTimeTotal = (payload && payload.oneTimeTotal !== undefined) ? payload.oneTimeTotal : "";
+    let oneTimeCompleted = (payload && payload.oneTimeCompleted !== undefined) ? payload.oneTimeCompleted : "";
+    let oneTimePending = (payload && payload.oneTimePending !== undefined) ? payload.oneTimePending : "";
     let taskAppTodayScore = (payload && payload.taskAppTodayScore) ? payload.taskAppTodayScore.toString().trim() : "";
     let taskAppWeekScore = (payload && payload.taskAppWeekScore) ? payload.taskAppWeekScore.toString().trim() : "";
     let taskAppMonthScore = (payload && payload.taskAppMonthScore) ? payload.taskAppMonthScore.toString().trim() : "";
@@ -1329,6 +1375,9 @@ function submitEODReport(empId, payload) {
       taskAppAssigned,
       taskAppCompleted,
       taskAppPending,
+      oneTimeTotal,
+      oneTimeCompleted,
+      oneTimePending,
       taskAppTodayScore,
       taskAppWeekScore,
       taskAppMonthScore,
