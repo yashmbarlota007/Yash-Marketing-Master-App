@@ -1214,6 +1214,9 @@
         taskAppAssignedCount: ts.assignedCount !== undefined ? ts.assignedCount : "",
         taskAppCompletedCount: ts.completedCount !== undefined ? ts.completedCount : "",
         taskAppPendingList: (ts.pendingTasks && ts.pendingTasks.length > 0) ? ts.pendingTasks.join(", ") : "None",
+        oneTimeTotal: ts.oneTimeTotal !== undefined ? ts.oneTimeTotal : "",
+        oneTimeCompleted: ts.oneTimeCompleted !== undefined ? ts.oneTimeCompleted : "",
+        oneTimePending: ts.oneTimePending !== undefined ? ts.oneTimePending : "",
         taskAppTodayScore: (ts.scores && ts.scores.todayScore) || "",
         taskAppWeekScore: (ts.scores && ts.scores.weekScore) || "",
         taskAppMonthScore: (ts.scores && ts.scores.monthScore) || "",
@@ -1317,21 +1320,33 @@
       // MERGED TASK APP SCORES & STATUS
       if (ts.assignedCount !== undefined) {
         text += "📊 *TASK APP OPERATIONS & SCORES:*" + NL;
-        text += "• 📋 Tasks Assigned Today: " + ts.assignedCount + NL;
-        text += "• ✅ Tasks Completed Today: " + ts.completedCount + NL;
-        if (ts.completedTasks && ts.completedTasks.length > 0) {
-          text += ts.completedTasks.map(function(t) { return "    ✓ " + t; }).join(NL) + NL;
-        }
-        text += "• ⏳ Pending / Incomplete Today: " + ts.pendingCount + NL;
-        if (ts.pendingTasks && ts.pendingTasks.length > 0) {
-          text += ts.pendingTasks.slice(0, 10).map(function(t) { return "    - " + t; }).join(NL) + NL;
-        }
+        text += "• 📅 *Daily Routine Tasks:* " + ts.assignedCount + " Assigned | " + ts.completedCount + " Completed | " + ts.pendingCount + " Pending" + NL;
+        text += "• 📌 *One-Time Tasks (Adhoc):* " + (ts.oneTimeTotal || 0) + " Total | " + (ts.oneTimeCompleted || 0) + " Completed | " + (ts.oneTimePending || 0) + " Pending" + NL;
         if (ts.scores) {
           text += "• 🎯 Today's Score: " + (ts.scores.todayScore || "-") + NL;
           text += "• 📅 This Week's Score: " + (ts.scores.weekScore || "-") + NL;
           text += "• 📈 This Month's Score: " + (ts.scores.monthScore || "-") + NL;
         }
         text += "━━━━━━━━━━━━━━━━━━━━━━" + NL + NL;
+
+        if (ts.completedTasks && ts.completedTasks.length > 0) {
+          text += "✅ *Tasks Completed Today:*" + NL;
+          text += ts.completedTasks.map(function(t) { return "  ✓ " + t; }).join(NL) + NL + NL;
+        }
+
+        if (ts.pendingTasks && ts.pendingTasks.length > 0) {
+          text += "⏳ *Daily Tasks Pending:*" + NL;
+          text += ts.pendingTasks.map(function(t) { return "  - " + t; }).join(NL) + NL + NL;
+        }
+
+        if (ts.oneTimePendingList && ts.oneTimePendingList.length > 0) {
+          text += "📌 *Pending One-Time Tasks (" + ts.oneTimePending + " Pending):*" + NL;
+          text += ts.oneTimePendingList.slice(0, 5).map(function(t) { return "  • " + t; }).join(NL);
+          if (ts.oneTimePendingList.length > 5) {
+            text += NL + "  _...aur " + (ts.oneTimePendingList.length - 5) + " pending one-time tasks_";
+          }
+          text += NL + NL;
+        }
       }
 
       if (tasks) {
@@ -1455,26 +1470,53 @@ window.showEODPromptNotification = showEODPromptNotification;
 
       <!-- 🌟 LIVE TASK APP PERFORMANCE CARD (NEW) -->
       <div id="eodTaskAppSummaryCard" style="background:linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); border:1.5px solid #86efac; border-radius:14px; padding:12px 14px; margin-bottom:14px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <div style="display:flex; align-items:center; gap:6px;">
             <span style="font-size:16px;">📊</span>
-            <span style="font-size:12px; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px;">Task App Performance & Scores</span>
+            <span style="font-size:12px; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px;">Task App Operations & Scores</span>
           </div>
           <span id="eodTaskLoadingPill" style="font-size:10px; background:#dcfce7; color:#15803d; font-weight:700; padding:2px 6px; border-radius:6px;">LIVE SYNC</span>
         </div>
 
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; text-align:center; margin-bottom:10px;">
-          <div style="background:#fff; border-radius:8px; padding:6px 4px; border:1px solid #bbf7d0;">
-            <div style="font-size:10px; color:#64748b; font-weight:600;">ASSIGNED</div>
-            <div id="eodMetricAssigned" style="font-size:16px; font-weight:800; color:#1e293b;">-</div>
+        <!-- 📅 SECTION 1: DAILY ROUTINE TASKS -->
+        <div style="background:#fff; border-radius:10px; padding:8px 10px; border:1px solid #bbf7d0; margin-bottom:8px;">
+          <div style="font-size:11px; font-weight:700; color:#1e293b; margin-bottom:6px; display:flex; align-items:center; gap:5px;">
+            <span>📅</span> <span>Daily Routine Tasks (Aaj Ke Tasks):</span>
           </div>
-          <div style="background:#fff; border-radius:8px; padding:6px 4px; border:1px solid #bbf7d0;">
-            <div style="font-size:10px; color:#166534; font-weight:600;">COMPLETED</div>
-            <div id="eodMetricCompleted" style="font-size:16px; font-weight:800; color:#16a34a;">-</div>
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; text-align:center;">
+            <div style="background:#f8fafc; border-radius:6px; padding:5px 2px; border:1px solid #e2e8f0;">
+              <div style="font-size:9px; color:#64748b; font-weight:700;">ASSIGNED</div>
+              <div id="eodMetricAssigned" style="font-size:15px; font-weight:800; color:#1e293b;">-</div>
+            </div>
+            <div style="background:#f0fdf4; border-radius:6px; padding:5px 2px; border:1px solid #bbf7d0;">
+              <div style="font-size:9px; color:#166534; font-weight:700;">COMPLETED</div>
+              <div id="eodMetricCompleted" style="font-size:15px; font-weight:800; color:#16a34a;">-</div>
+            </div>
+            <div style="background:#fef2f2; border-radius:6px; padding:5px 2px; border:1px solid #fecaca;">
+              <div style="font-size:9px; color:#b91c1c; font-weight:700;">PENDING</div>
+              <div id="eodMetricPending" style="font-size:15px; font-weight:800; color:#dc2626;">-</div>
+            </div>
           </div>
-          <div style="background:#fff; border-radius:8px; padding:6px 4px; border:1px solid #fecaca;">
-            <div style="font-size:10px; color:#b91c1c; font-weight:600;">PENDING</div>
-            <div id="eodMetricPending" style="font-size:16px; font-weight:800; color:#dc2626;">-</div>
+        </div>
+
+        <!-- 📌 SECTION 2: ONE-TIME / EXTRA (ADHOC) TASKS -->
+        <div style="background:#fff; border-radius:10px; padding:8px 10px; border:1px solid #fed7aa; margin-bottom:10px;">
+          <div style="font-size:11px; font-weight:700; color:#1e293b; margin-bottom:6px; display:flex; align-items:center; gap:5px;">
+            <span>📌</span> <span>One-Time Tasks (Adhoc / प्रोजेक्ट कार्य):</span>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; text-align:center;">
+            <div style="background:#f8fafc; border-radius:6px; padding:5px 2px; border:1px solid #e2e8f0;">
+              <div style="font-size:9px; color:#64748b; font-weight:700;">TOTAL ADHOC</div>
+              <div id="eodOneTimeTotal" style="font-size:15px; font-weight:800; color:#1e293b;">-</div>
+            </div>
+            <div style="background:#f0fdf4; border-radius:6px; padding:5px 2px; border:1px solid #bbf7d0;">
+              <div style="font-size:9px; color:#166534; font-weight:700;">COMPLETED</div>
+              <div id="eodOneTimeCompleted" style="font-size:15px; font-weight:800; color:#16a34a;">-</div>
+            </div>
+            <div style="background:#fff7ed; border-radius:6px; padding:5px 2px; border:1px solid #ffedd5;">
+              <div style="font-size:9px; color:#c2410c; font-weight:700;">PENDING</div>
+              <div id="eodOneTimePending" style="font-size:15px; font-weight:800; color:#ea580c;">-</div>
+            </div>
           </div>
         </div>
 
@@ -1497,20 +1539,32 @@ window.showEODPromptNotification = showEODPromptNotification;
           <div id="eodCompletedTasksList" style="line-height:1.5; color:#047857; padding-left:2px;"></div>
         </div>
 
-        <!-- Incomplete / Pending Tasks Notice (ORANGE/RED) -->
+        <!-- Incomplete / Pending Daily Tasks Notice (ORANGE/RED) -->
         <div id="eodPendingTasksBox" style="display:none; background:#fff1f2; border:1.5px dashed #fca5a5; border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:11px; color:#991b1b;">
           <div style="font-weight:700; display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
             <div style="display:flex; align-items:center; gap:6px;">
               <span style="font-size:14px;">⏳</span>
-              <span>Aaj Ke Baki / Pending Tasks:</span>
+              <span>Aaj Ke Baki / Pending Daily Tasks:</span>
             </div>
             <span id="eodPendingCountBadge" style="background:#fee2e2; color:#b91c1c; font-size:10px; font-weight:800; padding:1px 6px; border-radius:6px;">0</span>
           </div>
           <div id="eodPendingTasksList" style="line-height:1.5; color:#b91c1c; padding-left:2px;"></div>
         </div>
 
+        <!-- One-Time Pending Tasks Box (AMBER/ORANGE) -->
+        <div id="eodOneTimePendingBox" style="display:none; background:#fffbeb; border:1.5px dashed #fcd34d; border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:11px; color:#92400e;">
+          <div style="font-weight:700; display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:14px;">📌</span>
+              <span>Pending One-Time Tasks (Adhoc List):</span>
+            </div>
+            <span id="eodOneTimePendingBadge" style="background:#fef3c7; color:#b45309; font-size:10px; font-weight:800; padding:1px 6px; border-radius:6px;">0</span>
+          </div>
+          <div id="eodOneTimePendingList" style="line-height:1.5; color:#b45309; padding-left:2px;"></div>
+        </div>
+
         <!-- Auto-fill button -->
-        <button type="button" onclick="autoFillTasksFromTaskApp()" style="margin-top:8px; width:100%; background:#059669; color:#fff; border:none; padding:7px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">
+        <button type="button" onclick="autoFillTasksFromTaskApp()" style="margin-top:4px; width:100%; background:#059669; color:#fff; border:none; padding:7px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">
           ✨ Auto-Fill Completed & Pending Tasks into Report
         </button>
       </div>
