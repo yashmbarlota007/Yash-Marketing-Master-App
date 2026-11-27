@@ -196,6 +196,329 @@
       .modal-dialog { margin: 10px !important; }
       .modal iframe { height: 60vh !important; min-height: 280px !important; }
     }
+  
+    /* ========================================================
+       MICRO-INTERACTIONS, KEYFRAMES & INTERACTIVE INFOGRAPHICS
+       ======================================================== */
+    @keyframes pulseGlowPrimary {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.45); }
+      50% { box-shadow: 0 0 0 12px rgba(13, 110, 253, 0); }
+    }
+    @keyframes pulseGlowWarning {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.55); }
+      50% { box-shadow: 0 0 0 14px rgba(255, 193, 7, 0); }
+    }
+    @keyframes radarWave {
+      0% { transform: scale(1); opacity: 0.85; }
+      70% { transform: scale(1.45); opacity: 0; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    @keyframes subtleBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(4deg); }
+    }
+    @keyframes countPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.12); color: #0d6efd; }
+      100% { transform: scale(1); }
+    }
+    @keyframes statusDotBlink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.75); }
+    }
+    @keyframes shimmerMove {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+
+    /* Bouncing & Pulsing Buttons */
+    .btn-pulse-primary {
+      animation: pulseGlowPrimary 2.6s infinite;
+    }
+    .btn-pulse-warning {
+      animation: pulseGlowWarning 2.2s infinite;
+    }
+    .btn-bounce-hover {
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    }
+    .btn-bounce-hover:hover {
+      animation: subtleBounce 0.75s ease-in-out infinite;
+      transform: translateY(-3px) scale(1.02);
+    }
+    .btn:active {
+      transform: scale(0.96) !important;
+    }
+
+    /* Shimmer button sweep effect */
+    .btn-shimmer {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-shimmer::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      transform: translateX(-100%);
+      pointer-events: none;
+    }
+    .btn-shimmer:hover::after {
+      animation: shimmerMove 1s ease-in-out;
+    }
+
+    /* Floating Buttons Radar Rings */
+    .float-btn {
+      position: fixed;
+      right: 25px;
+      color: white;
+      border-radius: 50%;
+      width: 58px;
+      height: 58px;
+      text-align: center;
+      font-size: 26px;
+      line-height: 58px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+      z-index: 1000;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+    }
+    .float-btn:hover {
+      transform: scale(1.15) rotate(6deg);
+      color: white;
+    }
+    .whatsapp-float::before, .call-float::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 50%;
+      z-index: -1;
+      animation: radarWave 2.2s infinite ease-out;
+    }
+    .whatsapp-float::before { background: rgba(37, 211, 102, 0.5); }
+    .call-float::before { background: rgba(13, 110, 253, 0.5); }
+
+    /* Scroll Triggered Transformations */
+    .reveal-up {
+      opacity: 0;
+      transform: translate3d(0, 36px, 0);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .reveal-left {
+      opacity: 0;
+      transform: translate3d(-40px, 0, 0);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .reveal-right {
+      opacity: 0;
+      transform: translate3d(40px, 0, 0);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .reveal-scale {
+      opacity: 0;
+      transform: scale3d(0.9, 0.9, 1);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .reveal-up.is-revealed,
+    .reveal-left.is-revealed,
+    .reveal-right.is-revealed,
+    .reveal-scale.is-revealed,
+    .scroll-fade.visible {
+      opacity: 1 !important;
+      transform: translate3d(0, 0, 0) scale3d(1, 1, 1) !important;
+    }
+
+    .delay-1 { transition-delay: 0.1s !important; }
+    .delay-2 { transition-delay: 0.2s !important; }
+    .delay-3 { transition-delay: 0.3s !important; }
+    .delay-4 { transition-delay: 0.4s !important; }
+    .delay-5 { transition-delay: 0.5s !important; }
+
+    /* Counter Cards 3D Hover & Number Celebration */
+    .counter-box {
+      cursor: default;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s;
+    }
+    .counter-box:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.12);
+    }
+    .counter-box:hover i {
+      animation: iconFloat 1s ease-in-out infinite;
+    }
+    .counter-number.counter-popped {
+      animation: countPop 0.6s ease;
+    }
+
+    /* Interactive Brand Chips in Hero */
+    .brand-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-transform: uppercase;
+      user-select: none;
+    }
+    .brand-chip:hover {
+      transform: translateY(-3px) scale(1.08);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+      border-color: #0d6efd;
+      color: #0d6efd;
+    }
+
+    /* Interactive B.E.S.T. Pillar Cards */
+    .pillar-card {
+      position: relative;
+      background: #f8f9fa;
+      border-top: 5px solid #0d6efd;
+      border-radius: 12px;
+      padding: 25px;
+      height: 100%;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, background 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      cursor: pointer;
+    }
+    .pillar-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      background: #ffffff;
+      box-shadow: 0 16px 32px rgba(13,110,253,0.15);
+    }
+    .pillar-card:hover i {
+      transform: scale(1.2) rotate(6deg);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Interactive Evolution Timeline Infographic */
+    .journey-timeline-item {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: transform 0.25s ease;
+    }
+    .journey-timeline-item:last-child { margin-bottom: 0; }
+    .journey-timeline-item:hover {
+      transform: translateX(6px);
+    }
+    .journey-node-dot {
+      position: absolute;
+      left: 0;
+      top: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffc107;
+      box-shadow: 0 0 10px #ffc107;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .journey-timeline-item:hover .journey-node-dot {
+      transform: scale(1.4);
+      box-shadow: 0 0 16px #ffc107, 0 0 24px rgba(255, 193, 7, 0.6);
+    }
+    .journey-line-track {
+      position: absolute;
+      left: 6px;
+      top: 18px;
+      bottom: -6px;
+      width: 2px;
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* Interactive 6-Step Workflow Infographic */
+    .workflow-infographic-container {
+      background: #ffffff;
+      border-radius: 14px;
+      border: 2px solid #e2e8f0;
+      padding: 24px 20px;
+      margin-top: 30px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+    }
+    .workflow-stepper-nav {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #edf2f7;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      gap: 8px;
+    }
+    .workflow-stepper-nav::-webkit-scrollbar { display: none; }
+    .workflow-step-btn {
+      flex: 1;
+      min-width: 120px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 30px;
+      padding: 8px 12px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+      user-select: none;
+    }
+    .workflow-step-btn:hover {
+      transform: translateY(-2px);
+      border-color: #0d6efd;
+      color: #0d6efd;
+      background: #eff6ff;
+    }
+    .workflow-step-btn.active {
+      background: #0d6efd;
+      color: #ffffff;
+      border-color: #0d6efd;
+      box-shadow: 0 4px 14px rgba(13,110,253,0.4);
+      transform: scale(1.04);
+    }
+    .workflow-detail-box {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      min-height: 170px;
+      transition: all 0.3s ease;
+    }
+    .workflow-detail-box::before {
+      content: '';
+      position: absolute;
+      top: -50%; right: -20%;
+      width: 250px; height: 250px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(13,110,253,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Live Status Dot in App Cards */
+    .live-status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      margin-right: 5px;
+      animation: statusDotBlink 1.5s infinite;
+    }
+
   </style>
 </head>
 <body>
@@ -241,14 +564,14 @@
               <div class="hero-ym-text-marketing" style="color: #222; font-size: 1.1rem; letter-spacing: 5px; font-weight: bold;">MARKETING</div>
             </div>
           </div>
-          <div class="hero-brand-list" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; font-weight: bold; color: #333; text-transform: uppercase;">
-            <span>boAt</span> <span style="color: #ccc;">|</span> 
-            <span style="color: #e60000;">Portronics</span> <span style="color: #ccc;">|</span> 
-            <span style="color: #e60000;">JBL</span> <span style="color: #ccc;">|</span> 
-            <span>Knockout</span> <span style="color: #ccc;">|</span> 
-            <span style="color: #e60000; font-style: italic;">Hikvision</span> <span style="color: #ccc;">|</span> 
-            <span>Velocity</span> <span style="color: #ccc;">|</span>
-            <span style="color: #0d6efd;">GoBoult</span>
+          <div class="hero-brand-list d-flex justify-content-center gap-2 flex-wrap" style="font-size: 0.85rem; font-weight: bold; text-transform: uppercase;">
+            <span class="brand-chip" title="boAt - Audio, Airdopes & Smart Wearables"><i class="fas fa-headphones text-danger me-1"></i> boAt</span>
+            <span class="brand-chip" title="Portronics - Fast Chargers, Cables & Gadgets"><i class="fas fa-bolt text-danger me-1"></i> Portronics</span>
+            <span class="brand-chip" title="JBL - Premium Portable Speakers & Sound"><i class="fas fa-music text-danger me-1"></i> JBL</span>
+            <span class="brand-chip" title="Knockout - High Speed Mobile Accessories"><i class="fas fa-shield-halved text-dark me-1"></i> Knockout</span>
+            <span class="brand-chip" title="Hikvision - CCTV, Storage & Memory"><i class="fas fa-video text-danger me-1"></i> Hikvision</span>
+            <span class="brand-chip" title="Velocity - Fast Charging Cables & Adapters"><i class="fas fa-gauge-high text-dark me-1"></i> Velocity</span>
+            <span class="brand-chip" title="GoBoult - True Wireless & Smart Tech"><i class="fas fa-satellite-dish text-primary me-1"></i> GoBoult</span>
           </div>
         </div>
       </div>
@@ -259,41 +582,41 @@
       <div class="container mb-4" style="max-width: 750px;"></div>
       
       <div class="hero-btn-group d-flex flex-wrap justify-content-center">
-        <button type="button" onclick="scrollToSection('contact')" class="btn btn-light btn-lg fw-bold rounded-pill px-4 shadow text-primary me-2 mb-2"><i class="fas fa-handshake me-1"></i> Become a Dealer</button>
-        <button type="button" onclick="scrollToSection('franchise')" class="btn btn-warning btn-lg fw-bold rounded-pill px-4 shadow text-dark me-2 mb-2"><i class="fas fa-store me-1"></i> Get Franchise</button>
-        <button type="button" onclick="scrollToSection('software')" class="btn btn-outline-light btn-lg fw-bold rounded-pill px-4 mb-2"><i class="fas fa-laptop-code me-1"></i> Automate Your Business</button>
+        <button type="button" onclick="scrollToSection('contact')" class="btn btn-light btn-lg fw-bold rounded-pill px-4 shadow text-primary me-2 mb-2 btn-pulse-primary btn-bounce-hover btn-shimmer"><i class="fas fa-handshake me-1"></i> Become a Dealer</button>
+        <button type="button" onclick="scrollToSection('franchise')" class="btn btn-warning btn-lg fw-bold rounded-pill px-4 shadow text-dark me-2 mb-2 btn-pulse-warning btn-bounce-hover btn-shimmer"><i class="fas fa-store me-1"></i> Get Franchise</button>
+        <button type="button" onclick="scrollToSection('software')" class="btn btn-outline-light btn-lg fw-bold rounded-pill px-4 mb-2 btn-bounce-hover"><i class="fas fa-laptop-code me-1"></i> Automate Your Business</button>
       </div>
     </div>
   </section>
 
   
   <section class="container mt-n4 position-relative counter-section" style="top: -45px;">
-    <div class="row g-2 g-md-4 scroll-fade">
-      <div class="col-6 col-md-3">
-        <div class="counter-box border-bottom border-primary border-4">
+    <div class="row g-2 g-md-4">
+      <div class="col-6 col-md-3 reveal-scale delay-1">
+        <div class="counter-box border-bottom border-primary border-4 shadow-sm">
           <i class="fas fa-users text-primary fa-2x mb-2"></i>
-          <div class="counter-number">1000+</div>
+          <div class="counter-number" data-count-target="1000" data-count-suffix="+">1000+</div>
           <div class="text-muted fw-bold small counter-label">Trusted Dealers</div>
         </div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="counter-box border-bottom border-success border-4">
+      <div class="col-6 col-md-3 reveal-scale delay-2">
+        <div class="counter-box border-bottom border-success border-4 shadow-sm">
           <i class="fas fa-award text-success fa-2x mb-2"></i>
-          <div class="counter-number">23+ Yrs</div>
+          <div class="counter-number" data-count-target="23" data-count-suffix="+ Yrs">23+ Yrs</div>
           <div class="text-muted fw-bold small counter-label">Legacy Since 2003</div>
         </div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="counter-box border-bottom border-warning border-4">
+      <div class="col-6 col-md-3 reveal-scale delay-3">
+        <div class="counter-box border-bottom border-warning border-4 shadow-sm">
           <i class="fas fa-percent text-warning fa-2x mb-2"></i>
-          <div class="counter-number">7+</div>
+          <div class="counter-number" data-count-target="7" data-count-suffix="+">7+</div>
           <div class="text-muted fw-bold small counter-label">Leading Brands</div>
         </div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="counter-box border-bottom border-info border-4">
+      <div class="col-6 col-md-3 reveal-scale delay-4">
+        <div class="counter-box border-bottom border-info border-4 shadow-sm">
           <i class="fas fa-shipping-fast text-info fa-2x mb-2"></i>
-          <div class="counter-number">95%</div>
+          <div class="counter-number" data-count-target="95" data-count-suffix="%">95%</div>
           <div class="text-muted fw-bold small counter-label">Same Day Dispatch</div>
         </div>
       </div>
@@ -312,22 +635,35 @@
           <p class="text-muted">Aaj <strong>Yash Barlota</strong> ke vision ke tehat, Yash Marketing ne 23 saalon ke traditional anubhav ko modern automation aur technology se jod diya hai. Hum samajhte hain ki ek retailer din-raat kitni mehnat karta hai\ — isiliye humne Industry-First Dealer Ordering App, Transparent Pricing, Daily Collection System aur har order par upto 5% discount jaisi suvidhayein shuru ki hain taaki hamare har dealer ka munafa badhe aur unka waqt bache.</p>
         </div>
         <div class="col-lg-5 mt-4 mt-lg-0">
-          <div class="p-4 rounded text-white" style="background: linear-gradient(135deg, #002255, #0d6efd);">
-            <h4 class="fw-bold text-warning mb-3"><i class="fas fa-history me-2"></i>Our Evolution Journey</h4>
-            <ul class="list-unstyled mb-0">
-              <li class="mb-3">
-                <span class="badge bg-warning text-dark mb-1">2003 - The Foundation</span>
-                <p class="small mb-0">Parent company established with a focus on ethical trading and deep market relationships.</p>
-              </li>
-              <li class="mb-3">
-                <span class="badge bg-info text-dark mb-1">2021 - Expansion Phase</span>
-                <p class="small mb-0">Partnered with top global & Indian brands (boAt, JBL, Portronics, Hikvision, GoBoult, Velocity, Knockout).</p>
-              </li>
-              <li class="mb-0">
-                <span class="badge bg-success text-dark mb-1">Present - Tech Revolution 2026</span>
-                <p class="small mb-0">100% System-driven operations: Live Ordering App, Replacement Backend, Automated FMS & 95% Same-Day Dispatch.</p>
-              </li>
-            </ul>
+          <div class="p-4 rounded text-white reveal-right shadow-lg" style="background: linear-gradient(135deg, #002255, #0d6efd);">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h4 class="fw-bold text-warning mb-0"><i class="fas fa-history me-2"></i>Our Evolution Journey</h4>
+              <span class="badge bg-warning text-dark"><i class="fas fa-sparkles me-1"></i> 2003 - 2026</span>
+            </div>
+            <div class="position-relative ps-2">
+              <div class="journey-timeline-item" onclick="highlightMilestone(this)">
+                <div class="journey-line-track"></div>
+                <div class="journey-node-dot"></div>
+                <span class="badge bg-warning text-dark mb-1 fw-bold"><i class="fas fa-seedling me-1"></i> 2003 - The Foundation</span>
+                <h6 class="fw-bold text-white mb-1">Ethical Trading &amp; Deep Trust</h6>
+                <p class="small text-white-50 mb-0">Parent company established in Ahmednagar with a relentless focus on transparent pricing and partner goodwill.</p>
+              </div>
+
+              <div class="journey-timeline-item" onclick="highlightMilestone(this)">
+                <div class="journey-line-track"></div>
+                <div class="journey-node-dot" style="background: #0dcaf0; box-shadow: 0 0 10px #0dcaf0;"></div>
+                <span class="badge bg-info text-dark mb-1 fw-bold"><i class="fas fa-chart-line me-1"></i> 2021 - Direct Brand Alliances</span>
+                <h6 class="fw-bold text-white mb-1">Tier-1 Direct Distribution</h6>
+                <p class="small text-white-50 mb-0">Authorized partner with top global &amp; Indian brands: boAt, JBL, Portronics, Hikvision, GoBoult, Velocity, Knockout.</p>
+              </div>
+
+              <div class="journey-timeline-item" onclick="highlightMilestone(this)">
+                <div class="journey-node-dot" style="background: #10b981; box-shadow: 0 0 10px #10b981;"></div>
+                <span class="badge bg-success text-dark mb-1 fw-bold"><i class="fas fa-rocket me-1"></i> Present - Tech Revolution 2026</span>
+                <h6 class="fw-bold text-white mb-1">100% System-Driven Operations</h6>
+                <p class="small text-white-50 mb-0">Interactive Dealer Ordering App, Automated Replacement Portal, Barcode QC Scan &amp; 95% Same-Day Dispatch SLA.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -341,30 +677,42 @@
         <p class="text-muted fs-5">Hamara poora vyapar in 4 mazboot stambhon (pillars) par tiki hai jo hume sabse alag banate hain</p>
       </div>
       <div class="row g-4">
-        <div class="col-md-6 col-lg-3">
-          <div class="pillar-card">
-            <i class="fas fa-award fa-3x text-primary mb-3"></i>
+        <div class="col-md-6 col-lg-3 reveal-up delay-1">
+          <div class="pillar-card border-top-primary">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <i class="fas fa-award fa-3x text-primary"></i>
+              <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1"><i class="fas fa-tags me-1"></i> 7+ Direct Brands</span>
+            </div>
             <h5 class="fw-bold fs-4"><span class="text-danger fw-extrabold" style="font-size: 1.4rem;">B</span>rands</h5>
-            <p class="small text-muted mb-0">Hum sirf 100% original aur market-leading brands (<strong>boAt, JBL, Portronics, Hikvision, GoBoult, Velocity, Knockout</strong>) me deal karte hain. \₹50 se \₹1,50,000 tak ki har high-demand accessory ek hi chhat ke niche milti hai.</p>
+            <p class="small text-muted mb-0">Hum sirf 100% original aur market-leading brands (<strong>boAt, JBL, Portronics, Hikvision, GoBoult, Velocity, Knockout</strong>) me deal karte hain. ₹50 se ₹1,50,000 tak ki har high-demand accessory ek hi chhat ke niche milti hai.</p>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-3 reveal-up delay-2">
           <div class="pillar-card" style="border-top-color: #198754;">
-            <i class="fas fa-users-cog fa-3x text-success mb-3"></i>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <i class="fas fa-users-cog fa-3x text-success"></i>
+              <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="fas fa-headset me-1"></i> Dedicated VIP Desk</span>
+            </div>
             <h5 class="fw-bold fs-4"><span class="text-primary fw-extrabold" style="font-size: 1.4rem;">E</span>mployees</h5>
             <p class="small text-muted mb-0">Hamari trained aur dedicated manpower hamari asli taqat hai. Sales, Accounts, Billing, Packing aur Dedicated Replacement Desk ke liye alag-alag experts hain jo har dealer ko VIP support dete hain.</p>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-3 reveal-up delay-3">
           <div class="pillar-card" style="border-top-color: #ffc107;">
-            <i class="fas fa-cogs fa-3x text-warning mb-3"></i>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <i class="fas fa-cogs fa-3x text-warning"></i>
+              <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1"><i class="fas fa-barcode me-1"></i> 100% SOP &amp; QC Scan</span>
+            </div>
             <h5 class="fw-bold fs-4"><span class="text-success fw-extrabold" style="font-size: 1.4rem;">S</span>ystem</h5>
-            <p class="small text-muted mb-0">Insano ki bhool-chuk hota hai par system nahi! Stock inward se lekar QC photo verification, automated billing, aur dispatch tracking tak\ — hamara har step software aur SOPs se chalta hai, jisse zero error hota hai.</p>
+            <p class="small text-muted mb-0">Insano ki bhool-chuk hota hai par system nahi! Stock inward se lekar QC photo verification, automated billing, aur dispatch tracking tak — hamara har step software aur SOPs se chalta hai, jisse zero error hota hai.</p>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-3 reveal-up delay-4">
           <div class="pillar-card" style="border-top-color: #dc3545;">
-            <i class="fas fa-store-alt fa-3x text-danger mb-3"></i>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <i class="fas fa-store-alt fa-3x text-danger"></i>
+              <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1"><i class="fas fa-percent me-1"></i> Upto 5% Off Per Order</span>
+            </div>
             <h5 class="fw-bold fs-4"><span class="text-warning fw-extrabold" style="font-size: 1.4rem;">T</span>raders (Dealers)</h5>
             <p class="small text-muted mb-0">Dealers sirf 1000+ customers nahi, balki business partners hain. Unki profitability badhane ke liye hum Upto 5% Per Order Discount, Daily Collection aur fast replacement dete hain.</p>
           </div>
@@ -372,7 +720,6 @@
       </div>
     </div>
 
-    
     <div id="usp" class="card-custom scroll-fade" style="background: linear-gradient(to right, #f8f9fa, #ffffff);">
       <h2 class="mb-2 text-center text-primary fw-bold">Industry-First Tech & Financial Support</h2>
       <p class="text-center text-muted mb-5">Jo suvidhayein aapko kisi traditional distributor ke paas nahi milengi</p>
@@ -401,11 +748,69 @@
         </div>
         <div class="col-md-6">
           <div class="step-box border-warning" style="border-left-color: #ffc107;">
-            <i class="fas fa-boxes-packing step-icon text-warning"></i>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <i class="fas fa-boxes-packing step-icon text-warning mb-0"></i>
+              <span class="badge bg-warning text-dark"><i class="fas fa-gears me-1"></i> Automated SOPs</span>
+            </div>
             <h5 class="fw-bold text-dark">6-Step System Master Workflow</h5>
-            <p class="text-muted small mb-0">1. App Order Reception &rarr; 2. Instant Ledger Verification &rarr; 3. Automated Fast Billing &rarr; 4. QC Verified Secure Packing &rarr; 5. 95% Same-Day Dispatch &rarr; 6. Dealer Feedback.</p>
+            <p class="text-muted small mb-0">Har order 6 transparent aur automated stages se process hota hai: App Order &rarr; Ledger Verification &rarr; Fast Invoicing &rarr; Barcode QC Packing &rarr; 95% Dispatch &rarr; Instant Feedback.</p>
           </div>
         </div>
+      </div>
+
+      <!-- ⚡ INTERACTIVE 6-STEP SYSTEM MASTER WORKFLOW INFOGRAPHIC -->
+      <div class="workflow-infographic-container reveal-up mt-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
+          <div>
+            <span class="badge bg-primary mb-1"><i class="fas fa-microchip me-1"></i> AUTOMATED OPERATIONS ENGINE</span>
+            <h4 class="fw-bold text-dark mb-0"><i class="fas fa-diagram-project text-primary me-2"></i>Interactive 6-Step Order Workflow</h4>
+          </div>
+          <span class="text-muted small mt-2 mt-sm-0"><i class="fas fa-hand-pointer text-primary me-1"></i> Kisi bhi stage par tap karein live details dekhne ke liye</span>
+        </div>
+
+        <div class="workflow-stepper-nav" id="workflowNav">
+          <button type="button" class="workflow-step-btn active" onclick="setWorkflowStep(0, true)">
+            <span class="d-block text-primary fw-bold small">01</span>📱 App Order
+          </button>
+          <button type="button" class="workflow-step-btn" onclick="setWorkflowStep(1, true)">
+            <span class="d-block text-success fw-bold small">02</span>📑 Ledger Check
+          </button>
+          <button type="button" class="workflow-step-btn" onclick="setWorkflowStep(2, true)">
+            <span class="d-block text-warning fw-bold small">03</span>⚡ Fast Billing
+          </button>
+          <button type="button" class="workflow-step-btn" onclick="setWorkflowStep(3, true)">
+            <span class="d-block text-info fw-bold small">04</span>🔍 QC Verification
+          </button>
+          <button type="button" class="workflow-step-btn" onclick="setWorkflowStep(4, true)">
+            <span class="d-block text-danger fw-bold small">05</span>🚚 95% Dispatch
+          </button>
+          <button type="button" class="workflow-step-btn" onclick="setWorkflowStep(5, true)">
+            <span class="d-block text-success fw-bold small">06</span>🤝 Dealer Feedback
+          </button>
+        </div>
+
+        <div class="workflow-detail-box" id="workflowDetailBox">
+          <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
+            <div>
+              <span id="workflowBadge" class="badge bg-primary px-3 py-1 mb-2 fs-6">Stage 01 of 06</span>
+              <h5 id="workflowTitle" class="fw-bold text-white mb-1"><i class="fas fa-mobile-screen-button text-warning me-2"></i>Instant App Order Reception</h5>
+            </div>
+            <div id="workflowMetric" class="badge bg-dark border border-secondary text-warning px-3 py-2 fs-6">
+              <i class="fas fa-stopwatch me-1"></i> SLA: Under 60 Seconds
+            </div>
+          </div>
+          <p id="workflowDesc" class="text-white-50 small mb-3" style="font-size: 0.95rem; line-height: 1.6;">
+            Dealer 24x7 humare interactive mobile app se live inventory check karke 1 click me order punch karta hai. No salesman dependency, 100% transparent wholesale rates aur upto 5% automated discount live reflect hota hai.
+          </p>
+          <div class="d-flex justify-content-between align-items-center border-top border-secondary pt-2">
+            <span class="small text-white-50"><i class="fas fa-circle-check text-success me-1"></i> Zero Error Digital Pipeline</span>
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-outline-light btn-sm" onclick="prevWorkflowStep()"><i class="fas fa-chevron-left me-1"></i> Prev</button>
+              <button type="button" class="btn btn-primary btn-sm ms-1" onclick="nextWorkflowStep()">Next <i class="fas fa-chevron-right ms-1"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
 
@@ -790,7 +1195,7 @@
       <div class="p-4 mb-5 rounded-3 text-white text-center shadow contact-banner" style="background: linear-gradient(90deg, #002255, #0d6efd);">
         <h3 class="fw-bold mb-2"><i class="fas fa-mobile-alt text-warning me-2"></i>Existing Dealer Hain? Seedha App Se Order Place Karein!</h3>
         <p class="mb-3">Live stock dekhein, transparent rates paayein aur har order par <strong>Upto 5% Discount</strong> claim karein.</p>
-        <a href="https://wa.me/918378811922?text=Hello%20Yash%20Marketing,%20Please%20share%20the%20Direct%20Dealer%20Ordering%20App%20link." target="_blank" class="btn btn-warning btn-lg fw-bold rounded-pill px-5 shadow text-dark">
+        <a href="https://wa.me/918378811922?text=Hello%20Yash%20Marketing,%20Please%20share%20the%20Direct%20Dealer%20Ordering%20App%20link." target="_blank" class="btn btn-warning btn-lg fw-bold rounded-pill px-5 shadow text-dark btn-pulse-warning btn-bounce-hover btn-shimmer">
           <i class="fas fa-cart-shopping me-2"></i> Open Dealer Ordering App (Place Order)
         </a>
       </div>
@@ -937,6 +1342,183 @@
       }, { threshold: 0.1 });
       
       document.querySelectorAll('.scroll-fade').forEach(el => observer.observe(el));
+
+    // --- 1. Interactive 6-Step Workflow Data & Controller ---
+    var workflowStages = [
+      {
+        badge: 'Stage 01 of 06',
+        icon: 'fas fa-mobile-screen-button text-warning',
+        title: 'Instant App Order Reception',
+        metric: 'SLA: Under 60 Seconds',
+        desc: 'Dealer 24x7 humare interactive mobile app se live inventory check karke 1 click me order punch karta hai. No salesman dependency, 100% transparent wholesale rates aur upto 5% automated discount live reflect hota hai.'
+      },
+      {
+        badge: 'Stage 02 of 06',
+        icon: 'fas fa-file-invoice-dollar text-success',
+        title: 'Instant Ledger & Credit Verification',
+        metric: 'Speed: Real-Time Sync',
+        desc: 'Order punch hote hi automated Tally & FMS database se dealer ka current ledger aur credit status verify hota hai. Daily Collection model se dealer bina kisi payment block ke instant clearance paata hai.'
+      },
+      {
+        badge: 'Stage 03 of 06',
+        icon: 'fas fa-bolt text-warning',
+        title: 'Automated Fast Invoicing & Pick-Slip',
+        metric: 'Time: Under 4 Minutes',
+        desc: 'Automated billing software turant GST invoice aur batch pick-slip print karta hai. Warehouse team ke handheld scanners par ordered items aur rack location turant broadcast hoti hai.'
+      },
+      {
+        badge: 'Stage 04 of 06',
+        icon: 'fas fa-barcode text-info',
+        title: 'QC Verified & Double-Scan Secure Packing',
+        metric: 'Accuracy: 99.9% Error-Free',
+        desc: 'Har single item ka barcode scanner par check hota hai. CCTV recorded table par bubble-wrap secure packing hoti hai taaki transport me zero breakage aur zero missing item ki guarantee rahe.'
+      },
+      {
+        badge: 'Stage 05 of 06',
+        icon: 'fas fa-truck-fast text-danger',
+        title: '95% Same-Day Dispatch by 6:00 PM',
+        metric: 'SLA: 95% Daily Dispatch',
+        desc: 'Shaam 6 baje se pehle sabhi verified orders local transport hubs (Ahmednagar, Pune, Nashik, Marathwada & All Maharashtra) ko hand-over kiye jaate hain with live tracking LR update.'
+      },
+      {
+        badge: 'Stage 06 of 06',
+        icon: 'fas fa-handshake-angle text-success',
+        title: 'Delivery Confirmation & Replacement Desk',
+        metric: 'Support: VIP Dedicated Desk',
+        desc: 'Delivery hone par dealer feedback liya jata hai. Agar kisi piece me manufacturing defect nikla to dedicated replacement desk bina kisi jhanjhat ke fast swap process execute karti hai.'
+      }
+    ];
+
+    var currentWorkflowStep = 0;
+    var workflowAutoTimer = null;
+
+    function setWorkflowStep(index, isUserClick) {
+      if (index < 0 || index >= workflowStages.length) return;
+      currentWorkflowStep = index;
+      var stage = workflowStages[index];
+
+      var btns = document.querySelectorAll('.workflow-step-btn');
+      btns.forEach(function(b, i) {
+        if (i === index) {
+          b.classList.add('active');
+          if (b.scrollIntoView) {
+            b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        } else {
+          b.classList.remove('active');
+        }
+      });
+
+      var box = document.getElementById('workflowDetailBox');
+      if (box) {
+        box.style.opacity = '0.3';
+        box.style.transform = 'translateY(6px)';
+        setTimeout(function() {
+          var bEl = document.getElementById('workflowBadge');
+          var tEl = document.getElementById('workflowTitle');
+          var mEl = document.getElementById('workflowMetric');
+          var dEl = document.getElementById('workflowDesc');
+
+          if (bEl) bEl.innerText = stage.badge;
+          if (tEl) tEl.innerHTML = '<i class="' + stage.icon + ' me-2"></i>' + stage.title;
+          if (mEl) mEl.innerHTML = '<i class="fas fa-stopwatch me-1"></i> ' + stage.metric;
+          if (dEl) dEl.innerText = stage.desc;
+
+          box.style.opacity = '1';
+          box.style.transform = 'translateY(0)';
+        }, 150);
+      }
+
+      if (isUserClick && workflowAutoTimer) {
+        clearInterval(workflowAutoTimer);
+        workflowAutoTimer = null;
+      }
+    }
+
+    function nextWorkflowStep() {
+      var next = (currentWorkflowStep + 1) % workflowStages.length;
+      setWorkflowStep(next, true);
+    }
+
+    function prevWorkflowStep() {
+      var prev = (currentWorkflowStep - 1 + workflowStages.length) % workflowStages.length;
+      setWorkflowStep(prev, true);
+    }
+
+    function highlightMilestone(element) {
+      document.querySelectorAll('.journey-timeline-item').forEach(function(el) {
+        el.style.opacity = '0.6';
+      });
+      if (element) {
+        element.style.opacity = '1';
+      }
+      setTimeout(function() {
+        document.querySelectorAll('.journey-timeline-item').forEach(function(el) {
+          el.style.opacity = '1';
+        });
+      }, 3000);
+    }
+
+    // --- 2. Animated Number Count-Up Function ---
+    function animateCountUp(el) {
+      if (!el || el.dataset.counted === 'true') return;
+      el.dataset.counted = 'true';
+      var target = parseFloat(el.getAttribute('data-count-target')) || 0;
+      var suffix = el.getAttribute('data-count-suffix') || '';
+      var duration = 1800;
+      var startTime = performance.now();
+
+      function updateNumber(now) {
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        var easeOut = 1 - Math.pow(1 - progress, 3);
+        var current = Math.floor(easeOut * target);
+
+        el.innerText = current.toLocaleString('en-IN') + suffix;
+
+        if (progress < 1) {
+          requestAnimationFrame(updateNumber);
+        } else {
+          el.innerText = target.toLocaleString('en-IN') + suffix;
+          el.classList.add('counter-popped');
+        }
+      }
+      requestAnimationFrame(updateNumber);
+    }
+
+    // --- 3. Scroll Reveal & Intersection Observer ---
+    document.addEventListener("DOMContentLoaded", function() {
+      var revealObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            entry.target.classList.add('visible');
+
+            // Trigger Count-Up
+            var counters = entry.target.querySelectorAll('[data-count-target]');
+            counters.forEach(function(c) {
+              animateCountUp(c);
+            });
+            if (entry.target.hasAttribute('data-count-target')) {
+              animateCountUp(entry.target);
+            }
+
+            // Start Workflow Auto-cycle
+            if (entry.target.classList.contains('workflow-infographic-container') && !workflowAutoTimer) {
+              workflowAutoTimer = setInterval(function() {
+                var next = (currentWorkflowStep + 1) % workflowStages.length;
+                setWorkflowStep(next, false);
+              }, 4500);
+            }
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.reveal-up, .reveal-left, .reveal-right, .reveal-scale, .scroll-fade, .counter-section, .workflow-infographic-container, .pillar-card').forEach(function(el) {
+        revealObserver.observe(el);
+      });
+    });
+
     });
 
     
