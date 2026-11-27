@@ -1135,6 +1135,22 @@
               otBox.style.display = 'none';
             }
           }
+
+          // Auto-populate completed tasks into the active role form if empty
+          try {
+            var roleSelect = document.getElementById('eodRoleSelect');
+            var selectedRole = roleSelect ? roleSelect.value : "General";
+            var tasksInput = null;
+            if (selectedRole === "Sales") tasksInput = document.getElementById('eodSalesTasks');
+            else if (selectedRole === "Accounts") tasksInput = document.getElementById('eodAccountsTasks');
+            else if (selectedRole === "Store") tasksInput = document.getElementById('eodStoreTasks');
+            else if (selectedRole === "MIS") tasksInput = document.getElementById('eodMisTasks');
+            else tasksInput = document.getElementById('eodGenTasks');
+            
+            if (tasksInput && !tasksInput.value.trim() && taskSummary.completedTasks && taskSummary.completedTasks.length > 0) {
+              tasksInput.value = taskSummary.completedTasks.join(" & ");
+            }
+          } catch(e) {}
         }
       }).withFailureHandler(function(err) {
         if (loadingPill) loadingPill.innerText = "OFFLINE";
@@ -1336,42 +1352,42 @@
       var remarks = "";
 
       if (selectedRole === "Sales") {
-        var visits = document.getElementById('eodSalesVisits').value.trim();
-        var orders = document.getElementById('eodSalesOrders').value.trim();
-        var collection = document.getElementById('eodSalesCollection').value.trim();
+        var visits = getEodVal('eodSalesVisits');
+        var orders = getEodVal('eodSalesOrders');
+        var collection = getEodVal('eodSalesCollection');
         metrics = ["• Dealers Visited: " + (visits || "0"), "• Orders Taken: " + (orders || "None"), "• Collection: ₹" + (collection || "0")].join(NL);
-        tasks = document.getElementById('eodSalesTasks').value.trim();
-        tomorrow = document.getElementById('eodSalesTomorrow').value.trim();
-        remarks = document.getElementById('eodSalesRemarks').value.trim();
+        tasks = getEodVal('eodSalesTasks');
+        tomorrow = getEodVal('eodSalesTomorrow');
+        remarks = getEodVal('eodSalesRemarks');
       } else if (selectedRole === "Accounts") {
-        var bills = document.getElementById('eodAccountsBills').value.trim();
-        var payments = document.getElementById('eodAccountsPayments').value.trim();
-        var followups = document.getElementById('eodAccountsFollowups').value.trim();
+        var bills = getEodVal('eodAccountsBills');
+        var payments = getEodVal('eodAccountsPayments');
+        var followups = getEodVal('eodAccountsFollowups');
         metrics = ["• Bills Generated: " + (bills || "0"), "• Payment Entries: " + (payments || "0"), "• Follow-ups Done: " + (followups || "None")].join(NL);
-        tasks = document.getElementById('eodAccountsTasks').value.trim();
-        tomorrow = document.getElementById('eodAccountsTomorrow').value.trim();
-        remarks = document.getElementById('eodAccountsRemarks').value.trim();
+        tasks = getEodVal('eodAccountsTasks');
+        tomorrow = getEodVal('eodAccountsTomorrow');
+        remarks = getEodVal('eodAccountsRemarks');
       } else if (selectedRole === "Store") {
-        var inward = document.getElementById('eodStoreInward').value.trim();
-        var dispatch = document.getElementById('eodStoreDispatch').value.trim();
-        var check = document.getElementById('eodStoreCheck').value.trim();
+        var inward = getEodVal('eodStoreInward');
+        var dispatch = getEodVal('eodStoreDispatch');
+        var check = getEodVal('eodStoreCheck');
         metrics = ["• Inward Received: " + (inward || "None"), "• Dispatches Shipped: " + (dispatch || "None"), "• Stock Audit: " + (check || "Ok")].join(NL);
-        tasks = document.getElementById('eodStoreTasks').value.trim();
-        tomorrow = document.getElementById('eodStoreTomorrow').value.trim();
-        remarks = document.getElementById('eodStoreRemarks').value.trim();
+        tasks = getEodVal('eodStoreTasks');
+        tomorrow = getEodVal('eodStoreTomorrow');
+        remarks = getEodVal('eodStoreRemarks');
       } else if (selectedRole === "MIS") {
-        var sheets = document.getElementById('eodMisSheets').value.trim();
-        var fms = document.getElementById('eodMisFms').value.trim();
-        var issues = document.getElementById('eodMisIssues').value.trim();
+        var sheets = getEodVal('eodMisSheets');
+        var fms = getEodVal('eodMisFms');
+        var issues = getEodVal('eodMisIssues');
         metrics = ["• Sheets Updated: " + (sheets || "Updated"), "• FMS Status: " + (fms || "Ok"), "• Issues Resolved: " + (issues || "None")].join(NL);
-        tasks = document.getElementById('eodMisTasks').value.trim();
-        tomorrow = document.getElementById('eodMisTomorrow').value.trim();
-        remarks = document.getElementById('eodMisRemarks').value.trim();
+        tasks = getEodVal('eodMisTasks');
+        tomorrow = getEodVal('eodMisTomorrow');
+        remarks = getEodVal('eodMisRemarks');
       } else {
-        metrics = document.getElementById('eodGenMetrics').value.trim();
-        tasks = document.getElementById('eodGenTasks').value.trim();
-        tomorrow = document.getElementById('eodGenTomorrow').value.trim();
-        remarks = document.getElementById('eodGenRemarks').value.trim();
+        metrics = getEodVal('eodGenMetrics');
+        tasks = getEodVal('eodGenTasks');
+        tomorrow = getEodVal('eodGenTomorrow');
+        remarks = getEodVal('eodGenRemarks');
       }
 
       var ts = window.currentTaskSummary || {};
@@ -1415,7 +1431,7 @@
       }
 
       if (tasks) {
-        text += "✅ *Tasks Completed Details:*" + NL + tasks + NL + NL;
+        text += "📝 *Additional Tasks Notes:*" + NL + tasks + NL + NL;
       }
       if (metrics) {
         text += "📈 *Key Numbers / Metrics:*" + NL + metrics + NL + NL;
@@ -1643,6 +1659,147 @@ window.showEODPromptNotification = showEODPromptNotification;
         <option value="Store">Store & Warehouse (स्टॉक इनवर्ड, पैकिंग, डिस्पैच)</option>
         <option value="MIS">MIS & Operations (शीट्स, रिपोर्ट्स, सिस्टम ऑपरेशन्स)</option>
       </select>
+
+      <!-- Role-Specific Form Fields -->
+      <!-- 1. SALES FORM -->
+      <div id="eodFormSales" class="eod-role-form" style="display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Dealers Visited:</label>
+            <input type="number" id="eodSalesVisits" placeholder="Kitne mile (e.g. 7)" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Orders Taken (₹):</label>
+            <input type="text" id="eodSalesOrders" placeholder="e.g. 4 (₹95,000)" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Payment Collection (₹):</label>
+          <input type="number" id="eodSalesCollection" placeholder="Total payment collected (e.g. 50000)" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tasks Completed / Area Covered today:*</label>
+          <textarea id="eodSalesTasks" rows="2" placeholder="Kaunse route/market gaye, key discussions..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Route / Target Plan:</label>
+          <textarea id="eodSalesTomorrow" rows="2" placeholder="Kal ka plan, kaunse dealers target hai..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Remarks / Market Feedback (Optional):</label>
+          <textarea id="eodSalesRemarks" rows="2" placeholder="Competitor activity, payment issues, schemes..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <!-- 2. ACCOUNTS FORM -->
+      <div id="eodFormAccounts" class="eod-role-form" style="display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Bills Generated (Count):</label>
+            <input type="number" id="eodAccountsBills" placeholder="e.g. 15 bills" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Payments Entered / Recd:</label>
+            <input type="text" id="eodAccountsPayments" placeholder="e.g. ₹1,20,000" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Ledger / Payment Follow-ups Done:</label>
+          <input type="text" id="eodAccountsFollowups" placeholder="e.g. Called 10 overdue dealers" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Accounts Work Completed Today:*</label>
+          <textarea id="eodAccountsTasks" rows="2" placeholder="Bank reconciliation, tally entry, voucher verification..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Priorities (Tax, GST, Payments):</label>
+          <textarea id="eodAccountsTomorrow" rows="2" placeholder="Kal kya clear karna hai, urgent vendor payments..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Pending Approvals / Remarks:</label>
+          <textarea id="eodAccountsRemarks" rows="2" placeholder="Disputed bills, rate differences, bank issues..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <!-- 3. STORE & WAREHOUSE FORM -->
+      <div id="eodFormStore" class="eod-role-form" style="display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Stock Inward Received:</label>
+            <input type="text" id="eodStoreInward" placeholder="e.g. 50 pcs Boat, 20 Luminous" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Dispatches Packed / Shipped:</label>
+            <input type="text" id="eodStoreDispatch" placeholder="e.g. 8 parcels dispatched" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Physical Stock Audited Today:</label>
+          <input type="text" id="eodStoreCheck" placeholder="e.g. Verified battery cartons / All intact" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Store Work Completed Today:*</label>
+          <textarea id="eodStoreTasks" rows="2" placeholder="Packing, loading, stock placement, unboxing..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Dispatch / Inward Plan:</label>
+          <textarea id="eodStoreTomorrow" rows="2" placeholder="Urgent orders to pack, upcoming truck inward..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Packaging Material Needed / Remarks:</label>
+          <textarea id="eodStoreRemarks" rows="2" placeholder="Tapes, cartons shortage, warehouse status..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <!-- 4. MIS & OPERATIONS FORM -->
+      <div id="eodFormMIS" class="eod-role-form" style="display:none;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">Sheets / Dashboards Updated:</label>
+            <input type="text" id="eodMisSheets" placeholder="e.g. Sales, Stock, Attendance" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:600; color:#475569;">FMS Compliance:</label>
+            <input type="text" id="eodMisFms" placeholder="e.g. 100% On-Track" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tech / System Issues Resolved:</label>
+          <input type="text" id="eodMisIssues" placeholder="e.g. App sync ok, fixed 1 calculation" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Operations Tasks Completed Today:*</label>
+          <textarea id="eodMisTasks" rows="2" placeholder="Daily MIS compilation, workflow audits, data backup..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Key Deliverables:</label>
+          <textarea id="eodMisTomorrow" rows="2" placeholder="Reports to generate, team reviews, automation..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Remarks / Escalations (Optional):</label>
+          <textarea id="eodMisRemarks" rows="2" placeholder="Any blockers or management notice..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
+
+      <!-- 5. GENERAL / OFFICE FORM -->
+      <div id="eodFormGeneral" class="eod-role-form" style="display:none;">
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tasks Completed Today:*</label>
+          <textarea id="eodGenTasks" rows="3" placeholder="Aaj din bhar me kya kya kaam kiya, vistar se likhein..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Key Metrics / Quantities Handled:</label>
+          <input type="text" id="eodGenMetrics" placeholder="e.g. 20 phone calls, 5 files cleared" style="margin:4px 0 0 0; padding:10px; font-size:13px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Tomorrow's Priorities / Plan:</label>
+          <textarea id="eodGenTomorrow" rows="2" placeholder="Kal kya pending kaam pura karna hai..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px; font-weight:600; color:#475569;">Remarks / Issues (Optional):</label>
+          <textarea id="eodGenRemarks" rows="2" placeholder="Koi observations ya remarks..." style="margin:4px 0 0 0; padding:10px; font-size:13px;"></textarea>
+        </div>
+      </div>
 
       <!-- Status / Notification inside modal -->
       <div id="eodModalStatus" style="display:none; padding:10px; border-radius:10px; font-size:13px; margin-bottom:14px; text-align:center;"></div>
