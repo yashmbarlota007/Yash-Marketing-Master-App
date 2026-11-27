@@ -1050,25 +1050,90 @@
         if (loadingPill) loadingPill.innerText = "LIVE SYNC ✅";
         if (taskSummary && taskSummary.success) {
           window.currentTaskSummary = taskSummary;
-          document.getElementById('eodMetricAssigned').innerText = taskSummary.assignedCount || "0";
-          document.getElementById('eodMetricCompleted').innerText = taskSummary.completedCount || "0";
-          document.getElementById('eodMetricPending').innerText = taskSummary.pendingCount || "0";
           
+          // 1. Daily Tasks Metrics
+          var elAssigned = document.getElementById('eodMetricAssigned');
+          if (elAssigned) elAssigned.innerText = (taskSummary.assignedCount !== undefined) ? taskSummary.assignedCount : "0";
+          var elCompleted = document.getElementById('eodMetricCompleted');
+          if (elCompleted) elCompleted.innerText = (taskSummary.completedCount !== undefined) ? taskSummary.completedCount : "0";
+          var elPending = document.getElementById('eodMetricPending');
+          if (elPending) elPending.innerText = (taskSummary.pendingCount !== undefined) ? taskSummary.pendingCount : "0";
+          
+          // 2. One-Time (Adhoc) Tasks Metrics
+          var elOtTotal = document.getElementById('eodOneTimeTotal');
+          if (elOtTotal) elOtTotal.innerText = (taskSummary.oneTimeTotal !== undefined) ? taskSummary.oneTimeTotal : "0";
+          var elOtCompleted = document.getElementById('eodOneTimeCompleted');
+          if (elOtCompleted) elOtCompleted.innerText = (taskSummary.oneTimeCompleted !== undefined) ? taskSummary.oneTimeCompleted : "0";
+          var elOtPending = document.getElementById('eodOneTimePending');
+          if (elOtPending) elOtPending.innerText = (taskSummary.oneTimePending !== undefined) ? taskSummary.oneTimePending : "0";
+
+          // 3. Scores
           if (taskSummary.scores) {
-            document.getElementById('eodScoreToday').innerText = taskSummary.scores.todayScore || "-";
-            document.getElementById('eodScoreWeek').innerText = taskSummary.scores.weekScore || "-";
-            document.getElementById('eodScoreMonth').innerText = taskSummary.scores.monthScore || "-";
+            var elScToday = document.getElementById('eodScoreToday');
+            if (elScToday) elScToday.innerText = taskSummary.scores.todayScore || "-";
+            var elScWeek = document.getElementById('eodScoreWeek');
+            if (elScWeek) elScWeek.innerText = taskSummary.scores.weekScore || "-";
+            var elScMonth = document.getElementById('eodScoreMonth');
+            if (elScMonth) elScMonth.innerText = taskSummary.scores.monthScore || "-";
           }
           
+          // 4. Render Completed Tasks Today Box (GREEN)
+          var completedBox = document.getElementById('eodCompletedTasksBox');
+          var completedList = document.getElementById('eodCompletedTasksList');
+          var completedBadge = document.getElementById('eodCompletedCountBadge');
+          if (completedBox) {
+            completedBox.style.display = 'block';
+            if (taskSummary.completedTasks && taskSummary.completedTasks.length > 0) {
+              if (completedBadge) completedBadge.innerText = taskSummary.completedTasks.length;
+              if (completedList) {
+                completedList.innerHTML = taskSummary.completedTasks.map(function(t) { return '• ' + t; }).join('<br>');
+              }
+            } else {
+              if (completedBadge) completedBadge.innerText = '0';
+              if (completedList) {
+                completedList.innerHTML = '<span style="color:#64748b; font-style:italic;">(Aaj abhi tak koi task submit nahi kiya gaya hai)</span>';
+              }
+            }
+          }
+          
+          // 5. Render Pending Daily Tasks Box (RED)
           var pendingBox = document.getElementById('eodPendingTasksBox');
           var pendingList = document.getElementById('eodPendingTasksList');
-          if (taskSummary.pendingTasks && taskSummary.pendingTasks.length > 0) {
-            if (pendingBox) pendingBox.style.display = 'block';
-            if (pendingList) {
-              pendingList.innerHTML = taskSummary.pendingTasks.map(function(t) { return '• ' + t; }).join('<br>');
+          var pendingBadge = document.getElementById('eodPendingCountBadge');
+          if (pendingBox) {
+            pendingBox.style.display = 'block';
+            if (taskSummary.pendingTasks && taskSummary.pendingTasks.length > 0) {
+              if (pendingBadge) pendingBadge.innerText = taskSummary.pendingTasks.length;
+              if (pendingList) {
+                pendingList.innerHTML = taskSummary.pendingTasks.map(function(t) { return '• ' + t; }).join('<br>');
+              }
+            } else {
+              if (pendingBadge) pendingBadge.innerText = '0';
+              if (pendingList) {
+                pendingList.innerHTML = '<b style="color:#15803d;">🎉 Aaj ke sabhi daily tasks complete ho gaye hain! Zero pending.</b>';
+              }
             }
-          } else {
-            if (pendingBox) pendingBox.style.display = 'none';
+          }
+
+          // 6. Render Pending One-Time Tasks Box (AMBER)
+          var otBox = document.getElementById('eodOneTimePendingBox');
+          var otList = document.getElementById('eodOneTimePendingList');
+          var otBadge = document.getElementById('eodOneTimePendingBadge');
+          if (otBox) {
+            if (taskSummary.oneTimePending && taskSummary.oneTimePending > 0) {
+              otBox.style.display = 'block';
+              if (otBadge) otBadge.innerText = taskSummary.oneTimePending;
+              if (otList && taskSummary.oneTimePendingList) {
+                var topPending = taskSummary.oneTimePendingList.slice(0, 5);
+                var itemsHtml = topPending.map(function(t) { return '• ' + t; }).join('<br>');
+                if (taskSummary.oneTimePendingList.length > 5) {
+                  itemsHtml += '<br><i style="color:#b45309; font-size:10px;">...aur ' + (taskSummary.oneTimePendingList.length - 5) + ' pending one-time tasks</i>';
+                }
+                otList.innerHTML = itemsHtml;
+              }
+            } else {
+              otBox.style.display = 'none';
+            }
           }
         }
       }).withFailureHandler(function(err) {
