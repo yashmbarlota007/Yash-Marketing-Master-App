@@ -1221,124 +1221,12 @@
       if (targetEl) targetEl.style.display = 'block';
     }
 
-    function executeSubmitEODReport() {
-      var roleSelect = document.getElementById('eodRoleSelect');
-      var selectedRole = roleSelect ? roleSelect.value : "General";
-      var staffName = (document.getElementById('profileNameDisplay') && document.getElementById('profileNameDisplay').innerText) || window.currentEmpName || "Staff";
-      
-      var tasks = "";
-      var metrics = "";
-      var tomorrow = "";
-      var remarks = "";
-      
-      if (selectedRole === "Sales") {
-        var visits = document.getElementById('eodSalesVisits').value.trim();
-        var orders = document.getElementById('eodSalesOrders').value.trim();
-        var collection = document.getElementById('eodSalesCollection').value.trim();
-        metrics = "Visits: " + (visits || "0") + " | Orders: " + (orders || "None") + " | Collection: ₹" + (collection || "0");
-        tasks = document.getElementById('eodSalesTasks').value.trim();
-        tomorrow = document.getElementById('eodSalesTomorrow').value.trim();
-        remarks = document.getElementById('eodSalesRemarks').value.trim();
-      } else if (selectedRole === "Accounts") {
-        var bills = document.getElementById('eodAccountsBills').value.trim();
-        var payments = document.getElementById('eodAccountsPayments').value.trim();
-        var followups = document.getElementById('eodAccountsFollowups').value.trim();
-        metrics = "Bills: " + (bills || "0") + " | Payments: " + (payments || "0") + " | Follow-ups: " + (followups || "None");
-        tasks = document.getElementById('eodAccountsTasks').value.trim();
-        tomorrow = document.getElementById('eodAccountsTomorrow').value.trim();
-        remarks = document.getElementById('eodAccountsRemarks').value.trim();
-      } else if (selectedRole === "Store") {
-        var inward = document.getElementById('eodStoreInward').value.trim();
-        var dispatch = document.getElementById('eodStoreDispatch').value.trim();
-        var check = document.getElementById('eodStoreCheck').value.trim();
-        metrics = "Inward: " + (inward || "None") + " | Dispatch: " + (dispatch || "None") + " | Audit: " + (check || "Ok");
-        tasks = document.getElementById('eodStoreTasks').value.trim();
-        tomorrow = document.getElementById('eodStoreTomorrow').value.trim();
-        remarks = document.getElementById('eodStoreRemarks').value.trim();
-      } else if (selectedRole === "MIS") {
-        var sheets = document.getElementById('eodMisSheets').value.trim();
-        var fms = document.getElementById('eodMisFms').value.trim();
-        var issues = document.getElementById('eodMisIssues').value.trim();
-        metrics = "Sheets: " + (sheets || "Updated") + " | FMS: " + (fms || "Ok") + " | Issues: " + (issues || "None");
-        tasks = document.getElementById('eodMisTasks').value.trim();
-        tomorrow = document.getElementById('eodMisTomorrow').value.trim();
-        remarks = document.getElementById('eodMisRemarks').value.trim();
-      } else {
-        metrics = document.getElementById('eodGenMetrics').value.trim();
-        tasks = document.getElementById('eodGenTasks').value.trim();
-        tomorrow = document.getElementById('eodGenTomorrow').value.trim();
-        remarks = document.getElementById('eodGenRemarks').value.trim();
-      }
-      
-      var ts = window.currentTaskSummary || {};
-      
-      var statusEl = document.getElementById('eodModalStatus');
-      var submitBtn = document.getElementById('btnSubmitEOD');
-      if (statusEl) {
-        statusEl.style.display = 'block';
-        statusEl.style.background = '#eff6ff';
-        statusEl.style.color = '#1e40af';
-        statusEl.innerHTML = '⏳ Submitting Merged EOD Report to Google Sheets... Please wait.';
-      }
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.style.opacity = '0.6';
-      }
-      
-      var payload = {
-        staffName: staffName,
-        role: selectedRole,
-        tasksCompleted: tasks,
-        metrics: metrics,
-        tomorrowPlan: tomorrow,
-        remarks: remarks,
-        taskAppAssignedCount: ts.assignedCount !== undefined ? ts.assignedCount : "",
-        taskAppCompletedCount: ts.completedCount !== undefined ? ts.completedCount : "",
-        taskAppPendingList: (ts.pendingTasks && ts.pendingTasks.length > 0) ? ts.pendingTasks.join(", ") : "None",
-        oneTimeTotal: ts.oneTimeTotal !== undefined ? ts.oneTimeTotal : "",
-        oneTimeCompleted: ts.oneTimeCompleted !== undefined ? ts.oneTimeCompleted : "",
-        oneTimePending: ts.oneTimePending !== undefined ? ts.oneTimePending : "",
-        taskAppTodayScore: (ts.scores && ts.scores.todayScore) || "",
-        taskAppWeekScore: (ts.scores && ts.scores.weekScore) || "",
-        taskAppMonthScore: (ts.scores && ts.scores.monthScore) || "",
-        submittedVia: 'Attendance + Task App OS'
-      };
-      
-      google.script.run.withSuccessHandler(function(res) {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.style.opacity = '1';
-        }
-        if (res && res.success) {
-          if (statusEl) {
-            statusEl.style.background = '#ecfdf5';
-            statusEl.style.color = '#065f46';
-            statusEl.innerHTML = "✅ <b>Merged EOD Report Successfully Submitted!</b><br><span style='font-size:11px;'>Saved to Google Sheets at " + res.timestamp + "</span>";
-          }
-          setTimeout(function() {
-            closeEODReportModal();
-          }, 3000);
-        } else {
-          if (statusEl) {
-            statusEl.style.background = '#fef2f2';
-            statusEl.style.color = '#991b1b';
-            statusEl.innerHTML = "❌ Error: " + ((res && res.error) || 'Could not save report.');
-          }
-        }
-      }).withFailureHandler(function(err) {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.style.opacity = '1';
-        }
-        if (statusEl) {
-          statusEl.style.background = '#fef2f2';
-          statusEl.style.color = '#991b1b';
-          statusEl.innerHTML = "❌ Connection Error: " + (err.message || err);
-        }
-      }).submitEODReport(currentEmpId, payload);
+    function getEodVal(id) {
+      var el = document.getElementById(id);
+      return el ? el.value.trim() : "";
     }
 
-    function shareEODOnWhatsApp() {
+    function buildEODWhatsAppMessage() {
       var roleSelect = document.getElementById('eodRoleSelect');
       var selectedRole = roleSelect ? roleSelect.value : "General";
       var staffName = (document.getElementById('profileNameDisplay') && document.getElementById('profileNameDisplay').innerText) || window.currentEmpName || "Staff Member";
@@ -1445,11 +1333,186 @@
       text += "━━━━━━━━━━━━━━━━━━━━━━" + NL;
       text += "_Sent via Yash Marketing Attendance & Task OS_";
 
-      var waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
-      window.open(waUrl, "_blank");
+      return text;
     }
 
-window.showEODPromptNotification = showEODPromptNotification;
+    function openWhatsAppReliably(text) {
+      var encoded = encodeURIComponent(text);
+      var waAppUrl = "whatsapp://send?text=" + encoded;
+      var waWebUrl = "https://api.whatsapp.com/send?text=" + encoded;
+      var opened = false;
+
+      // 1. Try navigating top level window if accessible (escapes iframe sandbox)
+      try {
+        if (window.top && window.top !== window) {
+          window.top.location.href = waWebUrl;
+          opened = true;
+        }
+      } catch(e) {}
+
+      // 2. Trigger anchor with target="_top"
+      if (!opened) {
+        try {
+          var a = document.createElement("a");
+          a.href = waWebUrl;
+          a.target = "_top";
+          a.rel = "noopener noreferrer";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          opened = true;
+        } catch(e) {}
+      }
+
+      // 3. Fallback to direct window navigation or app schema
+      setTimeout(function() {
+        try {
+          window.location.href = waAppUrl;
+        } catch(e) {
+          try {
+            window.open(waWebUrl, "_blank");
+          } catch(err) {
+            window.location.href = waWebUrl;
+          }
+        }
+      }, 300);
+    }
+
+    function shareEODOnWhatsApp() {
+      var waText = buildEODWhatsAppMessage();
+      openWhatsAppReliably(waText);
+    }
+
+    function executeSubmitEODReport() {
+      var roleSelect = document.getElementById('eodRoleSelect');
+      var selectedRole = roleSelect ? roleSelect.value : "General";
+      var staffName = (document.getElementById('profileNameDisplay') && document.getElementById('profileNameDisplay').innerText) || window.currentEmpName || "Staff";
+      
+      var tasks = "";
+      var metrics = "";
+      var tomorrow = "";
+      var remarks = "";
+      
+      if (selectedRole === "Sales") {
+        var visits = getEodVal('eodSalesVisits');
+        var orders = getEodVal('eodSalesOrders');
+        var collection = getEodVal('eodSalesCollection');
+        metrics = "Visits: " + (visits || "0") + " | Orders: " + (orders || "None") + " | Collection: ₹" + (collection || "0");
+        tasks = getEodVal('eodSalesTasks');
+        tomorrow = getEodVal('eodSalesTomorrow');
+        remarks = getEodVal('eodSalesRemarks');
+      } else if (selectedRole === "Accounts") {
+        var bills = getEodVal('eodAccountsBills');
+        var payments = getEodVal('eodAccountsPayments');
+        var followups = getEodVal('eodAccountsFollowups');
+        metrics = "Bills: " + (bills || "0") + " | Payments: " + (payments || "0") + " | Follow-ups: " + (followups || "None");
+        tasks = getEodVal('eodAccountsTasks');
+        tomorrow = getEodVal('eodAccountsTomorrow');
+        remarks = getEodVal('eodAccountsRemarks');
+      } else if (selectedRole === "Store") {
+        var inward = getEodVal('eodStoreInward');
+        var dispatch = getEodVal('eodStoreDispatch');
+        var check = getEodVal('eodStoreCheck');
+        metrics = "Inward: " + (inward || "None") + " | Dispatch: " + (dispatch || "None") + " | Audit: " + (check || "Ok");
+        tasks = getEodVal('eodStoreTasks');
+        tomorrow = getEodVal('eodStoreTomorrow');
+        remarks = getEodVal('eodStoreRemarks');
+      } else if (selectedRole === "MIS") {
+        var sheets = getEodVal('eodMisSheets');
+        var fms = getEodVal('eodMisFms');
+        var issues = getEodVal('eodMisIssues');
+        metrics = "Sheets: " + (sheets || "Updated") + " | FMS: " + (fms || "Ok") + " | Issues: " + (issues || "None");
+        tasks = getEodVal('eodMisTasks');
+        tomorrow = getEodVal('eodMisTomorrow');
+        remarks = getEodVal('eodMisRemarks');
+      } else {
+        metrics = getEodVal('eodGenMetrics');
+        tasks = getEodVal('eodGenTasks');
+        tomorrow = getEodVal('eodGenTomorrow');
+        remarks = getEodVal('eodGenRemarks');
+      }
+      
+      var ts = window.currentTaskSummary || {};
+      
+      // If tasks field is empty, fallback to Task App completed tasks
+      if (!tasks && ts.completedTasks && ts.completedTasks.length > 0) {
+        tasks = ts.completedTasks.join(" & ");
+      }
+      
+      var statusEl = document.getElementById('eodModalStatus');
+      var submitBtn = document.getElementById('btnSubmitEOD');
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.background = '#eff6ff';
+        statusEl.style.color = '#1e40af';
+        statusEl.innerHTML = '⏳ Submitting EOD Report to Google Sheets & WhatsApp... Please wait.';
+      }
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+      }
+      
+      var payload = {
+        staffName: staffName,
+        role: selectedRole,
+        tasksCompleted: tasks,
+        metrics: metrics,
+        tomorrowPlan: tomorrow,
+        remarks: remarks,
+        taskAppAssignedCount: ts.assignedCount !== undefined ? ts.assignedCount : "",
+        taskAppCompletedCount: ts.completedCount !== undefined ? ts.completedCount : "",
+        taskAppPendingList: (ts.pendingTasks && ts.pendingTasks.length > 0) ? ts.pendingTasks.join(", ") : "None",
+        oneTimeTotal: ts.oneTimeTotal !== undefined ? ts.oneTimeTotal : "",
+        oneTimeCompleted: ts.oneTimeCompleted !== undefined ? ts.oneTimeCompleted : "",
+        oneTimePending: ts.oneTimePending !== undefined ? ts.oneTimePending : "",
+        taskAppTodayScore: (ts.scores && ts.scores.todayScore) || "",
+        taskAppWeekScore: (ts.scores && ts.scores.weekScore) || "",
+        taskAppMonthScore: (ts.scores && ts.scores.monthScore) || "",
+        submittedVia: 'Attendance + Task App OS'
+      };
+      
+      google.script.run.withSuccessHandler(function(res) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+        }
+        if (res && res.success) {
+          var waText = buildEODWhatsAppMessage();
+          var waLink = "https://api.whatsapp.com/send?text=" + encodeURIComponent(waText);
+          
+          if (statusEl) {
+            statusEl.style.background = '#ecfdf5';
+            statusEl.style.color = '#065f46';
+            statusEl.innerHTML = "✅ <b>Merged EOD Report Successfully Saved!</b><br><span style='font-size:11px;'>Google Sheets me save ho gaya. Ab WhatsApp open ho raha hai...</span><br><a href='" + waLink + "' target='_top' style='display:inline-block; margin-top:8px; background:#25d366; color:#fff; padding:10px 18px; border-radius:10px; font-weight:800; text-decoration:none; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); font-size:13px;'>📲 Click Karein: WhatsApp Pe Bhejein</a>";
+          }
+          
+          // Automatically trigger WhatsApp share immediately!
+          openWhatsAppReliably(waText);
+
+          setTimeout(function() {
+            closeEODReportModal();
+          }, 8000);
+        } else {
+          if (statusEl) {
+            statusEl.style.background = '#fef2f2';
+            statusEl.style.color = '#991b1b';
+            statusEl.innerHTML = "❌ Error: " + ((res && res.error) || 'Could not save report.');
+          }
+        }
+      }).withFailureHandler(function(err) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+        }
+        if (statusEl) {
+          statusEl.style.background = '#fef2f2';
+          statusEl.style.color = '#991b1b';
+          statusEl.innerHTML = "❌ Connection Error: " + (err.message || err);
+        }
+      }).submitEODReport(currentEmpId, payload);
+    }
+
+    window.showEODPromptNotification = showEODPromptNotification;
     window.closeEODPrompt = closeEODPrompt;
     window.openEODReportModal = openEODReportModal;
     window.closeEODReportModal = closeEODReportModal;
