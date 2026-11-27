@@ -1318,10 +1318,13 @@
       if (ts.assignedCount !== undefined) {
         text += "📊 *TASK APP OPERATIONS & SCORES:*" + NL;
         text += "• 📋 Tasks Assigned Today: " + ts.assignedCount + NL;
-        text += "• ✅ Tasks Completed: " + ts.completedCount + NL;
-        text += "• ⏳ Pending / Incomplete: " + ts.pendingCount + NL;
+        text += "• ✅ Tasks Completed Today: " + ts.completedCount + NL;
+        if (ts.completedTasks && ts.completedTasks.length > 0) {
+          text += ts.completedTasks.map(function(t) { return "    ✓ " + t; }).join(NL) + NL;
+        }
+        text += "• ⏳ Pending / Incomplete Today: " + ts.pendingCount + NL;
         if (ts.pendingTasks && ts.pendingTasks.length > 0) {
-          text += ts.pendingTasks.slice(0, 6).map(function(t) { return "  - " + t; }).join(NL) + NL;
+          text += ts.pendingTasks.slice(0, 10).map(function(t) { return "    - " + t; }).join(NL) + NL;
         }
         if (ts.scores) {
           text += "• 🎯 Today's Score: " + (ts.scores.todayScore || "-") + NL;
@@ -1482,10 +1485,28 @@ window.showEODPromptNotification = showEODPromptNotification;
           <div><span style="color:#64748b;">Month Score:</span> <b id="eodScoreMonth" style="color:#059669;">-</b></div>
         </div>
 
-        <!-- Incomplete Tasks Notice -->
-        <div id="eodPendingTasksBox" style="display:none; background:#fff1f2; border:1px dashed #fca5a5; border-radius:8px; padding:8px; font-size:11px; color:#991b1b;">
-          <b>⚠️ Incomplete / Pending Tasks Today:</b>
-          <div id="eodPendingTasksList" style="margin-top:4px; line-height:1.4;"></div>
+        <!-- Completed Tasks Today Box (GREEN) -->
+        <div id="eodCompletedTasksBox" style="display:none; background:#ecfdf5; border:1.5px solid #6ee7b7; border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:11px; color:#065f46;">
+          <div style="font-weight:700; display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:14px;">✅</span>
+              <span>Aaj Complete Kiye Gaye Tasks:</span>
+            </div>
+            <span id="eodCompletedCountBadge" style="background:#dcfce7; color:#15803d; font-size:10px; font-weight:800; padding:1px 6px; border-radius:6px;">0</span>
+          </div>
+          <div id="eodCompletedTasksList" style="line-height:1.5; color:#047857; padding-left:2px;"></div>
+        </div>
+
+        <!-- Incomplete / Pending Tasks Notice (ORANGE/RED) -->
+        <div id="eodPendingTasksBox" style="display:none; background:#fff1f2; border:1.5px dashed #fca5a5; border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:11px; color:#991b1b;">
+          <div style="font-weight:700; display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:14px;">⏳</span>
+              <span>Aaj Ke Baki / Pending Tasks:</span>
+            </div>
+            <span id="eodPendingCountBadge" style="background:#fee2e2; color:#b91c1c; font-size:10px; font-weight:800; padding:1px 6px; border-radius:6px;">0</span>
+          </div>
+          <div id="eodPendingTasksList" style="line-height:1.5; color:#b91c1c; padding-left:2px;"></div>
         </div>
 
         <!-- Auto-fill button -->
