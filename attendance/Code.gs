@@ -1089,7 +1089,7 @@ function getStaffTaskSummaryForEOD(empId) {
     
     const targetClean = staffName.trim().toUpperCase();
     
-    // 1. Read Task_Submissions
+    // 1. Read Task_Submissions (Today's completions & score points)
     const subSheet = tss.getSheetByName("Task_Submissions");
     let rawPts = { daily: 0, weekly: 0, monthly: 0 };
     let todayCompletedTasks = [];
@@ -1102,6 +1102,7 @@ function getStaffTaskSummaryForEOD(empId) {
         
         let pts = parseFloat(subData[j][10]) || 0;
         let tDesc = subData[j][4] ? subData[j][4].toString().trim() : "";
+        let subItem = subData[j][5] ? subData[j][5].toString().trim() : "";
         let rawDate = subData[j][0];
         let subDate = null;
         if (rawDate instanceof Date) { subDate = rawDate; }
@@ -1115,8 +1116,9 @@ function getStaffTaskSummaryForEOD(empId) {
         let subDateStr = Utilities.formatDate(subDate, tz, "yyyy-MM-dd");
         if (subDateStr === todayStr) {
           rawPts.daily += pts;
-          if (tDesc && todayCompletedTasks.indexOf(tDesc) === -1) {
-            todayCompletedTasks.push(tDesc);
+          let fullDesc = tDesc + (subItem && subItem !== tDesc ? " - " + subItem : "");
+          if (fullDesc && todayCompletedTasks.indexOf(fullDesc) === -1) {
+            todayCompletedTasks.push(fullDesc);
           }
         }
         if (subDate >= startOfWeek) rawPts.weekly += pts;
@@ -1124,7 +1126,7 @@ function getStaffTaskSummaryForEOD(empId) {
       }
     }
     
-    // 2. Find Staff's Personal Sheet
+    // 2. Find Staff's Routine Tasks (from personal sheet or role sheet)
     let pSheet = null;
     let allSheets = tss.getSheets();
     for (let s = 0; s < allSheets.length; s++) {
@@ -1136,6 +1138,9 @@ function getStaffTaskSummaryForEOD(empId) {
     }
     
     let assignedDailyTasks = [];
+    let routineWeeklyCount = 0;
+    let routineMonthlyCount = 0;
+    
     if (pSheet && pSheet.getLastRow() > 1) {
       let pData = pSheet.getDataRange().getValues();
       for (let r = 1; r < pData.length; r++) {
@@ -1147,33 +1152,76 @@ function getStaffTaskSummaryForEOD(empId) {
           if (assignedDailyTasks.indexOf(fullDesc) === -1) {
             assignedDailyTasks.push(fullDesc);
           }
+        } else if (freq.includes("weekly")) {
+          routineWeeklyCount++;
+        } else if (freq.includes("monthly")) {
+          routineMonthlyCount++;
         }
       }
     }
     
-    // 3. Check Adhoc_Tasks
+    // 3. Check Adhoc_Tasks assigned specifically for TODAY (or due today)
     const adhocSheet = tss.getSheetByName("Adhoc_Tasks");
     if (adhocSheet && adhocSheet.getLastRow() > 1) {
       let adhocData = adhocSheet.getDataRange().getValues();
       for (let a = 1; a < adhocData.length; a++) {
+        let aDate = adhocData[a][0];
         let aStaff = adhocData[a][1] ? adhocData[a][1].toString().trim().toUpperCase() : "";
         let aDesc = adhocData[a][2] ? adhocData[a][2].toString().trim() : "";
-        if (aStaff && (aStaff === targetClean || aStaff.includes(targetClean) || targetClean.includes(aStaff))) {
-          if (aDesc && assignedDailyTasks.indexOf("[Adhoc] " + aDesc) === -1) {
-            assignedDailyTasks.push("[Adhoc] " + aDesc);
+        let aDeadline = adhocData[a][3] ? adhocData[a][3].toString().trim() : "";
+        let aFreq = adhocData[a][6] ? adhocData[a][6].toString().trim().toLowerCase() : "";
+
+        if (!aDesc) continue;
+        if (aStaff !== targetClean && !aStaff.includes(targetClean) && !targetClean.includes(aStaff) && aStaff !== "ALL" && aStaff !== "ALL STAFF") continue;
+
+        // Check if assign date is TODAY or deadline date is TODAY
+        let isTodayAdhoc = false;
+        if (aDate) {
+          let aDateObj = (aDate instanceof Date) ? aDate : new Date(aDate);
+          if (!isNaN(aDateObj.getTime())) {
+            let aDateStr = Utilities.formatDate(aDateObj, tz, "yyyy-MM-dd");
+            if (aDateStr === todayStr) isTodayAdhoc = true;
+          }
+        }
+        if (!isTodayAdhoc && aDeadline) {
+          let dObj = new Date(aDeadline);
+          if (!isNaN(dObj.getTime())) {
+            let dStr = Utilities.formatDate(dObj, tz, "yyyy-MM-dd");
+            if (dStr === todayStr) isTodayAdhoc = true;
+          }
+        }
+
+        // Only include if assigned today, or explicitly scheduled for today
+        if (isTodayAdhoc || aFreq.includes("daily")) {
+          let taskLabel = "[Adhoc] " + aDesc;
+          if (assignedDailyTasks.indexOf(taskLabel) === -1) {
+            assignedDailyTasks.push(taskLabel);
           }
         }
       }
     }
     
-    // 4. Calculate Pending / Incomplete Tasks
+    // 4. Ensure any task completed today is accounted for in assignedDailyTasks
+    for (let c = 0; c < todayCompletedTasks.length; c++) {
+      let cTask = todayCompletedTasks[c];
+      let cleanCTask = cTask.toLowerCase().replace(/[^a-z0-9]/g, "");
+      let exists = assignedDailyTasks.some(function(a) {
+        let cleanA = a.replace("[Adhoc] ", "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        return cleanA.includes(cleanCTask) || cleanCTask.includes(cleanA);
+      });
+      if (!exists) {
+        assignedDailyTasks.push(cTask);
+      }
+    }
+    
+    // 5. Calculate Pending / Incomplete Tasks for TODAY
     let pendingTasks = [];
     for (let a = 0; a < assignedDailyTasks.length; a++) {
       let aTask = assignedDailyTasks[a];
-      let cleanATask = aTask.replace("[Adhoc] ", "").toLowerCase().trim();
+      let cleanATask = aTask.replace("[Adhoc] ", "").toLowerCase().replace(/[^a-z0-9]/g, "");
       let isDone = false;
       for (let c = 0; c < todayCompletedTasks.length; c++) {
-        let cleanCTask = todayCompletedTasks[c].toLowerCase().trim();
+        let cleanCTask = todayCompletedTasks[c].toLowerCase().replace(/[^a-z0-9]/g, "");
         if (cleanATask.includes(cleanCTask) || cleanCTask.includes(cleanATask)) {
           isDone = true; break;
         }
@@ -1181,18 +1229,18 @@ function getStaffTaskSummaryForEOD(empId) {
       if (!isDone) pendingTasks.push(aTask);
     }
     
-    // 5. Scores Calculation
-    let dailyExpected = Math.max(1, assignedDailyTasks.length);
-    let dailyMax = Math.max(rawPts.daily, dailyExpected * 10, 10);
+    // 6. Scores Calculation (matching Task App getStaffScoresBreakdown exactly)
+    let routineDaily = Math.max(1, assignedDailyTasks.length);
+    let dailyMax = Math.max(rawPts.daily, routineDaily * 10, 10);
     let dailyPct = Math.min(100, Math.round((rawPts.daily / dailyMax) * 100));
     
     let dayOfWeekNum = (dayOfWeek === 0 ? 7 : dayOfWeek);
-    let weeklyExpected = Math.max(1, (dailyExpected * dayOfWeekNum));
+    let weeklyExpected = (routineDaily * dayOfWeekNum) + routineWeeklyCount;
     let weeklyMax = Math.max(rawPts.weekly, weeklyExpected * 10, 10);
     let weeklyPct = Math.min(100, Math.round((rawPts.weekly / weeklyMax) * 100));
     
     let dayOfMonth = now.getDate();
-    let monthlyExpected = Math.max(1, (dailyExpected * dayOfMonth));
+    let monthlyExpected = (routineDaily * dayOfMonth) + (routineWeeklyCount * Math.ceil(dayOfMonth / 7)) + routineMonthlyCount;
     let monthlyMax = Math.max(rawPts.monthly, monthlyExpected * 10, 10);
     let monthlyPct = Math.min(100, Math.round((rawPts.monthly / monthlyMax) * 100));
     
