@@ -2037,18 +2037,15 @@
       var currentActiveTab = 'Daily';
       var selectedTaskObj = null; 
       var urlParams = new URLSearchParams(window.location.search);
-      var passedEmpId = urlParams.get("empId") || localStorage.getItem("ym_master_id") || "";
-      if ((!passedEmpId || passedEmpId.includes("<%=")) && urlParams.has("empId")) passedEmpId = urlParams.get("empId");
       var passedName = urlParams.get("name") || localStorage.getItem("ym_master_name") || "";
-      if ((!passedName || passedName.includes("<%=")) && urlParams.has("name")) passedName = urlParams.get("name");
+      var passedEmpId = urlParams.get("empId") || localStorage.getItem("ym_master_id") || "";
+      var passedRole = urlParams.get("role") || localStorage.getItem("ym_master_role") || "";
 
       window.onload = function() {
-        if (passedEmpId && passedEmpId.trim() !== "") {
-          document.getElementById('empId').value = passedEmpId;
-          document.getElementById('empPass').value = "SSO_BYPASS";
-          loginUser();
-        } else if (passedName && passedName.trim() !== "") {
-          document.getElementById('empId').value = passedName;
+        // Prioritize full staff name for instant spreadsheet tab matching
+        var autoTarget = (passedName && passedName.trim() !== "") ? passedName.trim() : (passedEmpId ? passedEmpId.trim() : "");
+        if (autoTarget !== "") {
+          document.getElementById('empId').value = autoTarget;
           document.getElementById('empPass').value = "SSO_BYPASS";
           loginUser();
         } else {
