@@ -276,7 +276,9 @@ function authorizeDrivePermissions() {
 
 
 // Helper Engine: Process Daily Punch Logs with Chronological Short Break Deductions
-function processDailyPunchLogs(punchesMap) {
+function processDailyPunchLogs(punchesMap, staffRole) {
+  let isSales = (staffRole && (staffRole.toString().toUpperCase().includes("SALES")));
+
   for (let dKey in punchesMap) {
     let dayData = punchesMap[dKey];
     if (!dayData.rawLogs || dayData.rawLogs.length === 0) continue;
@@ -320,14 +322,36 @@ function processDailyPunchLogs(punchesMap) {
         }
       }
     }
+
+    // In-Office 50m Radius & 30-Minute Break Rule (Effective immediately):
+    // For In-Office staff: if total break exceeds 30 minutes, full duration is deducted from salary.
+    // If break is 30 minutes or less, 0 salary deduction (allowed grace period).
+    // Sales Boys are exempt as they are in the field for market visits.
+    let totalBreakMins = Math.round(totalBreakMs / 60000);
+    let breakDeductedHours = 0;
+    let breakDeductedMinutes = 0;
+
+    if (isSales) {
+      breakDeductedHours = 0;
+      breakDeductedMinutes = 0;
+    } else {
+      if (totalBreakMins > 30) {
+        breakDeductedHours = totalBreakMs / 3600000;
+        breakDeductedMinutes = totalBreakMins;
+      } else {
+        breakDeductedHours = 0;
+        breakDeductedMinutes = 0;
+      }
+    }
     
     dayData.in = punchIn;
     dayData.out = punchOut;
     dayData.inSelfie = inSelfie;
     dayData.outSelfie = outSelfie;
     dayData.type = isHalfDay ? "Half Day" : null;
-    dayData.totalBreakHours = totalBreakMs / 3600000;
-    dayData.totalBreakMinutes = Math.round(totalBreakMs / 60000);
+    dayData.totalBreakHours = breakDeductedHours;
+    dayData.totalBreakMinutes = totalBreakMins;
+    dayData.breakDeductedMinutes = breakDeductedMinutes;
   }
 }
 
@@ -338,6 +362,11 @@ function processDailyPunchLogs(punchesMap) {
 function doGet(e) {
 
   
+
+  if (e && e.parameter && e.parameter.action === "autoGeofenceBreak") {
+    var bRes = recordAutoGeofenceBreak(e.parameter.empId, e.parameter.exitTime, e.parameter.returnTime, e.parameter.maxDist);
+    return ContentService.createTextOutput(JSON.stringify(bRes)).setMimeType(ContentService.MimeType.JSON);
+  }
 
   if (e && e.parameter && e.parameter.diag === "status") {
     var result = { drive: null, logs: [], tokenScope: null };
@@ -513,21 +542,30 @@ function evaluateEmployeeMonth(empObj, empPunchesMap, daysInMonth, evalBoundary,
                         }
                     }
                     
+                    let breakDesc = "";
+                    if (pData && pData.totalBreakMinutes > 0) {
+                        if (pData.totalBreakHours > 0) {
+                            breakDesc = `${pData.totalBreakMinutes}m Break Deducted`;
+                        } else {
+                            breakDesc = `${pData.totalBreakMinutes}m Break Allowed`;
+                        }
+                    }
+
                     if (otMinutes > 0) {
-                        if (pData.totalBreakMinutes > 0) {
-                            dayStatus = `Present (${pData.totalBreakMinutes}m Break, +${otMinutes}m OT)`;
+                        if (breakDesc) {
+                            dayStatus = `Present (${breakDesc}, +${otMinutes}m OT)`;
                         } else {
                             dayStatus = `Present (+${otMinutes}m OT)`;
                         }
                     } else if (bufferApplied) {
-                        if (pData.totalBreakMinutes > 0) {
-                            dayStatus = `Present (${pData.totalBreakMinutes}m Break, 40m Buffer)`;
+                        if (breakDesc) {
+                            dayStatus = `Present (${breakDesc}, 40m Buffer)`;
                         } else {
                             dayStatus = `Present (40m Buffer)`;
                         }
                     } else {
-                        if (pData.totalBreakMinutes > 0) {
-                            dayStatus = `Present (${pData.totalBreakMinutes}m Break)`;
+                        if (breakDesc) {
+                            dayStatus = `Present (${breakDesc})`;
                         } else {
                             dayStatus = "Present";
                         }
@@ -592,6 +630,7 @@ function evaluateEmployeeMonth(empObj, empPunchesMap, daysInMonth, evalBoundary,
                 inSelfie: pData ? (pData.inSelfie || "") : "",
                 outSelfie: pData ? (pData.outSelfie || "") : "",
                 breakMins: pData ? (pData.totalBreakMinutes || 0) : 0, 
+                breakDeductedMins: pData ? (pData.breakDeductedMinutes || 0) : 0,
                 otMins: otMinutes,
                 bufferApplied: bufferApplied,
                 hrs: typeof dayHrs === 'number' ? dayHrs.toFixed(2) : dayHrs 
@@ -734,7 +773,7 @@ function authenticateUser(empId, pass, targetMonthStr) {
         }
       }
     }
-    processDailyPunchLogs(userPunchesMap);
+    processDailyPunchLogs(userPunchesMap, user ? user.role : "");
 
     // Call unified engine for standard user calculation
     let userMetrics = evaluateEmployeeMonth(user, userPunchesMap, totalDaysInTargetMonth, evaluationDaysBoundary, filterYear, filterMonth, globalLeaveDataAll, isPenaltyActive);
@@ -795,7 +834,7 @@ function authenticateUser(empId, pass, targetMonthStr) {
             }
           }
         }
-        processDailyPunchLogs(staffPunches);
+        processDailyPunchLogs(staffPunches, staffObj ? staffObj.role : "");
 
         // Call unified engine for Admin grid matrix
         let staffMetrics = evaluateEmployeeMonth(staffObj, staffPunches, totalDaysInTargetMonth, evaluationDaysBoundary, filterYear, filterMonth, globalLeaveDataAll, isPenaltyActive);
@@ -1498,5 +1537,46 @@ function getTodayEODStatus(empId) {
     return { submittedToday: false };
   } catch (e) {
     return { submittedToday: false, error: e.message };
+  }
+}
+
+
+// Record automatic geofence out-of-office break for in-office staff (>50m for >30 mins)
+function recordAutoGeofenceBreak(empId, exitTimeStr, returnTimeStr, maxDistance) {
+  try {
+    if (!empId) return { success: false, error: "Employee ID missing." };
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Attendance_Logs") || ss.getSheetByName("Attendance Logs");
+    if (!sheet) return { success: false, error: "Attendance Logs sheet missing." };
+    
+    let staffName = "Unknown Staff";
+    const staffSheet = ss.getSheetByName("Staff Master") || ss.getSheetByName("Staff_Master");
+    if (staffSheet) {
+      const sData = staffSheet.getDataRange().getValues();
+      let idCol = sData[0].findIndex(h => h.toString().trim().toUpperCase() === "EMPLOYEE ID"); if(idCol === -1) idCol = 0;
+      let nameCol = sData[0].findIndex(h => h.toString().trim().toUpperCase() === "NAME"); if(nameCol === -1) nameCol = 1;
+      let roleCol = sData[0].findIndex(h => h.toString().trim().toUpperCase() === "ROLE"); if(roleCol === -1) roleCol = 5;
+      for (let i = 1; i < sData.length; i++) {
+        if (sData[i][idCol].toString().trim().toUpperCase() === empId.toString().trim().toUpperCase()) {
+          staffName = sData[i][nameCol];
+          let r = sData[i][roleCol] ? sData[i][roleCol].toString().trim().toUpperCase() : "";
+          if (r === "SALES BOY" || r.includes("SALES")) {
+            return { success: true, message: "Sales staff exempt from geofence break logging." };
+          }
+          break;
+        }
+      }
+    }
+    
+    let exitDate = exitTimeStr ? new Date(exitTimeStr) : new Date(Date.now() - 35 * 60000);
+    let returnDate = returnTimeStr ? new Date(returnTimeStr) : new Date();
+    let distDesc = maxDistance ? `${Math.round(maxDistance)}m` : ">50m";
+    
+    sheet.appendRow([exitDate, staffName, empId, "Auto Break (Out)", `Office Geofence Exit (${distDesc} from office)`, ""]);
+    sheet.appendRow([returnDate, staffName, empId, "Auto Break (In)", `Office Geofence Return to office`, ""]);
+    
+    return { success: true, message: "Auto Geofence Break recorded successfully." };
+  } catch(err) {
+    return { success: false, error: err.toString() };
   }
 }
