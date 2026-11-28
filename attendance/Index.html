@@ -456,13 +456,20 @@
               }
             }
 
+            let otDisplay = "";
+            if (l.otMins && l.otMins > 0) {
+              otDisplay = ` <span style="font-size:10px; font-weight:700; color:#15803d; background:#dcfce7; padding:1px 4px; border-radius:4px; vertical-align:middle;">+${l.otMins}m OT</span>`;
+            } else if (l.bufferApplied) {
+              otDisplay = ` <span style="font-size:10px; font-weight:600; color:#b45309; background:#fef3c7; padding:1px 4px; border-radius:4px; vertical-align:middle;" title="Punch out was within 40m buffer; hours capped at shift end">40m Buffer</span>`;
+            }
+
             let row = `<tr style="${trBg}">
                 <td style="font-size:11px;">${l.date}</td>
                 <td style="font-size:11px; font-weight:600; color:${statusColor}">${l.status}</td>
                 <td style="font-size:11px;">${l.in}</td>
                 <td style="font-size:11px;">${l.out}</td>
                 <td style="font-size:11px; text-align:center;">${breakDisplay}</td>
-                <td style="font-size:12px; font-weight:700;">${l.hrs}h</td>
+                <td style="font-size:12px; font-weight:700; white-space:nowrap;">${l.hrs}h${otDisplay}</td>
                 <td style="font-size:11px; text-align:center; white-space:nowrap;">${selfieHtml}</td>
             </tr>`;
             tbody.insertAdjacentHTML('beforeend', row);
@@ -513,7 +520,10 @@
           document.getElementById('profileIdDisplay').innerText = "Employee ID: " + id + " | " + currentUserRole + " (" + response.gender + ")";
           
           // MAP CORE METRICS TO UI
-          document.getElementById('lblPresent').innerHTML = `${response.paidDays} d<br><span style="font-size:14px; color:var(--accent);">${response.totalExactHours} Hrs</span>`;
+          let otBadge = (response.overtimeHours && parseFloat(response.overtimeHours) > 0)
+            ? `<br><span style="font-size:11px; font-weight:700; color:#15803d; background:#dcfce7; padding:1px 6px; border-radius:4px;">+${response.overtimeHours}h OT (₹${response.overtimePay})</span>`
+            : "";
+          document.getElementById('lblPresent').innerHTML = `${response.paidDays} d<br><span style="font-size:14px; color:var(--accent);">${response.totalExactHours} Hrs</span>${otBadge}`;
           document.getElementById('lblAbsent').innerText = response.absent;
           document.getElementById('lblUnapproved').innerText = response.unapprovedAbsents;
           document.getElementById('lblBaseSalary').innerText = "₹" + response.salary;
@@ -662,6 +672,7 @@
           <td>
             <span style="font-size:13px; font-weight:600; color:var(--text);">${staffRow.paidDays} d</span><br>
             <span style="font-size:11px; font-weight:600; color:var(--warning);">${staffRow.totalHours} hrs</span>
+            ${(staffRow.overtimeHours && parseFloat(staffRow.overtimeHours) > 0) ? `<br><span style="font-size:10px; font-weight:700; color:#15803d; background:#dcfce7; padding:1px 5px; border-radius:4px;">+${staffRow.overtimeHours}h OT</span>` : ''}
           </td>
           <td style="font-weight:600; color:var(--text-light);">₹${staffRow.grossEarnings}</td>
           <td style="font-weight:600; color:var(--danger);">-₹${staffRow.advanceDeducted}</td>
