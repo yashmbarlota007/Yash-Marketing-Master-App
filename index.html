@@ -725,6 +725,8 @@
       const isSales = role && (role === "Sales Boy" || role.toLowerCase().includes("sales"));
       if (isSales) {
         startSalesLocationTracking();
+      } else if (role && role.toUpperCase() !== "OWNER" && role.toUpperCase() !== "CEO" && role.toUpperCase() !== "OWNER 2") {
+        startInOfficeGeofenceMonitor();
       }
 
       // MANAGEMENT SALES TRACKER BUTTON (OWNER / MIS)
@@ -1023,6 +1025,70 @@
 
       container.innerHTML = html;
     }
-  </script>
+  
+
+    // ==========================================
+    // IN-OFFICE STAFF 50M GEOFENCE AUTO-MONITOR
+    // ==========================================
+    let inOfficeWatchId = null;
+    let inOfficeIntervalId = null;
+
+    function startInOfficeGeofenceMonitor() {
+      if (!navigator.geolocation) return;
+      if (inOfficeWatchId || inOfficeIntervalId) return;
+
+      const OFFICE_LAT = 19.088889;
+      const OFFICE_LON = 74.733667;
+      const GEOFENCE_RADIUS_METERS = 50;
+
+      function checkPosition(pos) {
+        if (!loggedInUser || !loggedInUser.empId) return;
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const dLat = (lat - OFFICE_LAT) * Math.PI / 180;
+        const dLon = (lon - OFFICE_LON) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(OFFICE_LAT * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const distMeters = 6371e3 * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+
+        const exitKey = "ym_out_of_office_exit_" + loggedInUser.empId;
+        const distKey = "ym_out_of_office_dist_" + loggedInUser.empId;
+
+        let exitTimeStr = localStorage.getItem(exitKey);
+        let maxDist = parseFloat(localStorage.getItem(distKey) || "0");
+
+        if (distMeters > GEOFENCE_RADIUS_METERS) {
+          if (!exitTimeStr) {
+            exitTimeStr = new Date().toISOString();
+            localStorage.setItem(exitKey, exitTimeStr);
+            maxDist = distMeters;
+            localStorage.setItem(distKey, maxDist);
+          } else if (distMeters > maxDist) {
+            maxDist = distMeters;
+            localStorage.setItem(distKey, maxDist);
+          }
+        } else {
+          if (exitTimeStr) {
+            let exitTime = new Date(exitTimeStr);
+            let returnTime = new Date();
+            let elapsedMins = Math.round((returnTime.getTime() - exitTime.getTime()) / 60000);
+            if (elapsedMins > 30) {
+              fetch("https://script.google.com/macros/s/AKfycbxqR-0ALaYJJH8B5JjNd62sOtXEvMs6yL2QgFJbTRT2L8R-my0RC8WuYDUj3Z04NpXatg/exec?action=autoGeofenceBreak&empId=" + encodeURIComponent(loggedInUser.empId) + "&exitTime=" + encodeURIComponent(exitTime.toISOString()) + "&returnTime=" + encodeURIComponent(returnTime.toISOString()) + "&maxDist=" + Math.round(maxDist), { mode: "no-cors" }).catch(function(){});
+            }
+            localStorage.removeItem(exitKey);
+            localStorage.removeItem(distKey);
+          }
+        }
+      }
+
+      const opts = { enableHighAccuracy: true, timeout: 20000, maximumAge: 15000 };
+      inOfficeWatchId = navigator.geolocation.watchPosition(checkPosition, function(err){}, opts);
+      inOfficeIntervalId = setInterval(function() {
+        navigator.geolocation.getCurrentPosition(checkPosition, function(err){}, opts);
+      }, 45000);
+    }
+
+</script>
 </body>
 </html>
