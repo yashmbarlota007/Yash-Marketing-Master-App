@@ -439,6 +439,9 @@ function evaluateEmployeeMonth(empObj, empPunchesMap, daysInMonth, evalBoundary,
     let bufferEndHour = isFemale ? 19 : 20;
     let bufferEndMin = 40; // 7:40 PM for ladies, 8:40 PM for male
 
+    // Effective start date for 40-min buffer rule: 01/12/2026 (Month index 11 = December)
+    let bufferRuleEffectiveDate = new Date(2026, 11, 1, 0, 0, 0, 0);
+
     for (let d = 1; d <= daysInMonth; d++) {
         let loopDate = new Date(filterYear, filterMonth, d);
         let dKey = `${loopDate.getFullYear()}-${String(loopDate.getMonth() + 1).padStart(2, '0')}-${String(loopDate.getDate()).padStart(2, '0')}`;
@@ -473,24 +476,27 @@ function evaluateEmployeeMonth(empObj, empPunchesMap, daysInMonth, evalBoundary,
                     dayIn = inDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     dayOut = outDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                     
-                    let shiftEndDate = new Date(inDate.getFullYear(), inDate.getMonth(), inDate.getDate(), shiftEndHour, shiftEndMin, 0, 0);
-                    let bufferEndDate = new Date(inDate.getFullYear(), inDate.getMonth(), inDate.getDate(), bufferEndHour, bufferEndMin, 0, 0);
+                    let isBufferRuleActive = (loopDate.getTime() >= bufferRuleEffectiveDate.getTime());
+                    let effectiveOutMs = outDate.getTime();
                     
-                    let outMs = outDate.getTime();
-                    let shiftEndMs = shiftEndDate.getTime();
-                    let bufferEndMs = bufferEndDate.getTime();
-                    
-                    let effectiveOutMs = outMs;
-                    
-                    if (outMs > shiftEndMs && outMs <= bufferEndMs) {
-                        // Punch out within 40-minute buffer: extra time not counted, capped at shift end
-                        effectiveOutMs = shiftEndMs;
-                        bufferApplied = true;
-                        otMinutes = 0;
-                    } else if (outMs > bufferEndMs) {
-                        // Punch out after 40-minute buffer: genuine late work, full overtime paid right from shift end
-                        effectiveOutMs = outMs;
-                        otMinutes = Math.round((outMs - shiftEndMs) / 60000);
+                    if (isBufferRuleActive) {
+                        let shiftEndDate = new Date(inDate.getFullYear(), inDate.getMonth(), inDate.getDate(), shiftEndHour, shiftEndMin, 0, 0);
+                        let bufferEndDate = new Date(inDate.getFullYear(), inDate.getMonth(), inDate.getDate(), bufferEndHour, bufferEndMin, 0, 0);
+                        
+                        let outMs = outDate.getTime();
+                        let shiftEndMs = shiftEndDate.getTime();
+                        let bufferEndMs = bufferEndDate.getTime();
+                        
+                        if (outMs > shiftEndMs && outMs <= bufferEndMs) {
+                            // Punch out within 40-minute buffer: extra time not counted, capped at shift end
+                            effectiveOutMs = shiftEndMs;
+                            bufferApplied = true;
+                            otMinutes = 0;
+                        } else if (outMs > bufferEndMs) {
+                            // Punch out after 40-minute buffer: genuine late work, full overtime paid right from shift end
+                            effectiveOutMs = outMs;
+                            otMinutes = Math.round((outMs - shiftEndMs) / 60000);
+                        }
                     }
                     
                     let grossHrs = Math.max(0, (effectiveOutMs - inDate.getTime()) / 3600000);
