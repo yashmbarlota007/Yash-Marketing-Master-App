@@ -422,8 +422,22 @@ function evaluateEmployeeMonth(empObj, empPunchesMap, daysInMonth, evalBoundary,
     let metrics = {
         present: 0, halfDays: 0, absent: 0, sundays: 0,
         missedOuts: 0, unapprovedAbsents: 0, totalExactHours: 0, paidDays: 0,
+        totalOvertimeHours: 0, totalOvertimeMinutes: 0,
         attendanceMap: {}, dailyLogs: []
     };
+
+    // Determine shift end and 40-minute buffer boundary based on gender
+    let isFemale = false;
+    if (empObj) {
+        let g = (empObj.gender || "").toString().trim().toUpperCase();
+        if (g === "F" || g === "FEMALE" || empObj.shiftHours === 9) {
+            isFemale = true;
+        }
+    }
+    let shiftEndHour = isFemale ? 19 : 20; // 7:00 PM for ladies, 8:00 PM for male
+    let shiftEndMin = 0;
+    let bufferEndHour = isFemale ? 19 : 20;
+    let bufferEndMin = 40; // 7:40 PM for ladies, 8:40 PM for male
 
     for (let d = 1; d <= daysInMonth; d++) {
         let loopDate = new Date(filterYear, filterMonth, d);
@@ -431,6 +445,7 @@ function evaluateEmployeeMonth(empObj, empPunchesMap, daysInMonth, evalBoundary,
         let pData = empPunchesMap[dKey];
 
         let dayStatus = ""; let dayIn = "-"; let dayOut = "-"; let dayHrs = 0;
+        let otMinutes = 0; let bufferApplied = false;
 
         // 1. SUNDAY LOGIC - Absolute override, completely ignores missed punch outs and absent penalties.
         if (loopDate.getDay() === 0) { 
@@ -453,20 +468,63 @@ function evaluateEmployeeMonth(empObj, empPunchesMap, daysInMonth, evalBoundary,
                     }
                     dayStatus = "Half Day";
                 } else if (pData.in && pData.out) {
-                    dayIn = new Date(pData.in).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    dayOut = new Date(pData.out).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    let inDate = new Date(pData.in);
+                    let outDate = new Date(pData.out);
+                    dayIn = inDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    dayOut = outDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    let shiftEndDate = new Date(inDate.getFullYear(), inDate.getMonth(), inDate.getDate(), shiftEndHour, shiftEndMin, 0, 0);
+                    let bufferEndDate = new Date(inDate.getFullYear(), inDate.getMonth(), inDate.getDate(), bufferEndHour, bufferEndMin, 0, 0);
+                    
+                    let outMs = outDate.getTime();
+                    let shiftEndMs = shiftEndDate.getTime();
+                    let bufferEndMs = bufferEndDate.getTime();
+                    
+                    let effectiveOutMs = outMs;
+                    
+                    if (outMs > shiftEndMs && outMs <= bufferEndMs) {
+                        // Punch out within 40-minute buffer: extra time not counted, capped at shift end
+                        effectiveOutMs = shiftEndMs;
+                        bufferApplied = true;
+                        otMinutes = 0;
+                    } else if (outMs > bufferEndMs) {
+                        // Punch out after 40-minute buffer: genuine late work, full overtime paid right from shift end
+                        effectiveOutMs = outMs;
+                        otMinutes = Math.round((outMs - shiftEndMs) / 60000);
+                    }
+                    
+                    let grossHrs = Math.max(0, (effectiveOutMs - inDate.getTime()) / 3600000);
+                    let netHrs = Math.max(0, grossHrs - (pData.totalBreakHours || 0));
+                    
                     if (d <= evalBoundary) {
                         metrics.present++;
                         metrics.paidDays++;
-                        let grossHrs = (new Date(pData.out).getTime() - new Date(pData.in).getTime()) / 3600000;
-                        let netHrs = Math.max(0, grossHrs - (pData.totalBreakHours || 0));
                         metrics.totalExactHours += netHrs;
                         dayHrs = netHrs;
+                        if (otMinutes > 0) {
+                            metrics.totalOvertimeHours += (otMinutes / 60);
+                            metrics.totalOvertimeMinutes += otMinutes;
+                        }
                     }
-                    if (pData.totalBreakMinutes > 0) {
-                        dayStatus = `Present (${pData.totalBreakMinutes}m Break)`;
+                    
+                    if (otMinutes > 0) {
+                        if (pData.totalBreakMinutes > 0) {
+                            dayStatus = `Present (${pData.totalBreakMinutes}m Break, +${otMinutes}m OT)`;
+                        } else {
+                            dayStatus = `Present (+${otMinutes}m OT)`;
+                        }
+                    } else if (bufferApplied) {
+                        if (pData.totalBreakMinutes > 0) {
+                            dayStatus = `Present (${pData.totalBreakMinutes}m Break, 40m Buffer)`;
+                        } else {
+                            dayStatus = `Present (40m Buffer)`;
+                        }
                     } else {
-                        dayStatus = "Present";
+                        if (pData.totalBreakMinutes > 0) {
+                            dayStatus = `Present (${pData.totalBreakMinutes}m Break)`;
+                        } else {
+                            dayStatus = "Present";
+                        }
                     }
                 } else if (pData.in && !pData.out) {
                     metrics.missedOuts++;
@@ -528,6 +586,8 @@ function evaluateEmployeeMonth(empObj, empPunchesMap, daysInMonth, evalBoundary,
                 inSelfie: pData ? (pData.inSelfie || "") : "",
                 outSelfie: pData ? (pData.outSelfie || "") : "",
                 breakMins: pData ? (pData.totalBreakMinutes || 0) : 0, 
+                otMins: otMinutes,
+                bufferApplied: bufferApplied,
                 hrs: typeof dayHrs === 'number' ? dayHrs.toFixed(2) : dayHrs 
             });
         }
@@ -690,6 +750,8 @@ function authenticateUser(empId, pass, targetMonthStr) {
     let grossCalculatedEarnings = userMetrics.totalExactHours * user.perHour;
     let netCalculatedEarnings = grossCalculatedEarnings - totalAdvanceTakenByUser;
     if(netCalculatedEarnings < 0) netCalculatedEarnings = 0; 
+    let userOvertimeHours = (userMetrics.totalOvertimeHours || 0).toFixed(2);
+    let userOvertimePay = ((userMetrics.totalOvertimeHours || 0) * (user.perHour || 0)).toFixed(2); 
 
     // ADMIN OVERVIEW LOGIC
     let masterPayrollOverviewGrid = [];
@@ -709,7 +771,8 @@ function authenticateUser(empId, pass, targetMonthStr) {
         let staffObj = {
             id: staffId, name: staffData[s][nameCol] ? staffData[s][nameCol].toString().trim() : "Unknown Staff",
             role: staffData[s][roleCol] ? staffData[s][roleCol].toString().trim() : "Staff",
-            monthlySalary: staffBaseSalary, perHour: staffPerHourRate, shiftHours: staffShiftHours
+            monthlySalary: staffBaseSalary, perHour: staffPerHourRate, shiftHours: staffShiftHours,
+            gender: staffGender
         };
 
         let staffPunches = {};
@@ -752,6 +815,7 @@ function authenticateUser(empId, pass, targetMonthStr) {
         masterPayrollOverviewGrid.push({
           id: staffId, name: staffObj.name, role: staffObj.role, baseSalary: staffBaseSalary,
           totalHours: staffMetrics.totalExactHours.toFixed(2), 
+          overtimeHours: (staffMetrics.totalOvertimeHours || 0).toFixed(2),
           paidDays: staffMetrics.paidDays.toFixed(1), 
           grossEarnings: staffGrossEarnings.toFixed(2),
           advanceDeducted: staffTotalAdvance.toFixed(2),
@@ -781,6 +845,8 @@ function authenticateUser(empId, pass, targetMonthStr) {
       absent: userMetrics.absent, 
       unapprovedAbsents: userMetrics.unapprovedAbsents,
       totalExactHours: userMetrics.totalExactHours.toFixed(2),
+      overtimeHours: userOvertimeHours,
+      overtimePay: userOvertimePay,
       missedPunchOuts: userMetrics.missedOuts,
       attendanceMap: userMetrics.attendanceMap, 
       dailyDetailedLogs: userMetrics.dailyLogs, // NEW Daily detailed breakdown
