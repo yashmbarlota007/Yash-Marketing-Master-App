@@ -160,6 +160,9 @@
   </div>
 
   <!-- Dashboard View -->
+  <!-- In-Office Geofence 50m Warning Banner -->
+  <div id="geofenceAlertBanner" style="display:none; background:#fef2f2; border:1px solid #f87171; color:#991b1b; padding:10px 14px; border-radius:10px; margin:10px 0; font-size:12px; line-height:1.5;"></div>
+
   <div id="dashboardView" class="container">
     <div class="profile-header">
       <div id="liveClockTracker" class="live-clock-badge">00:00:00</div>
@@ -240,7 +243,7 @@
     </select>
     <div id="shortBreakHint" style="display:none; background:#eff6ff; border:1px solid #bfdbfe; padding:10px 12px; border-radius:10px; margin: 10px 0; text-align:left;">
       <p style="font-size:12px; color:#1e40af; margin:0; line-height:1.5; font-weight:500;">
-        <b>Short Break Policy:</b> Office se kisi kaam se bahar jate waqt <b>Short Break (Punch Out)</b> aur wapas aane par <b>Short Break (Punch In)</b> karein. Office ke <b>50m radius</b> ke andar se hi punch valid hoga, aur total break time net working hours me se deduct ho jayega.
+        <b>Short Break & 50m Radius Policy:</b> Office se bahar jate waqt <b>Short Break (Punch Out)</b> aur wapas aane par <b>Short Break (Punch In)</b> karein. Office ke 50m radius se 30 min tak ka break allowed hai; agar 30 min se zyada bahar rahe toh pura duration Break count hoga aur salary cut hogi.
       </p>
     </div>
     
@@ -437,7 +440,14 @@
               trBg = "background:#f0fdf4;"; statusColor = "var(--success)";
             }
 
-            let breakDisplay = (l.breakMins && l.breakMins > 0) ? `<span style="color:var(--warning); font-weight:700;">-${l.breakMins}m</span>` : `<span style="color:var(--text-light);">-</span>`;
+            let breakDisplay = `<span style="color:var(--text-light);">-</span>`;
+            if (l.breakMins && l.breakMins > 0) {
+              if (l.breakDeductedMins && l.breakDeductedMins > 0) {
+                breakDisplay = `<span style="color:var(--danger); font-weight:700;" title="Break > 30m: Full ${l.breakDeductedMins}m deducted from salary">-${l.breakDeductedMins}m</span>`;
+              } else {
+                breakDisplay = `<span style="color:var(--success); font-weight:600;" title="Break <= 30m: Allowed (No salary deduction)">${l.breakMins}m (OK)</span>`;
+              }
+            }
             
             let selfieHtml = "";
             let inImg = l.inSelfie || "";
@@ -540,6 +550,11 @@
           compileVisualCalendar(response.attendanceMap); 
           compileCloudDocumentsVaultList(response.uploadedDocs);
           renderMandatoryDocsComplianceUI(response.docCompliance);
+          
+          let roleUp = (currentUserRole || "").toString().trim().toUpperCase();
+          if (roleUp !== "SALES BOY" && !roleUp.includes("SALES") && roleUp !== "OWNER" && roleUp !== "CEO") {
+            startGeofenceMonitor();
+          }
 
           if (response.userLeaveHistoryData && response.userLeaveHistoryData.length > 0) {
             document.getElementById('myLeaveStatusCard').style.display = 'block';
@@ -1532,6 +1547,97 @@
     window.shareEODOnWhatsApp = shareEODOnWhatsApp;
     window.autoFillTasksFromTaskApp = autoFillTasksFromTaskApp;
     window.loadLiveTaskAppSummary = loadLiveTaskAppSummary;
+
+
+
+    // ====================================================================================
+    // IN-OFFICE STAFF 50M RADIUS & 30-MINUTE BREAK AUTO-MONITOR
+    // ====================================================================================
+    let geofenceWatchId = null;
+    let geofenceIntervalId = null;
+
+    function startGeofenceMonitor() {
+      if (!navigator.geolocation) return;
+      if (geofenceWatchId || geofenceIntervalId) return;
+
+      const OFFICE_LAT = 19.088889;
+      const OFFICE_LON = 74.733667;
+      const GEOFENCE_RADIUS_METERS = 50;
+
+      function checkPosition(pos) {
+        if (!currentEmpId) return;
+        let rUpper = (currentUserRole || "").toString().trim().toUpperCase();
+        if (rUpper === "SALES BOY" || rUpper.includes("SALES") || rUpper === "OWNER" || rUpper === "CEO") return;
+
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const dLat = (lat - OFFICE_LAT) * Math.PI / 180;
+        const dLon = (lon - OFFICE_LON) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(OFFICE_LAT * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const distMeters = 6371e3 * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+
+        const exitKey = "ym_out_of_office_exit_" + currentEmpId;
+        const distKey = "ym_out_of_office_dist_" + currentEmpId;
+
+        let exitTimeStr = localStorage.getItem(exitKey);
+        let maxDist = parseFloat(localStorage.getItem(distKey) || "0");
+
+        let banner = document.getElementById("geofenceAlertBanner");
+
+        if (distMeters > GEOFENCE_RADIUS_METERS) {
+          if (!exitTimeStr) {
+            exitTimeStr = new Date().toISOString();
+            localStorage.setItem(exitKey, exitTimeStr);
+            maxDist = distMeters;
+            localStorage.setItem(distKey, maxDist);
+          } else {
+            if (distMeters > maxDist) {
+              maxDist = distMeters;
+              localStorage.setItem(distKey, maxDist);
+            }
+          }
+          let elapsedMins = Math.round((Date.now() - new Date(exitTimeStr).getTime()) / 60000);
+          if (banner) {
+            banner.style.display = "block";
+            if (elapsedMins > 30) {
+              banner.style.background = "#fef2f2";
+              banner.style.borderColor = "#f87171";
+              banner.style.color = "#991b1b";
+              banner.innerHTML = `⚠️ <b>Geofence Alert:</b> Aap office ke 50m radius se bahar hain (${Math.round(distMeters)}m door). <b>${elapsedMins} mins</b> ho chuke hain (>30 min threshold), ye duration Break me count ho raha hai aur salary cut hogi!`;
+            } else {
+              banner.style.background = "#eff6ff";
+              banner.style.borderColor = "#bfdbfe";
+              banner.style.color = "#1e40af";
+              banner.innerHTML = `ℹ️ <b>Office Geofence Notice:</b> Aap office ke 50m radius se bahar hain (${Math.round(distMeters)}m door, ${elapsedMins} mins). 30 min tak break allowed hai, 30 min se zyada bahar rehne par salary cut hogi.`;
+            }
+          }
+        } else {
+          // Returned within 50m of office
+          if (banner) banner.style.display = "none";
+          if (exitTimeStr) {
+            let exitTime = new Date(exitTimeStr);
+            let returnTime = new Date();
+            let elapsedMins = Math.round((returnTime.getTime() - exitTime.getTime()) / 60000);
+            if (elapsedMins > 30) {
+              google.script.run.withSuccessHandler(function(res) {
+                console.log("Auto break recorded:", res);
+                triggerMonthFilterRefresh();
+              }).recordAutoGeofenceBreak(currentEmpId, exitTime.toISOString(), returnTime.toISOString(), maxDist);
+            }
+            localStorage.removeItem(exitKey);
+            localStorage.removeItem(distKey);
+          }
+        }
+      }
+
+      const opts = { enableHighAccuracy: true, timeout: 20000, maximumAge: 15000 };
+      geofenceWatchId = navigator.geolocation.watchPosition(checkPosition, function(err){}, opts);
+      geofenceIntervalId = setInterval(function() {
+        navigator.geolocation.getCurrentPosition(checkPosition, function(err){}, opts);
+      }, 45000);
+    }
 
 </script>
 
